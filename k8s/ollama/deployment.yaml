@@ -1,5 +1,9 @@
 # Ollama para inferência local com GPU (nvidia-device-plugin no Minikube).
 # Serviço: ollama-service:11434 — OpenClaw usa OLLAMA_HOST=http://ollama-service.ai-agents.svc.cluster.local:11434
+#
+# Preload automático: ao subir o pod, baixa os modelos LLM para não precisar de "kubectl exec ... ollama pull".
+# Se OLLAMA_PRELOAD_MODELS estiver definido, usa essa lista; senão, extrai os modelos do OpenClaw (openclaw.json,
+# agents.defaults + agents.list[].model). Se o ConfigMap openclaw-config não existir, usa fallback "glm-5:cloud".
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +34,10 @@ spec:
                   name: ollama-cloud
                   key: OLLAMA_API_KEY
                   optional: true
+            # Lista de modelos para preload ao subir o pod. Se vazio, extrai automaticamente do OpenClaw (openclaw.json: agents).
+            # Ex.: "glm-5:cloud" ou "glm-5:cloud ministral-3:3b" (separados por espaço). Deixe vazio para usar só a lista dos agentes.
+            - name: OLLAMA_PRELOAD_MODELS
+              value: "ministral-3:3b-cloud gpt-oss:20b-cloud qwen3-coder-next:cloud"
             # GPU: se o cluster tiver nvidia-device-plugin e GPU disponível, descomente CUDA_VISIBLE_DEVICES e as linhas nvidia.com/gpu em resources abaixo.
             # - name: CUDA_VISIBLE_DEVICES
             #   value: "0"
@@ -39,6 +47,23 @@ spec:
             # Opcional: limita janela de contexto global (ex.: 8192); reduz VRAM e pode melhorar tempo de primeira resposta.
             - name: OLLAMA_CONTEXT_LENGTH
               value: "8192"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ollama serve &
+              until ollama list 2>/dev/null; do sleep 2; done
+              if [ -n "$OLLAMA_PRELOAD_MODELS" ]; then
+                MODELS="$OLLAMA_PRELOAD_MODELS"
+              elif [ -f /config/openclaw.json ]; then
+                MODELS=$(grep -oE 'ollama/[^"]+' /config/openclaw.json | sed 's|ollama/||' | sort -u | tr '\n' ' ')
+              else
+                MODELS="glm-5:cloud"
+              fi
+              if [ -n "$MODELS" ]; then
+                for m in $MODELS; do echo "Preload: ollama pull $m"; ollama pull "$m" || true; done
+              fi
+              wait
           resources:
             requests:
               memory: "2Gi"
@@ -51,10 +76,20 @@ spec:
           volumeMounts:
             - name: ollama-data
               mountPath: /root/.ollama
+            - name: openclaw-config
+              mountPath: /config
+              readOnly: true
       volumes:
         - name: ollama-data
           persistentVolumeClaim:
             claimName: ollama-data
+        - name: openclaw-config
+          configMap:
+            name: openclaw-config
+            optional: true
+            items:
+              - key: openclaw.json
+                path: openclaw.json
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

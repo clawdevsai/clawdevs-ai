@@ -33,9 +33,9 @@ data:
         }
       },
       "agents": {
-        "defaults": { "model": "ollama/glm-5:cloud", "workspace": "/workspace" },
+        "defaults": { "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" },
         "list": [
-          { "id": "ceo", "name": "CEO", "model": "ollama/glm-5:cloud", "workspace": "/workspace" }
+          { "id": "ceo", "name": "CEO", "model": "ollama/ministral-3:3b-cloud", "workspace": "/workspace" }
         ]
       }
     }
@@ -67,7 +67,7 @@ data:
         - id: ceo
           name: "CEO"
           description: "Estratégia e interface com o Diretor. Único agente que recebe Telegram."
-          model: "ollama/glm-5:cloud"
+          model: "ollama/ministral-3:3b-cloud"
           # Canal Telegram roteia para este agente
         - id: po
           name: "Product Owner"
