@@ -4,7 +4,7 @@ Resumo **somente leitura** de CPU, GPU, RAM e disco. Use para confirmar se sua m
 
 ## Uso
 
-A partir da pasta `docs/agents-devs/scripts/`:
+A partir da pasta `docs/scripts/`:
 
 ```bash
 ./verify-machine.sh
@@ -13,7 +13,7 @@ A partir da pasta `docs/agents-devs/scripts/`:
 Ou de qualquer lugar (ajuste o caminho ao repo):
 
 ```bash
-/path/to/docs/agents-devs/scripts/verify-machine.sh
+/path/to/clawdevs-1/docs/scripts/verify-machine.sh
 ```
 
 ## O que é exibido
@@ -44,6 +44,19 @@ echo "=== SSD / Discos ==="
 lsblk -d -o NAME,SIZE,ROTA,MODEL 2>/dev/null
 df -h /
 ```
+
+## Quest 65% (validação de hardware para o cluster)
+
+O cluster Minikube do ClawDevs deve usar **cerca de 65%** do CPU e da RAM da máquina; o restante fica para o SO e uso diário ([04-infraestrutura.md](../04-infraestrutura.md)).
+
+1. **Execute o script** `./verify-machine.sh`.
+2. No final, o script exibe:
+   - **Resumo:** número de threads de CPU e RAM total.
+   - **Valores 65%:** `--cpus=X` e `--memory=Yg` recomendados para `minikube start`.
+   - **Avisos:** se RAM &lt; 16 GB ou se não houver NVIDIA (GPU).
+3. Use o comando Minikube sugerido (ou ajuste driver/addons conforme a doc de infraestrutura).
+
+Assim você valida o hardware e segue a regra de 65% na doc.
 
 ## Referência
 

@@ -53,7 +53,13 @@ cp k8s/openclaw/secret.yaml.example k8s/openclaw/secret.yaml
 kubectl apply -f k8s/openclaw/secret.yaml
 ```
 
-## 4. OpenClaw (ConfigMap + Deployment)
+## 4. OpenClaw (ConfigMap + Workspace CEO + Deployment)
+
+O agente CEO obedece ao **perfil SOUL** ([docs/soul/CEO.md](soul/CEO.md)): o ConfigMap `openclaw-workspace-ceo` fornece `SOUL.md` no workspace; o OpenClaw injeta esse conteúdo no system prompt. Assim o CEO responde em tom executivo e direto, na **mesma língua** que o Diretor usar, e segue as restrições (nunca escrever código, nunca aprovar PRs, etc.). Aplicar também o workspace do CEO:
+
+```bash
+kubectl apply -f k8s/openclaw/workspace-ceo-configmap.yaml
+```
 
 A imagem padrão no deployment é um placeholder (`node:22-bookworm-slim` com `sleep infinity`). Para o CEO responder de fato no Telegram você precisa:
 
@@ -70,10 +76,11 @@ export TELEGRAM_BOT_TOKEN='...'
 openclaw gateway
 ```
 
-Aplicar ConfigMap e Deployment no cluster (mesmo com imagem placeholder, para deixar o fluxo pronto):
+Aplicar ConfigMap, workspace CEO e Deployment no cluster (mesmo com imagem placeholder, para deixar o fluxo pronto):
 
 ```bash
 kubectl apply -f k8s/openclaw/configmap.yaml
+kubectl apply -f k8s/openclaw/workspace-ceo-configmap.yaml
 kubectl apply -f k8s/openclaw/deployment.yaml
 ```
 
@@ -100,7 +107,19 @@ Com `dmPolicy: pairing`:
 | Componente   | Função                                      |
 |-------------|----------------------------------------------|
 | **openclaw**| Gateway: canal Telegram → agente CEO → Ollama|
-| **ollama-gpu** | Modelo local (ex.: phi3:mini)             |
+| **ollama-gpu** | Modelo local (ex.: phi3:mini, ministral-3:3b) |
 | **redis**   | Disponível para estado/streams (fase futura) |
+| **openclaw-workspace-ceo** | SOUL.md no workspace → CEO segue perfil [soul/CEO.md](soul/CEO.md) |
 
 Doc de arquitetura: [openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md).
+
+---
+
+## Próximas etapas (após Fase 0)
+
+| Fase | Conteúdo principal |
+|------|---------------------|
+| **1** | SOUL dos outros agentes (PO, DevOps, Architect, etc.), integração com OpenClaw, line-up, fluxo evento-driven — [issues/README.md](issues/README.md) (010–019). |
+| **2** | Segurança: Zero Trust, token bucket e degradação por eficiência (CEO), quarentena, sandbox, OWASP, CISO — (020–029, 126, 128). |
+| **3** | Operações: manual de primeiros socorros, five strikes, aprovação por omissão cosmética, orçamento de degradação — (030–039, 127). |
+| **4+** | Configuração FinOps no Gateway, truncamento/sumarização, memória Elite, habilidades transversais, ferramentas, integrações — ver [issues/README.md](issues/README.md). |
