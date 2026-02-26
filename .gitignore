@@ -3,3 +3,4 @@
 *.env
 !*.env.example
 k8s/openclaw/secret.yaml
+k8s/ollama/secret.yaml
