@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Conecta o OpenClaw ao seu bot do Telegram e usa o Ollama do cluster para responder.
-# Pré-requisitos: kubectl (contexto apontando para o cluster com namespace ai-agents), openclaw CLI.
+# Pré-requisitos: kubectl (contexto apontando para o cluster com namespace ai-agents), Node.js/npx (openclaw roda via npx).
 # Variáveis: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID (ou arquivo .env na raiz do projeto).
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -60,4 +60,4 @@ echo "==> Iniciando OpenClaw gateway (Telegram + Ollama em 127.0.0.1:11434)..."
 echo "    Config: $OPENCLAW_CONFIG_PATH"
 echo "    Workspace CEO (SOUL.md): config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
 echo "    Envie uma mensagem ao seu bot no Telegram para testar."
-exec openclaw gateway
+exec npx --yes openclaw@latest gateway
