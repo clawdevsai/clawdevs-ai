@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image
+.PHONY: prepare up down openclaw-image verify
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -36,16 +36,25 @@ prepare:
 	@minikube addons enable nvidia-device-plugin 2>/dev/null || true
 	@echo "==> prepare concluído. Use 'make up' para aplicar os recursos no cluster."
 
-# 2. up: aplica todos os recursos (namespace, redis, ollama, openclaw, secret Telegram se existir)
+# 2. up: inicia Minikube (se necessário) e aplica todos os recursos
 up:
+	@echo "==> Verificando Minikube..."
+	@if ! minikube status >/dev/null 2>&1; then \
+		echo "==> Iniciando Minikube: minikube start --driver=docker --addons=nvidia-device-plugin --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY)"; \
+		minikube start --driver=docker --addons=nvidia-device-plugin --cpus=$(MINIKUBE_CPUS) --memory=$(MINIKUBE_MEMORY); \
+		minikube addons enable nvidia-device-plugin 2>/dev/null || true; \
+	else \
+		echo "  Minikube já está rodando."; \
+	fi
 	@echo "==> Aplicando namespace..."
 	kubectl apply -f $(K8S_DIR)/namespace.yaml
 	@echo "==> Aplicando Redis..."
 	kubectl apply -f $(K8S_DIR)/redis/deployment.yaml
 	@echo "==> Aplicando Ollama..."
 	kubectl apply -f $(K8S_DIR)/ollama/deployment.yaml
-	@echo "==> Aplicando OpenClaw (ConfigMap + Deployment)..."
+	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + Deployment)..."
 	kubectl apply -f $(K8S_DIR)/openclaw/configmap.yaml
+	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
 	kubectl apply -f $(K8S_DIR)/openclaw/deployment.yaml
 	@if [ -f $(K8S_DIR)/openclaw/secret.yaml ]; then \
 		echo "==> Aplicando secret Telegram (k8s/openclaw/secret.yaml)..."; \
@@ -64,6 +73,10 @@ openclaw-image:
 	@echo "==> Build da imagem openclaw-gateway:local no Docker do Minikube..."
 	eval $$(minikube docker-env) && docker build -f $(K8S_DIR)/openclaw/Dockerfile -t openclaw-gateway:local $(K8S_DIR)/openclaw
 	@echo "==> openclaw-image concluído. Rode make up para aplicar."
+
+# Verificação de hardware (máquina de referência + consumo GPU/CPU/RAM + Quest 65%)
+verify:
+	@docs/scripts/verify-machine.sh
 
 # 3. down: remove todos os recursos do namespace ai-agents (e o namespace)
 down:

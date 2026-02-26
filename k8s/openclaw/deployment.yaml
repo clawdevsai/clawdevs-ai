@@ -42,6 +42,9 @@ spec:
             - name: config
               mountPath: /config
               readOnly: true
+            - name: workspace
+              mountPath: /workspace
+              readOnly: true
           resources:
             requests:
               memory: "1Gi"
@@ -55,6 +58,9 @@ spec:
         - name: config
           configMap:
             name: openclaw-config
+        - name: workspace
+          configMap:
+            name: openclaw-workspace-ceo
 ---
 apiVersion: v1
 kind: Service
