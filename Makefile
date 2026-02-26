@@ -90,8 +90,28 @@ verify:
 	@docs/scripts/verify-machine.sh
 	@docs/scripts/verify-gpu-cluster.sh
 
-# 3. down: remove todos os recursos do namespace ai-agents (e o namespace)
+# 3. down: derruba tudo — deployments, PVCs, secrets, configmaps e namespace. Ambiente em estaca zero.
 down:
-	@echo "==> Removendo namespace ai-agents (todos os recursos dentro dele)..."
-	kubectl delete namespace ai-agents --ignore-not-found --timeout=120s
-	@echo "==> down concluído."
+	@echo "==> down: removendo todos os recursos do ambiente (estaca zero)..."
+	@if ! kubectl get namespace ai-agents >/dev/null 2>&1; then \
+		echo "  Namespace ai-agents não existe. Ambiente já está limpo."; \
+		exit 0; \
+	fi
+	@echo "==> Deletando deployments (pods saem e liberam volumes)..."
+	-kubectl delete deployment -n ai-agents --all --ignore-not-found --timeout=60s 2>/dev/null || true
+	-kubectl delete statefulset -n ai-agents --all --ignore-not-found --timeout=60s 2>/dev/null || true
+	@echo "==> Aguardando pods terminarem..."
+	-kubectl wait --for=delete pod -l app=ollama -n ai-agents --timeout=90s 2>/dev/null || true
+	-kubectl wait --for=delete pod -l app=openclaw -n ai-agents --timeout=90s 2>/dev/null || true
+	-kubectl wait --for=delete pod -l app=redis -n ai-agents --timeout=90s 2>/dev/null || true
+	@sleep 3
+	@echo "==> Deletando PVCs (volumes persistentes)..."
+	-kubectl delete pvc -n ai-agents --all --ignore-not-found --timeout=60s 2>/dev/null || true
+	@echo "==> Deletando serviços, configmaps, secrets restantes e o namespace..."
+	-kubectl delete namespace ai-agents --ignore-not-found --timeout=120s 2>/dev/null || true
+	@echo "==> Verificando se o namespace sumiu..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if ! kubectl get namespace ai-agents 2>/dev/null; then echo "  Namespace ai-agents removido."; break; fi; \
+		echo "  Aguardando término do namespace ($$i/10)..."; sleep 6; \
+	done
+	@echo "==> down concluído. Ambiente limpo (estaca zero). Use 'make up' para subir de novo."
