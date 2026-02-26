@@ -1,8 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 from orchestrator.consumers.review_pipeline import (
-    PreGPUValidator,
     BatchingBuffer,
+    PreGPUValidator,
     ReviewPipeline,
 )
 
@@ -40,9 +41,7 @@ class TestReviewPipelineFlow(unittest.TestCase):
     def setUp(self):
         self.mock_r = MagicMock()
         # Mocking gpu_lock and _get_redis inside ReviewPipeline.__init__
-        with patch(
-            "orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r
-        ):
+        with patch("orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r):
             with patch("scripts.gpu_lock.GPULock") as mock_lock:
                 self.pipeline = ReviewPipeline()
                 self.mock_lock = mock_lock
@@ -80,9 +79,7 @@ class TestReviewPipelineFlow(unittest.TestCase):
 
     def test_run_review_dba_trigger(self):
         self.pipeline.pre_gpu.validate = MagicMock(return_value={"valid": True})
-        self.pipeline._call_ollama = MagicMock(
-            return_value='{"approved": true, "comments": []}'
-        )
+        self.pipeline._call_ollama = MagicMock(return_value='{"approved": true, "comments": []}')
 
         diff_with_migration = "Adding new migration for schema"
         res = self.pipeline.run_review("pr-1", diff_with_migration, "issue-1")

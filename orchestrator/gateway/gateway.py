@@ -15,12 +15,12 @@ Referências:
   docs/07-configuracao-e-prompts.md (FinOps Gateway)
 """
 
-import os
-import time
-import logging
-import threading
-from typing import Optional
 from dataclasses import dataclass, field
+import logging
+import os
+import threading
+import time
+
 from orchestrator.gateway.balancer import DynamicBalancer
 
 logger = logging.getLogger("clawdevs.gateway")
@@ -84,9 +84,7 @@ class TokenBucket:
             )
             return False
 
-        logger.debug(
-            "Token bucket: %d/%d eventos na janela.", count_before + 1, self.limit
-        )
+        logger.debug("Token bucket: %d/%d eventos na janela.", count_before + 1, self.limit)
         return True
 
 
@@ -182,9 +180,7 @@ class ContextTruncator:
         criteria_blocks = re.findall(pattern, payload, re.DOTALL)
         criteria = "\n".join(criteria_blocks)
         # Remove blocos de critérios do payload principal (para truncamento)
-        clean_payload = re.sub(
-            pattern, "[CRITERIOS_PROTEGIDOS]", payload, flags=re.DOTALL
-        )
+        clean_payload = re.sub(pattern, "[CRITERIOS_PROTEGIDOS]", payload, flags=re.DOTALL)
         return clean_payload, criteria
 
 
@@ -249,9 +245,7 @@ class DegradationBudget:
 
     def __init__(self, r, threshold_pct: float = 0.12):
         self.r = r
-        self.threshold = float(
-            os.getenv("DEGRADATION_THRESHOLD_PCT", str(threshold_pct))
-        )
+        self.threshold = float(os.getenv("DEGRADATION_THRESHOLD_PCT", str(threshold_pct)))
 
     def record_fifth_strike(self):
         self.r.incr(self.FIFTH_STRIKE_KEY)
@@ -318,11 +312,9 @@ class HeadblessClusterWatchdog:
 
     def __init__(self, r, timeout_seconds: int = 300):
         self.r = r
-        self.timeout = int(
-            os.getenv("HEARTBEAT_CEO_TIMEOUT_SECONDS", str(timeout_seconds))
-        )
+        self.timeout = int(os.getenv("HEARTBEAT_CEO_TIMEOUT_SECONDS", str(timeout_seconds)))
         self._running = False
-        self._thread: Optional[threading.Thread] = None
+        self._thread: threading.Thread | None = None
         self.consecutive_stable = 0
 
     def record_ceo_command(self):
@@ -334,9 +326,7 @@ class HeadblessClusterWatchdog:
         thread = threading.Thread(target=self._watch_loop, daemon=True)
         self._thread = thread
         thread.start()
-        logger.info(
-            "Watchdog cluster acéfalo iniciado (timeout CEO: %ds).", self.timeout
-        )
+        logger.info("Watchdog cluster acéfalo iniciado (timeout CEO: %ds).", self.timeout)
 
     def stop(self):
         self._running = False
@@ -431,7 +421,7 @@ class Gateway:
         self.watchdog.start()
         logger.info("Gateway ClawDevs iniciado.")
 
-    def process_strategy_event(self, event: dict) -> Optional[dict]:
+    def process_strategy_event(self, event: dict) -> dict | None:
         """Processa evento de estratégia do CEO.
         Verifica VFM Score, Token Bucket e Degradação por Eficiência.
         """
@@ -469,9 +459,7 @@ class Gateway:
         # 4. Truncamento de contexto
         payload = event.get("payload", "")
         if payload:
-            clean_payload, criteria = self.truncator.protect_acceptance_criteria(
-                payload
-            )
+            clean_payload, criteria = self.truncator.protect_acceptance_criteria(payload)
             truncated_payload, was_truncated = self.truncator.truncate(clean_payload)
             event["payload"] = truncated_payload
             if criteria:
@@ -486,9 +474,7 @@ class Gateway:
         event["tier"] = tier
         event["model"] = self.balancer.get_model_for_tier(tier, agent_role)
 
-        logger.info(
-            "Evento %s roteado para TIER=%s MODEL=%s", event_id, tier, event["model"]
-        )
+        logger.info("Evento %s roteado para TIER=%s MODEL=%s", event_id, tier, event["model"])
 
         return event
 

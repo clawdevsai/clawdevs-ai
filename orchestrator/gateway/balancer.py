@@ -4,9 +4,9 @@ Implementa lógica de balanceamento de carga entre Nuvem, GPU local e CPU.
 Atua em conjunto com o Gateway para otimizar custo e performance.
 """
 
-import os
-import logging
 from dataclasses import dataclass
+import logging
+import os
 
 logger = logging.getLogger("clawdevs.balancer")
 
@@ -27,9 +27,7 @@ class DynamicBalancer:
         self.threshold_budget = float(
             os.getenv("BALANCER_BUDGET_THRESHOLD", "0.8")
         )  # 80% do budget
-        self.threshold_efficiency = float(
-            os.getenv("BALANCER_EFFICIENCY_THRESHOLD", "0.4")
-        )
+        self.threshold_efficiency = float(os.getenv("BALANCER_EFFICIENCY_THRESHOLD", "0.4"))
 
     def get_resource_state(self) -> ResourceState:
         """Coleta estado atual do sistema do Redis."""

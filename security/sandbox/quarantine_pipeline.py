@@ -17,12 +17,11 @@ Referências:
   docs/05-seguranca-e-etica.md
 """
 
-import math
 import json
 import logging
-import subprocess
+import math
 from pathlib import Path
-from typing import Optional
+import subprocess
 
 logger = logging.getLogger("clawdevs.quarantine")
 
@@ -61,9 +60,7 @@ def _compute_entropy(data: bytes) -> float:
     for byte in data:
         freq[byte] = freq.get(byte, 0) + 1
     length = len(data)
-    entropy = -sum(
-        (count / length) * math.log2(count / length) for count in freq.values()
-    )
+    entropy = -sum((count / length) * math.log2(count / length) for count in freq.values())
     return entropy
 
 
@@ -101,9 +98,7 @@ class TrustMatrix:
             )
             return verified
         except Exception as e:
-            logger.warning(
-                "Não foi possível verificar assinatura npm %s: %s", package, e
-            )
+            logger.warning("Não foi possível verificar assinatura npm %s: %s", package, e)
             return False
 
     def verify_pypi_package(self, package: str, version: str) -> bool:
@@ -122,9 +117,7 @@ class TrustMatrix:
             self.verified_cache[cache_key] = verified
             return verified
         except Exception as e:
-            logger.warning(
-                "Não foi possível verificar assinatura PyPI %s: %s", package, e
-            )
+            logger.warning("Não foi possível verificar assinatura PyPI %s: %s", package, e)
             return False
 
     def is_trusted_publisher(self, package_name: str) -> bool:
@@ -213,7 +206,7 @@ class SASTScanner:
     Foca em: injeção de rede, eval() oculto, shell indesejado.
     """
 
-    def scan_diff(self, diff_content: str, output_dir: Optional[Path] = None) -> dict:
+    def scan_diff(self, diff_content: str, output_dir: Path | None = None) -> dict:
         """Escaneia diff com semgrep. Retorna resultado com issues encontradas."""
         if not diff_content.strip():
             return {"issues": [], "clean": True}
@@ -254,9 +247,7 @@ class SASTScanner:
                 except json.JSONDecodeError:
                     pass
         except FileNotFoundError:
-            logger.debug(
-                "semgrep não encontrado. Usando verificação manual de padrões."
-            )
+            logger.debug("semgrep não encontrado. Usando verificação manual de padrões.")
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
@@ -376,9 +367,7 @@ class QuarantinePipeline:
         sast_result = self.sast.scan_diff(diff_content)
         result["checks"]["sast"] = sast_result
         if not sast_result["clean"]:
-            result["checks"]["sast_note"] = (
-                f"SAST: {len(sast_result['issues'])} issues encontradas"
-            )
+            result["checks"]["sast_note"] = f"SAST: {len(sast_result['issues'])} issues encontradas"
             logger.warning("[Quarentena] PR %s: SAST encontrou issues.", pr_id)
             result["approved"] = False
             return result

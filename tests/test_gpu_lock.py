@@ -1,7 +1,8 @@
+import os
 import unittest
 from unittest.mock import MagicMock, patch
+
 from scripts.gpu_lock import GPULock, _compute_ttl
-import os
 
 
 class TestGPULock(unittest.TestCase):
@@ -11,9 +12,7 @@ class TestGPULock(unittest.TestCase):
         self.mock_r.get.return_value = b"test-agent"
         self.pod_patch = patch.dict(os.environ, {"POD_NAME": "test-agent"})
         self.pod_patch.start()
-        self.redis_patch = patch(
-            "scripts.gpu_lock._get_redis", return_value=self.mock_r
-        )
+        self.redis_patch = patch("scripts.gpu_lock._get_redis", return_value=self.mock_r)
         self.redis_patch.start()
         self.lock = GPULock(event_key="test-key", poll_interval=0.1)
 

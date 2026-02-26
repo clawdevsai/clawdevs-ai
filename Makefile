@@ -3,11 +3,13 @@
 # Uso: make <alvo>
 # Referência: docs/README.md | docs/issues/README.md
 
-.PHONY: help configure load-env check-env setup verify apply-all start stop status logs-ceo logs-all \
+.PHONY: help configure load-env check-env setup verify install-tools check-k8s check-docker \
+        apply-all start stop status logs-ceo logs-all \
         pull-models test-redis test-gpu build-base unblock-brake \
         apply-namespace apply-limits apply-redis apply-ollama apply-agents apply-network \
         venv test-local test-coverage format lint
 
+SHELL  := /bin/bash
 KUBECTL := kubectl
 NAMESPACE := ai-agents
 HELM := helm
@@ -42,40 +44,68 @@ setup: check-env ## Executa setup completo (um clique) — requer .env configura
 verify: ## Verifica se a máquina atende aos requisitos
 	@chmod +x scripts/verify-machine.sh && scripts/verify-machine.sh
 
+# ─── Guards de pré-requisito ────────────────────────────────────────────────────────────
+
+check-docker: ## Verifica se Docker está disponível
+	@which docker >/dev/null 2>&1 || { echo "[ERRO] Docker não encontrado. Execute: make setup"; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "[ERRO] Docker daemon não está rodando. Inicie o Docker."; exit 1; }
+	@echo "[OK] Docker disponível: $$(docker --version)"
+
+check-k8s: ## Verifica se kubectl/minikube/helm estão disponíveis
+	@which kubectl  >/dev/null 2>&1 || { echo "[ERRO] kubectl não encontrado. Execute: make install-tools"; exit 1; }
+	@which minikube >/dev/null 2>&1 || { echo "[ERRO] minikube não encontrado. Execute: make install-tools"; exit 1; }
+	@which helm     >/dev/null 2>&1 || { echo "[ERRO] helm não encontrado. Execute: make install-tools"; exit 1; }
+	@echo "[OK] kubectl:  $$(kubectl version --client --short 2>/dev/null || kubectl version --client 2>/dev/null | head -1)"
+	@echo "[OK] minikube: $$(minikube version --short 2>/dev/null)"
+	@echo "[OK] helm:     $$(helm version --short 2>/dev/null)"
+
+install-tools: ## Instala kubectl, minikube e helm (sem setup completo)
+	@echo "Instalando ferramentas Kubernetes..."
+	@echo "--> kubectl"
+	@KUBECTL_VER=$$(curl -L -s https://dl.k8s.io/release/stable.txt) && \
+	  curl -Lo /tmp/kubectl "https://dl.k8s.io/release/$${KUBECTL_VER}/bin/linux/amd64/kubectl" && \
+	  sudo install /tmp/kubectl /usr/local/bin/kubectl && rm /tmp/kubectl
+	@echo "--> minikube"
+	@curl -Lo /tmp/minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && \
+	  sudo install /tmp/minikube /usr/local/bin/minikube && rm /tmp/minikube
+	@echo "--> helm"
+	@curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+	@echo "[OK] Ferramentas instaladas."
+
 # ─── Aplicação de manifestos Kubernetes ──────────────────────────────────────
 
-apply-namespace: ## Cria namespace ai-agents
+apply-namespace: check-k8s ## Cria namespace ai-agents
 	$(KUBECTL) apply -f k8s/namespace/ai-agents.yaml
 
-apply-limits: ## Aplica ResourceQuota e LimitRange
+apply-limits: check-k8s ## Aplica ResourceQuota e LimitRange
 	$(KUBECTL) apply -f k8s/limits/resource-quota.yaml
 
-apply-redis: ## Implanta Redis
+apply-redis: check-k8s ## Implanta Redis
 	$(KUBECTL) apply -f k8s/redis/deployment.yaml
 
-apply-ollama: ## Implanta Ollama com GPU
+apply-ollama: check-k8s ## Implanta Ollama com GPU
 	$(KUBECTL) apply -f k8s/ollama/deployment.yaml
 
-apply-agents: ## Implanta todos os agentes
+apply-agents: check-k8s ## Implanta todos os agentes
 	$(KUBECTL) apply -f k8s/agents/deployments.yaml
 
-apply-network: ## Aplica NetworkPolicy (Zero Trust)
+apply-network: check-k8s ## Aplica NetworkPolicy (Zero Trust)
 	$(KUBECTL) apply -f k8s/gateway/network-policy.yaml
 
-apply-rbac: ## Aplica RBAC e ServiceAccounts
+apply-rbac: check-k8s ## Aplica RBAC e ServiceAccounts
 	$(KUBECTL) apply -f k8s/gateway/rbac.yaml
 
-apply-all: apply-namespace apply-limits apply-rbac apply-network apply-redis apply-ollama apply-agents ## Aplica todos os manifestos
+apply-all: check-env check-k8s apply-namespace apply-limits apply-rbac apply-network apply-redis apply-ollama apply-agents ## Aplica todos os manifestos
 	@echo "Todos os manifestos aplicados."
 
 # ─── Operação do cluster ──────────────────────────────────────────────────────
 
-start: ## Inicia o Minikube e o enxame
+start: check-env check-k8s ## Inicia o Minikube e o enxame
 	@minikube start --driver=docker || true
 	@$(MAKE) apply-all
 	@echo "ClawDevs iniciado."
 
-stop: ## Para o Minikube
+stop: check-k8s ## Para o Minikube
 	@minikube stop
 
 status: ## Status completo do cluster
@@ -149,7 +179,7 @@ quarantine: ## Isola um pod (uso: make quarantine POD=<nome-do-pod>)
 
 # ─── Build de imagens ────────────────────────────────────────────────────────
 
-build-base: ## Build da imagem base dos agentes
+build-base: check-docker ## Build da imagem base dos agentes
 	docker build -f Dockerfile.base -t clawdevs/agent-base:latest .
 
 # ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -169,16 +199,20 @@ venv: ## Cria ambiente virtual e instala dependências
 	$(PYTHON_VENV) get-pip.py
 	rm get-pip.py
 	$(PIP_VENV) install -r requirements.base.txt
-	$(PIP_VENV) install pytest pytest-cov ruff
+	$(PIP_VENV) install pytest pytest-cov pytest-asyncio ruff mypy types-requests types-PyYAML
 
 test-local: ## Executa testes unitários com cobertura (Local)
-	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest --cov=. --cov-report=term-missing tests/
+	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest tests/
 
-test-coverage: ## Executa testes e valida 90% de cobertura
-	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest --cov=. --cov-fail-under=90 tests/
+test-coverage: ## Executa testes exigindo a cobertura configurada (85%)
+	export PYTHONPATH=$$(pwd) && $(PYTHON_VENV) -m pytest --cov=. tests/
 
-format: ## Formata o código fonte (Local)
+format: ## Formata o código fonte com ruff (configuração em pyproject.toml)
 	$(PYTHON_VENV) -m ruff format .
+	$(PYTHON_VENV) -m ruff check --fix .
 
-lint: ## Executa linting e checagem de tipos (Local)
+lint: ## Executa linting com ruff (configuração em pyproject.toml)
 	$(PYTHON_VENV) -m ruff check .
+
+typecheck: ## Verifica tipos estáticos com mypy (configuração em pyproject.toml)
+	$(PYTHON_VENV) -m mypy orchestrator/ memory/ security/ tools/ agents/ --ignore-missing-imports

@@ -50,8 +50,14 @@ if [[ ! -f "$_ENV_FILE" ]]; then
   [[ "$_SOURCED" -eq 1 ]] && return 1 || exit 1
 fi
 
-# ─── Carregar variáveis ────────────────────────────────────────────────────────
-if [[ "$_CHECK_ONLY" -eq 0 ]]; then
+# ─── Carregar variáveis (sempre, para validação e para exportação) ─────────────
+# Em --check carregamos em subshell; em modo normal exportamos para o shell atual
+if [[ "$_CHECK_ONLY" -eq 1 ]]; then
+  # Subshell: carrega apenas para validar sem poluir o ambiente
+  _info "Modo --check: validando .env sem exportar variáveis..."
+  # shellcheck disable=SC1090
+  source "$_ENV_FILE" 2>/dev/null || true
+else
   _info "Carregando .env de: $_ENV_FILE"
   set -o allexport
   # shellcheck disable=SC1090
