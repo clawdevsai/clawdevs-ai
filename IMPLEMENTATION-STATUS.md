@@ -79,16 +79,40 @@
 | 052 — Memória Elite (seis camadas) | `memory/hot/elite_memory.py` (6 camadas, KnowledgeCurator) | ✅ |
 | 053 — Habilidades proativas e heartbeat | `orchestrator/gateway/gateway.py` (HeadblessClusterWatchdog) | ✅ |
 
-## Fases 6–11 — Habilidades e Avançado
+## Fase 6 — Habilidades transversais
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 060 — Escrita humanizada (checklist 24 padrões) | `governance/escrita-humanizada.md` | ✅ |
+| 061 — Expertise em documentação (árvore de decisão) | → `docs/18-expertise-documentacao.md` (referência) | 📖 |
+
+## Fase 7 — Ferramentas
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 070 — Ferramentas de browser (agent-browser CLI) | `tools/browser/SKILL.md` | ✅ |
+| 071 — Ferramenta summarize (markitdown) | `tools/summarize/SKILL.md` | ✅ |
+| 072 — Ferramenta GitHub (gh CLI) | `tools/gh/SKILL.md` | ✅ |
+| 073 — Ferramenta Markdown Converter | `tools/markdown_converter/SKILL.md` | ✅ |
+| 074 — Ollama Local Skill (gestão + GPU Lock) | `tools/ollama_skill/SKILL.md` | ✅ |
+| 075 — OpenCode Controller (Plan/Build) | `tools/opencode/SKILL.md` | ✅ |
+
+## Fase 8 — Skills e ambiente
+
+| Issue | Arquivo Implementado | Status |
+|-------|---------------------|--------|
+| 090 — Descoberta e instalação de skills (Zero Trust) | `skills/skill-discovery/SKILL.md` | ✅ |
+| 091 — Criação de skills (anatomia, 6 passos) | `skills/skill-creation/SKILL.md` | ✅ |
+| 092 — Auto-atualização do ambiente | `scripts/auto-update.sh`, `k8s/devops/cronjob-auto-update.yaml` | ✅ |
+| 093 — Modelos gratuitos OpenRouter (FreeRide) | `skills/freeride/SKILL.md` | ✅ |
+
+## Fases 9–11 — Integrações e Avançado
 
 | Fase | Status | Próximos passos |
 |------|--------|----------------|
-| 6 — Escrita humanizada, docs | 📖 Documentado | Implementar como habilidade nos prompts dos agentes |
-| 7 — Browser, summarize, gh CLI, OpenCode | 🔲 A criar | Criar skills em `tools/` |
-| 8 — Skills: descoberta, criação, FreeRide | 🔲 A criar | Criar skills em `skills/` |
-| 9 — API Gateway, Exa, watchlist | 🔲 A criar | Criar integrações em `tools/` |
-| 10 — Frontend/UX | 🔲 A criar | Implementar componentes UX |
-| 11 — War Room, Chaos, GPU avançado | 🔲 A criar | Implementar dashboard e chaos engineering |
+| 9 — API Gateway (Maton), Exa Search, watchlist | 🔲 A implementar | Criar integrações em `tools/` |
+| 10 — Frontend/UX Pro Max | 🔲 A implementar | Implementar via Agent UX + agent-browser |
+| 11 — War Room, Chaos Engineering, GPU avançado | 🔲 A implementar | Dashboard + chaos engineering |
 
 ---
 
@@ -101,4 +125,4 @@
 ---
 
 *Atualizado em: 2026-02-25*  
-*Total de issues implementadas: 35/59 (Fase 0–5 completa)*
+*Total de issues implementadas: 53/59 (Fases 0–8 completas)*
