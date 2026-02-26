@@ -56,6 +56,10 @@ up:
 		echo "==> Aplicando secret Ollama Cloud (k8s/ollama/secret.yaml)..."; \
 		kubectl apply -f $(K8S_DIR)/ollama/secret.yaml; \
 		kubectl rollout restart deployment/ollama-gpu -n ai-agents --timeout=60s 2>/dev/null || true; \
+	fi
+	@if [ -f $(K8S_DIR)/ollama/secret.yaml ]; then \
+		echo "==> Ollama Cloud: exige confirmação de login (link no navegador) antes de continuar..."; \
+		$(CURDIR)/scripts/ollama-ensure-cloud-auth.sh; \
 	else \
 		echo "==> Secret Ollama Cloud não encontrado (opcional). Para glm-5:cloud: cp k8s/ollama/secret.yaml.example k8s/ollama/secret.yaml e preencha OLLAMA_API_KEY"; \
 	fi
