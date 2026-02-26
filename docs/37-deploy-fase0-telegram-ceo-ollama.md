@@ -35,6 +35,16 @@ ollama pull stewyphoenix19/phi3-mini_v1:latest
 kill %1
 ```
 
+### 2.1. Ollama Cloud (modelos glm-5:cloud etc.) — login obrigatório no `make up`
+
+Se existir `k8s/ollama/secret.yaml` (com `OLLAMA_API_KEY`), o **`make up`** aplica o secret e em seguida **exige** que você conclua o login no Ollama Cloud antes de continuar:
+
+1. O script `scripts/ollama-ensure-cloud-auth.sh` verifica se o pod já está autenticado (teste com um modelo cloud).
+2. Se **já autenticado** (credenciais no volume do pod): nada é pedido e o fluxo segue.
+3. Se **não autenticado**: é exibido um link `https://ollama.com/connect?name=...&key=...`. Você deve **abrir o link no navegador**, fazer login em ollama.com (se precisar) e autorizar o dispositivo. Em seguida **pressionar ENTER** no terminal para o `make up` continuar (OpenClaw, etc.).
+
+A autenticação fica gravada no volume do Ollama (`/root/.ollama`); nos próximos `make up` o script detecta que já está autenticado e não pede o link de novo. Para gerar um novo link manualmente: `./scripts/ollama-signin.sh`.
+
 ## 3. Secret Telegram (obrigatório)
 
 **Não** commitar `secret.yaml` com valores reais. Criar o secret manualmente:
