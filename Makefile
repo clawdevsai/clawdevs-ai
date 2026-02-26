@@ -52,6 +52,13 @@ up:
 	kubectl apply -f $(K8S_DIR)/redis/deployment.yaml
 	@echo "==> Aplicando Ollama..."
 	kubectl apply -f $(K8S_DIR)/ollama/deployment.yaml
+	@if [ -f $(K8S_DIR)/ollama/secret.yaml ]; then \
+		echo "==> Aplicando secret Ollama Cloud (k8s/ollama/secret.yaml)..."; \
+		kubectl apply -f $(K8S_DIR)/ollama/secret.yaml; \
+		kubectl rollout restart deployment/ollama-gpu -n ai-agents --timeout=60s 2>/dev/null || true; \
+	else \
+		echo "==> Secret Ollama Cloud não encontrado (opcional). Para glm-5:cloud: cp k8s/ollama/secret.yaml.example k8s/ollama/secret.yaml e preencha OLLAMA_API_KEY"; \
+	fi
 	@echo "==> Aplicando OpenClaw (ConfigMap + Workspace CEO + Deployment)..."
 	kubectl apply -f $(K8S_DIR)/openclaw/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
