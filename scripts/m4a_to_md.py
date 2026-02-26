@@ -8,11 +8,10 @@ Referência: docs/issues/009-transcricao-audio-m4a-to-md.md | docs/scripts/m4a_t
 
 import argparse
 import os
+from pathlib import Path
 import sys
 import time
 import warnings
-from pathlib import Path
-from typing import Optional
 
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
 warnings.filterwarnings("ignore")
@@ -22,7 +21,7 @@ PT_BR_PROMPT = "Transcrição em português do Brasil. Texto em português brasi
 
 def transcrever_audio(
     m4a_path: str,
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
     model: str = "base",
     device: str = "auto",
 ) -> str:
@@ -100,9 +99,7 @@ def main():
         description="ClawDevs — Transcreve áudio M4A para Markdown (offline, PT-BR)"
     )
     parser.add_argument("arquivo", help="Arquivo M4A de entrada")
-    parser.add_argument(
-        "-o", "--output", help="Arquivo MD de saída (padrão: mesmo nome do áudio)"
-    )
+    parser.add_argument("-o", "--output", help="Arquivo MD de saída (padrão: mesmo nome do áudio)")
     parser.add_argument(
         "-m",
         "--model",

@@ -6,11 +6,10 @@ Importar nos agentes locais (Developer, QA, Architect, CyberSec, UX) antes de ch
 Referência: docs/scripts/gpu_lock.md | docs/issues/006-gpu-lock-script.md
 """
 
+from contextlib import contextmanager
+import logging
 import os
 import time
-import logging
-from contextlib import contextmanager
-from typing import Optional
 
 logger = logging.getLogger("clawdevs.gpu_lock")
 
@@ -27,7 +26,7 @@ def _get_redis():
         raise RuntimeError("Instale redis: pip install redis")
 
 
-def _compute_ttl(r, event_key: Optional[str]) -> int:
+def _compute_ttl(r, event_key: str | None) -> int:
     """Calcula TTL em segundos com base no payload do evento no Redis.
     Payload > 500 linhas → 120s (PR grande / Architect); senão → 60s (padrão).
     """
@@ -43,9 +42,7 @@ def _compute_ttl(r, event_key: Optional[str]) -> int:
         logger.debug("GPU Lock TTL calculado: %ds (payload=%d linhas)", ttl, line_count)
         return ttl
     except Exception as exc:
-        logger.warning(
-            "Erro ao calcular TTL dinâmico: %s — usando padrão %ds", exc, default_ttl
-        )
+        logger.warning("Erro ao calcular TTL dinâmico: %s — usando padrão %ds", exc, default_ttl)
         return default_ttl
 
 
@@ -67,10 +64,10 @@ class GPULock:
 
     LOCK_KEY = "gpu_active_lock"
 
-    def __init__(self, event_key: Optional[str] = None, poll_interval: float = 1.0):
+    def __init__(self, event_key: str | None = None, poll_interval: float = 1.0):
         self.r = _get_redis()
         self.agent_name = os.getenv("POD_NAME", "unknown-agent")
-        self.event_key: Optional[str] = event_key or os.getenv("GPU_LOCK_EVENT_KEY")
+        self.event_key: str | None = event_key or os.getenv("GPU_LOCK_EVENT_KEY")
         self.poll_interval = poll_interval
         self._acquired = False
 
@@ -110,7 +107,7 @@ class GPULock:
 
 
 @contextmanager
-def gpu_lock(event_key: Optional[str] = None):
+def gpu_lock(event_key: str | None = None):
     """Context manager funcional para GPU Lock."""
     lock = GPULock(event_key=event_key)
     lock.acquire()

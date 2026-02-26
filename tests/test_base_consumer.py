@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 from orchestrator.consumers.base_consumer import BaseConsumer
 
 
@@ -21,9 +22,7 @@ class MockConsumer(BaseConsumer):
 class TestBaseConsumer(unittest.TestCase):
     def setUp(self):
         self.mock_r = MagicMock()
-        with patch(
-            "orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r
-        ):
+        with patch("orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r):
             with patch("signal.signal"):
                 self.consumer = MockConsumer(
                     stream_name="test-stream",
@@ -90,22 +89,16 @@ class TestBaseConsumer(unittest.TestCase):
         self.mock_r.xack.assert_not_called()
 
     def test_base_consumer_ack_call(self):
-        with patch(
-            "orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r
-        ):
+        with patch("orchestrator.consumers.base_consumer._get_redis", return_value=self.mock_r):
             with patch("signal.signal"):
-                consumer = MockConsumer(
-                    stream_name="test", consumer_group="cg", consumer_name="c"
-                )
+                consumer = MockConsumer(stream_name="test", consumer_group="cg", consumer_name="c")
                 consumer.ack("msg123")
                 self.mock_r.xack.assert_called()
 
     def test_base_consumer_stop_call(self):
         with patch("orchestrator.consumers.base_consumer._get_redis"):
             with patch("signal.signal"):
-                consumer = MockConsumer(
-                    stream_name="test", consumer_group="cg", consumer_name="c"
-                )
+                consumer = MockConsumer(stream_name="test", consumer_group="cg", consumer_name="c")
                 consumer.stop()
                 self.assertFalse(consumer._running)
 

@@ -10,14 +10,13 @@ Referências:
   docs/03-arquitetura.md (Stream de eventos, Semântica idempotente)
 """
 
-import os
-import time
-import logging
+from abc import ABC, abstractmethod
 import json
+import logging
+import os
 import signal
 import sys
-from abc import ABC, abstractmethod
-from typing import Optional
+import time
 
 logger = logging.getLogger("clawdevs.consumer")
 
@@ -46,20 +45,16 @@ class BaseConsumer(ABC):
 
     def __init__(
         self,
-        stream_name: Optional[str] = None,
-        consumer_group: Optional[str] = None,
-        consumer_name: Optional[str] = None,
+        stream_name: str | None = None,
+        consumer_group: str | None = None,
+        consumer_name: str | None = None,
     ):
         self.r = _get_redis()
-        self.stream_name = stream_name or os.getenv(
-            "REDIS_STREAM_INPUT", "task:backlog"
-        )
+        self.stream_name = stream_name or os.getenv("REDIS_STREAM_INPUT", "task:backlog")
         self.consumer_group = consumer_group or os.getenv(
             "REDIS_CONSUMER_GROUP", f"cg-{self.AGENT_NAME.lower()}"
         )
-        self.consumer_name = consumer_name or os.getenv(
-            "POD_NAME", f"{self.AGENT_NAME.lower()}-0"
-        )
+        self.consumer_name = consumer_name or os.getenv("POD_NAME", f"{self.AGENT_NAME.lower()}-0")
         self.output_stream = os.getenv("REDIS_STREAM_OUTPUT", "")
         self._running = True
         self._ensure_group()
@@ -110,11 +105,7 @@ class BaseConsumer(ABC):
                 "0-0",
                 count=5,
             )
-            messages = (
-                result[1]
-                if isinstance(result, (list, tuple)) and len(result) > 1
-                else []
-            )
+            messages = result[1] if isinstance(result, (list, tuple)) and len(result) > 1 else []
             if messages:
                 logger.info(
                     "[%s] Reclamando %d mensagens pendentes.",
@@ -151,9 +142,7 @@ class BaseConsumer(ABC):
                         block=self.BLOCK_MS,
                     )
                     if result:
-                        messages = result[0][
-                            1
-                        ]  # [(stream_name, [(msg_id, data), ...])]
+                        messages = result[0][1]  # [(stream_name, [(msg_id, data), ...])]
                 except Exception as e:
                     logger.error("[%s] Erro ao ler stream: %s", self.AGENT_NAME, e)
                     time.sleep(5)
@@ -170,9 +159,7 @@ class BaseConsumer(ABC):
                     # ACK apenas APÓS conclusão bem-sucedida em disco
                     # (Semântica idempotente: Issue 005)
                     self.r.xack(self.stream_name, self.consumer_group, msg_id)
-                    logger.info(
-                        "[%s] Evento %s confirmado (ACK).", self.AGENT_NAME, msg_id
-                    )
+                    logger.info("[%s] Evento %s confirmado (ACK).", self.AGENT_NAME, msg_id)
                 except Exception as exc:
                     logger.error(
                         "[%s] Erro no processamento do evento %s: %s. "
@@ -194,31 +181,25 @@ class BaseConsumer(ABC):
     def publish(self, stream: str, data: dict) -> str:
         """Publica evento em outro stream."""
         msg_id = self.r.xadd(stream, data)
-        logger.debug(
-            "[%s] Evento publicado em '%s': %s", self.AGENT_NAME, stream, msg_id
-        )
+        logger.debug("[%s] Evento publicado em '%s': %s", self.AGENT_NAME, stream, msg_id)
         return msg_id
 
-    def get_state(self, key: str) -> Optional[str]:
+    def get_state(self, key: str) -> str | None:
         """Lê estado do 'blackboard' global (Redis chaves)."""
         return self.r.get(key)
 
-    def set_state(
-        self, key: str, value: str, ttl_seconds: Optional[int] = None
-    ) -> None:
+    def set_state(self, key: str, value: str, ttl_seconds: int | None = None) -> None:
         """Grava estado no blackboard. TTL automático para working buffer."""
         if ttl_seconds:
             self.r.setex(key, ttl_seconds, value)
         else:
             self.r.set(key, value)
 
-    def set_state_json(
-        self, key: str, data: dict, ttl_seconds: Optional[int] = 86400
-    ) -> None:
+    def set_state_json(self, key: str, data: dict, ttl_seconds: int | None = 86400) -> None:
         """Grava estado JSON com TTL padrão de 24h (working buffer)."""
         self.set_state(key, json.dumps(data), ttl_seconds=ttl_seconds)
 
-    def get_state_json(self, key: str) -> Optional[dict]:
+    def get_state_json(self, key: str) -> dict | None:
         """Lê estado JSON do blackboard."""
         value = self.get_state(key)
         if value:

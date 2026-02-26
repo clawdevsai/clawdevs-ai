@@ -104,10 +104,19 @@ install_docker() {
     ok "Docker já instalado: $(docker --version)"
     return
   fi
-  info "Instalando Docker..."
-  curl -fsSL https://get.docker.com | sudo sh
+  info "Instalando Docker (repositório oficial)..."
+  sudo install -m 0755 -d /etc/apt/keyrings
+  sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  sudo chmod a+r /etc/apt/keyrings/docker.asc
+  # Pop!_OS usa repositórios ubuntu nativamente. $(lsb_release -cs) deve voltar jammy ou o nome compatível.
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
   sudo usermod -aG docker "$USER"
-  ok "Docker instalado. (Pode ser necessário fazer logout/login para efeito do grupo docker)"
+  ok "Docker instalado. (Faça logout/login depois para grupos entrarem em vigor)"
 }
 install_docker
 
@@ -152,10 +161,11 @@ install_kubectl() {
     return
   fi
   info "Instalando kubectl..."
-  KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-  curl -Lo /tmp/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
-  sudo install /tmp/kubectl /usr/local/bin/kubectl
-  rm /tmp/kubectl
+  sudo curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq kubectl
   ok "kubectl instalado."
 }
 install_kubectl
@@ -167,7 +177,11 @@ install_helm() {
     return
   fi
   info "Instalando Helm..."
-  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  curl https://baltocdn.com/helm/signing.asc | sudo gpg --dearmor -o /usr/share/keyrings/helm.gpg
+  sudo apt-get install apt-transport-https --yes
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq helm
   ok "Helm instalado."
 }
 install_helm

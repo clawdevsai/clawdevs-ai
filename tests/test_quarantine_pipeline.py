@@ -1,16 +1,17 @@
-import unittest
-from unittest.mock import patch
-from security.sandbox.quarantine_pipeline import (
-    TrustMatrix,
-    EntropyAnalyzer,
-    SASTScanner,
-    QuarantinePipeline,
-    _compute_entropy,
-)
 import os
+from pathlib import Path
 import shutil
 import tempfile
-from pathlib import Path
+import unittest
+from unittest.mock import patch
+
+from security.sandbox.quarantine_pipeline import (
+    EntropyAnalyzer,
+    QuarantinePipeline,
+    SASTScanner,
+    TrustMatrix,
+    _compute_entropy,
+)
 
 
 class TestQuarantinePipeline(unittest.TestCase):
@@ -87,16 +88,12 @@ class TestQuarantinePipeline(unittest.TestCase):
         self.assertTrue(res1["approved"])
 
         # Verified signature (mocked)
-        with patch.object(
-            pipeline.trust_matrix, "verify_npm_package", return_value=True
-        ):
+        with patch.object(pipeline.trust_matrix, "verify_npm_package", return_value=True):
             res2 = pipeline.scan_package("express", "4.17.1")
             self.assertTrue(res2["approved"])
 
         # Untrusted/Unsigned
-        with patch.object(
-            pipeline.trust_matrix, "verify_npm_package", return_value=False
-        ):
+        with patch.object(pipeline.trust_matrix, "verify_npm_package", return_value=False):
             res3 = pipeline.scan_package("unknown-pkg", "1.0.0")
             self.assertFalse(res3["approved"])
             self.assertTrue(res3["requires_human_review"])

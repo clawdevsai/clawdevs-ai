@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
+
 from orchestrator.gateway.balancer import DynamicBalancer
 
 
@@ -46,15 +47,9 @@ class TestBalancer(unittest.TestCase):
             self.assertEqual(self.balancer.decide_placement(role), expected)
 
     def test_get_model_for_tier(self):
-        self.assertIn(
-            "gemini-2.0-pro", self.balancer.get_model_for_tier("cloud", "CEO")
-        )
-        self.assertIn(
-            "deepseek-coder", self.balancer.get_model_for_tier("gpu", "Developer")
-        )
-        self.assertEqual(
-            "ollama/phi3:mini", self.balancer.get_model_for_tier("cpu", "UX")
-        )
+        self.assertIn("gemini-2.0-pro", self.balancer.get_model_for_tier("cloud", "CEO"))
+        self.assertIn("deepseek-coder", self.balancer.get_model_for_tier("gpu", "Developer"))
+        self.assertEqual("ollama/phi3:mini", self.balancer.get_model_for_tier("cpu", "UX"))
 
 
 if __name__ == "__main__":

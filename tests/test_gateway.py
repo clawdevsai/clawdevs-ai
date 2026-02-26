@@ -1,15 +1,16 @@
+import time
 import unittest
 from unittest.mock import MagicMock, patch
+
 from orchestrator.gateway.gateway import (
-    Gateway,
-    TokenBucket,
-    EfficiencyDegradation,
     ContextTruncator,
     DegradationBudget,
+    EfficiencyDegradation,
+    Gateway,
     HeadblessClusterWatchdog,
+    TokenBucket,
     VFMScore,
 )
-import time
 
 
 class TestGateway(unittest.TestCase):

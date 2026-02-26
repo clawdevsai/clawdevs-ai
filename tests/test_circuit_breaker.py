@@ -1,13 +1,14 @@
+import os
+from pathlib import Path
+import shutil
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
+
 from orchestrator.consumers.circuit_breaker import (
     DraftRejectedCircuitBreaker,
     RAGHealthCheck,
 )
-from pathlib import Path
-import tempfile
-import shutil
-import os
 
 
 class TestCircuitBreaker(unittest.TestCase):
@@ -90,9 +91,7 @@ class TestRAGHealthCheck(unittest.TestCase):
             mock_run.return_value.stdout = ""
             # No dirs created except the ones in setUp (docs/ and workspace/docs)
             results = rag.run("epic-2")
-            self.assertEqual(
-                results["checks"]["workspace_structure"]["status"], "incomplete"
-            )
+            self.assertEqual(results["checks"]["workspace_structure"]["status"], "incomplete")
             self.assertIn(
                 "orchestrator/",
                 results["checks"]["workspace_structure"]["missing_dirs"],

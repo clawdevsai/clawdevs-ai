@@ -1,20 +1,20 @@
-import os
-import tempfile
-from pathlib import Path
-import unittest
-import json
-from unittest.mock import MagicMock, patch
 from datetime import datetime
+import json
+import os
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import MagicMock, patch
 
 # Import here, it will use dynamic get_memory_base
 from memory.hot.elite_memory import (
-    ELITEMemory,
-    WALProtocol,
-    HotRAMStore,
-    WarmStore,
     ColdStore,
+    ELITEMemory,
+    HotRAMStore,
     KnowledgeCurator,
     MemoryMarkdown,
+    WALProtocol,
+    WarmStore,
 )
 
 
@@ -79,9 +79,7 @@ class TestEliteMemory(unittest.TestCase):
 
         # microADR - weak rationale
         with self.assertRaises(ValueError):
-            store.create_adr(
-                "ADR-002", "Title", "Decision", "parece melhor", "None", "Architect"
-            )
+            store.create_adr("ADR-002", "Title", "Decision", "parece melhor", "None", "Architect")
 
         adrs = store.list_adrs()
         self.assertEqual(len(adrs), 1)
@@ -125,9 +123,7 @@ class TestEliteMemory(unittest.TestCase):
 
         mock_r = MagicMock()
         mock_r.get.side_effect = [True, False]  # brake, recovery
-        mock_r.lrange.return_value = [
-            json.dumps({"timestamp": "12:00", "decision": "Fixed typo"})
-        ]
+        mock_r.lrange.return_value = [json.dumps({"timestamp": "12:00", "decision": "Fixed typo"})]
 
         warm.create_adr("ADR-001", "T", "D", "Rationale with metrics", "C", "A")
 

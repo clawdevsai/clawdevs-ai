@@ -12,13 +12,13 @@ Referências:
   docs/03-arquitetura.md (Disjuntor)
 """
 
-import os
-import json
-import time
-import logging
-from pathlib import Path
-from typing import Optional
 from datetime import datetime
+import json
+import logging
+import os
+from pathlib import Path
+import time
+
 import redis as r_lib
 
 logger = logging.getLogger("clawdevs.circuit_breaker")
@@ -186,13 +186,9 @@ class RAGHealthCheck:
     Objetivo: sanear o contexto antes de descongelar o épico.
     """
 
-    def __init__(
-        self, docs_dir: Optional[Path] = None, workspace_dir: Optional[Path] = None
-    ):
+    def __init__(self, docs_dir: Path | None = None, workspace_dir: Path | None = None):
         self.docs_dir = docs_dir or Path(os.getenv("DOCS_DIR", "/app/docs"))
-        self.workspace_dir = workspace_dir or Path(
-            os.getenv("WORKSPACE_DIR", "/workspace")
-        )
+        self.workspace_dir = workspace_dir or Path(os.getenv("WORKSPACE_DIR", "/workspace"))
 
     def run(self, epic_id: str) -> dict:
         """Executa health check determinístico. Retorna contexto saneado."""
@@ -257,9 +253,7 @@ class RAGHealthCheck:
             "missing_dirs": missing,
         }
 
-    def _build_sanitized_context(
-        self, epic_id: str, freshness: dict, structure: dict
-    ) -> str:
+    def _build_sanitized_context(self, epic_id: str, freshness: dict, structure: dict) -> str:
         """Constrói contexto saneado para o PO retentar o rascunho."""
         context_lines = [
             f"# Contexto Saneado para Épico: {epic_id}",
@@ -270,9 +264,7 @@ class RAGHealthCheck:
             f"- Estrutura do workspace: {structure.get('status', 'desconhecido')}",
         ]
         if structure.get("missing_dirs"):
-            context_lines.append(
-                f"- Pastas ausentes: {', '.join(structure['missing_dirs'])}"
-            )
+            context_lines.append(f"- Pastas ausentes: {', '.join(structure['missing_dirs'])}")
         context_lines.extend(
             [
                 "",

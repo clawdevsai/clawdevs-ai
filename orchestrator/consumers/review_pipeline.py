@@ -15,10 +15,10 @@ Referências:
   docs/03-arquitetura.md (Estágio pré-GPU, Batching de PRs)
 """
 
+import json
+import logging
 import os
 import time
-import logging
-import json
 
 logger = logging.getLogger("clawdevs.review_pipeline")
 
@@ -60,9 +60,7 @@ class PreGPUValidator:
             if json_match:
                 return json.loads(json_match.group())
         except Exception as e:
-            logger.warning(
-                "Validação pré-GPU falhou (%s). Deixando passar para GPU.", e
-            )
+            logger.warning("Validação pré-GPU falhou (%s). Deixando passar para GPU.", e)
         return {"valid": True, "issues": []}  # Fail open para não travar esteira
 
 
@@ -76,9 +74,7 @@ class BatchingBuffer:
 
     def __init__(self, r, max_batch_size: int = 5, max_wait_seconds: int = 120):
         self.r = r
-        self.batch_key = (
-            f"{self.BATCH_KEY_PREFIX}:{os.getenv('AGENT_NAMESPACE', 'default')}"
-        )
+        self.batch_key = f"{self.BATCH_KEY_PREFIX}:{os.getenv('AGENT_NAMESPACE', 'default')}"
         self.max_size = int(os.getenv("BATCH_MAX_SIZE", str(max_batch_size)))
         self.max_wait = int(os.getenv("BATCH_MAX_WAIT_SECONDS", str(max_wait_seconds)))
 
@@ -139,8 +135,9 @@ class ReviewPipeline:
     RESULT_STREAM = "review:result"
 
     def __init__(self):
-        from orchestrator.consumers.base_consumer import _get_redis
         from scripts.gpu_lock import GPULock
+
+        from orchestrator.consumers.base_consumer import _get_redis
 
         self.r = _get_redis()
         self.GPULock = GPULock
@@ -201,9 +198,7 @@ class ReviewPipeline:
             )
 
             # Architect
-            results["reviews"]["architect"] = self._run_architect(
-                pr_id, diff_content, issue_id
-            )
+            results["reviews"]["architect"] = self._run_architect(pr_id, diff_content, issue_id)
 
             # QA (apenas se Architect aprovado)
             if results["reviews"]["architect"].get("approved"):
