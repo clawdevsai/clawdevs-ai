@@ -4,7 +4,7 @@ K8S_DIR := k8s
 MINIKUBE_CPUS ?= 10
 MINIKUBE_MEMORY ?= 20g
 
-.PHONY: prepare up down openclaw-image verify revisao-slot-configmap acefalo-configmap
+.PHONY: prepare up down openclaw-image verify revisao-slot-configmap acefalo-configmap up-management developer-configmap
 
 # 1. prepare: instala Docker e Minikube com suporte a GPU
 prepare:
@@ -72,6 +72,8 @@ up: openclaw-image
 	kubectl apply -f $(K8S_DIR)/openclaw/configmap.yaml
 	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
 	kubectl apply -f $(K8S_DIR)/openclaw/deployment.yaml
+	@echo "==> Aplicando SOUL por agente (Fase 1 — 011)..."
+	kubectl apply -f $(K8S_DIR)/soul/configmap.yaml
 	@if [ -f $(K8S_DIR)/openclaw/secret.yaml ]; then \
 		echo "==> Aplicando secret Telegram (k8s/openclaw/secret.yaml)..."; \
 		kubectl apply -f $(K8S_DIR)/openclaw/secret.yaml; \
@@ -82,6 +84,30 @@ up: openclaw-image
 	@echo "==> up concluído."
 	@echo "  Envie mensagem ao ClawDev bot no Telegram; a resposta vem do Ollama no cluster."
 	@echo "  Ollama: puxe o modelo do CEO se necessário: kubectl exec -n ai-agents deploy/ollama-gpu -- ollama pull stewyphoenix19/phi3-mini_v1:latest"
+	@echo "  Opcional (Fase 1 — 012): para topologia CEO/PO apenas: make up-management (e scale deployment openclaw a 0 para evitar dois gateways Telegram)."
+
+# Pods CEO e PO apenas (Fase 1 — 012). Usa mesma imagem openclaw-gateway:local e secret Telegram.
+# Se usar este target, scale o gateway único a 0 para não ter dois listeners Telegram: kubectl scale deployment openclaw -n ai-agents --replicas=0
+up-management:
+	@echo "==> Aplicando Management Team (CEO, PO)..."
+	kubectl apply -f $(K8S_DIR)/openclaw/workspace-ceo-configmap.yaml
+	kubectl apply -f $(K8S_DIR)/management-team/configmap.yaml
+	kubectl apply -f $(K8S_DIR)/management-team/deployment.yaml
+	@if [ -f $(K8S_DIR)/openclaw/secret.yaml ]; then \
+		echo "==> Secret Telegram já existe (openclaw)."; \
+	else \
+		echo "==> Crie o secret: kubectl create secret generic openclaw-telegram -n ai-agents --from-literal=TELEGRAM_BOT_TOKEN=... --from-literal=TELEGRAM_CHAT_ID=..."; \
+	fi
+	@echo "==> up-management concluído. Gateway CEO/PO: deploy/openclaw-management."
+
+# ConfigMap dos scripts do pod Developer (013). Necessário para deployment developer.
+developer-configmap:
+	@echo "==> Criando ConfigMap developer-scripts..."
+	@kubectl create configmap developer-scripts -n ai-agents \
+	  --from-file=developer_worker.py=scripts/developer_worker.py \
+	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "==> developer-configmap concluído. Aplique k8s/developer/ (PVC + deployment)."
 
 # Build da imagem OpenClaw para o Minikube (obrigatório antes do pod openclaw subir com o gateway real)
 openclaw-image:

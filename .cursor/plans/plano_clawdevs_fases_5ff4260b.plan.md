@@ -34,10 +34,34 @@ todos:
     status: completed
   - id: fase1-soul-pods
     content: Fase 1 — SOUL e pods para todos os agentes (010–019); pods CEO/PO nuvem; pods técnicos 100% offline.
-    status: pending
+    status: completed
   - id: fase1-fluxo-e2e
     content: Fase 1 — Fluxo evento-driven mínimo (CEO→PO→backlog) e exemplo E2E Operação 2FA (016).
-    status: pending
+    status: completed
+  - id: fase1-010
+    content: "Fase 1 — 010: Definição canônica dos 8 agentes e tabela de conflitos (02-agentes)."
+    status: completed
+  - id: fase1-011
+    content: "Fase 1 — 011: SOUL montado em OpenClaw (ConfigMap soul-agents em /workspace/soul)."
+    status: completed
+  - id: fase1-012
+    content: "Fase 1 — 012: make up-management (CEO/PO)."
+    status: completed
+  - id: fase1-013
+    content: "Fase 1 — 013: Pod Developer (k8s/developer/, PVC, GPU Lock, make developer-configmap)."
+    status: completed
+  - id: fase1-014
+    content: "Fase 1 — 014: Slot revisão documentado (Architect/QA/CyberSec/DBA)."
+    status: completed
+  - id: fase1-015
+    content: "Fase 1 — 015: CODE_OF_CONDUCT.md."
+    status: completed
+  - id: fase1-016
+    content: "Fase 1 — 016: Doc 42 fluxo E2E Operação 2FA."
+    status: completed
+  - id: fase1-017
+    content: "Fase 1 — 017: Doc 43 autonomia nível 4 e matriz de escalonamento."
+    status: completed
 isProject: false
 ---
 
@@ -64,7 +88,7 @@ isProject: false
 - **Makefile:** `make prepare` (Docker, kubectl, Minikube GPU), `make up` (namespace, Redis, Ollama, llm-providers, OpenClaw com workspace CEO e todos os agentes em Ollama-GPU, secrets opcionais), `make down` (estaca zero), `make verify` (scripts em docs/scripts), `make openclaw-image` (build da imagem gateway).
 - **k8s:** namespace, [k8s/redis/](k8s/redis/), [k8s/ollama/](k8s/ollama/) (Ollama GPU), [k8s/llm-providers-configmap.yaml](k8s/llm-providers-configmap.yaml) (provedor LLM por agente), [k8s/management-team/](k8s/management-team/) (CEO, PO), [k8s/development-team/](k8s/development-team/) (time técnico), [k8s/governance-team/](k8s/governance-team/) (Governance Proposer), [k8s/openclaw/](k8s/openclaw/) (gateway Fase 0, todos os agentes Ollama-GPU). **Presente:** ResourceQuota/LimitRange (004), Redis Streams e estado global (005): [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md), [k8s/redis/streams-configmap.yaml](k8s/redis/streams-configmap.yaml), [scripts/redis-streams-init.sh](scripts/redis-streams-init.sh), [k8s/redis/job-init-streams.yaml](k8s/redis/job-init-streams.yaml). **Presente:** GPU Lock em [scripts/gpu_lock.py](scripts/gpu_lock.py) (006), hard timeout em 04/06 e [k8s/gpu-lock-hard-timeout-example.yaml](k8s/gpu-lock-hard-timeout-example.yaml). **Presente:** Consumer groups (007) e slot único Revisão pós-Dev (125): [docs/39-consumer-groups-pipeline-revisao.md](docs/39-consumer-groups-pipeline-revisao.md), [k8s/revisao-pos-dev/](k8s/revisao-pos-dev/), [scripts/slot_revisao_pos_dev.py](scripts/slot_revisao_pos_dev.py). **Presente:** 009 transcrição validada (setup + doc 09); 001/003/008 validados ([docs/issues/validacao-fase0-001-003-008.md](docs/issues/validacao-fase0-001-003-008.md)); 124 contingência cluster acéfalo ([docs/40-contingencia-cluster-acefalo.md](docs/40-contingencia-cluster-acefalo.md), scripts acefalo_*.py, make acefalo-configmap). **Ausente:** consumidores agentes completos (Fase 1).
 - **Scripts:** `docs/scripts/verify-machine.sh`, `verify-gpu-cluster.sh`; `scripts/ollama-ensure-cloud-auth.sh`, `run-openclaw-telegram-ollama.sh`; **scripts/setup.sh** (setup um clique — 002) e **scripts/m4a_to_md.py** (transcrição). Conforme [docs/issues/002-setup-um-clique.md](docs/issues/002-setup-um-clique.md) e [09-setup-e-scripts.md](docs/09-setup-e-scripts.md).
-- **Conclusão:** A **Fase 0 está concluída**: 001–009 (validados), 124 (contingência acéfalo), 125 (slot único). CEO via Telegram + Ollama no K8s operacional (doc 37 + Makefile). Próximo passo: **Fase 1** (SOUL, pods agentes, fluxo E2E).
+- **Conclusão:** Fase 0 concluída. **Fase 1 implementada (ordem 010→017):** 010 definição + tabela conflitos (02-agentes); 011 SOUL montado em openclaw (/workspace/soul), ConfigMap soul-agents; 012 make up-management (CEO/PO); 013 pod Developer (k8s/developer/, PVC, GPU Lock, make developer-configmap); 014 slot revisão documentado como Architect/QA/CyberSec/DBA; 015 CODE_OF_CONDUCT.md; 016 doc 42 E2E 2FA; 017 doc 43 autonomia nível 4 e matriz. Ref: [docs/41-fase1-agentes-soul-pods.md](docs/41-fase1-agentes-soul-pods.md).
 
 ---
 

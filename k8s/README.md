@@ -12,6 +12,7 @@ Estrutura por times e integração com **Ollama GPU** por padrão. Provedor de L
 | **governance-team/** | Governance Proposer — config e deployment (CPU, sessão isolada). |
 | **redis/** | Redis (deployment, service), **streams-configmap.yaml** (nomes dos streams e chaves), **job-init-streams.yaml** (opcional, cria consumer groups). Ref: [docs/38-redis-streams-estado-global.md](docs/38-redis-streams-estado-global.md). |
 | **openclaw/** | Gateway único (Fase 0): Dockerfile, entrypoint, configmap com todos os agentes, deployment. |
+| **developer/** | Pod Developer (Fase 1 — 013): PVC workspace, consumer task:backlog, GPU Lock. `make developer-configmap` + `kubectl apply -f developer/`. |
 | **limits.yaml** | ResourceQuota (65% hardware) e LimitRange por container (Fase 0 — 004). |
 
 ## Ordem de apply (Fase 0)
@@ -38,7 +39,7 @@ ConfigMap `clawdevs-llm-providers`: chaves `agent_ceo`, `agent_po`, `agent_devop
 
 ## Layout por time
 
-- **Management (CEO, PO):** servem Telegram; podem usar Ollama GPU ou nuvem. Config e deployment alternativos em `management-team/`.
+- **Management (CEO, PO):** servem Telegram; podem usar Ollama GPU ou nuvem. Gateway único (openclaw) já inclui CEO e PO; alternativa **apenas CEO/PO**: `make up-management` aplica `management-team/` (scale openclaw a 0 para evitar dois gateways Telegram). Ref: Fase 1 — 012.
 - **Development (time técnico):** 100% offline por padrão; Ollama GPU. Config fragmento em `development-team/`; NetworkPolicy para pod dedicado.
 - **Governance:** Governance Proposer em `governance-team/` (replicas: 0 por padrão; ativar sob demanda).
 

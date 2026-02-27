@@ -55,6 +55,9 @@ spec:
             - name: workspace
               mountPath: /workspace
               # Writable: OpenClaw precisa escrever AGENTS.md etc. ao processar Telegram
+            - name: soul-agents
+              mountPath: /workspace/soul
+              readOnly: true
           resources:
             requests:
               memory: "1Gi"
@@ -71,6 +74,10 @@ spec:
         - name: workspace-ceo-cm
           configMap:
             name: openclaw-workspace-ceo
+        - name: soul-agents
+          configMap:
+            name: soul-agents
+            optional: true
         - name: workspace
           emptyDir: {}
 ---
