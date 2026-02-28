@@ -50,4 +50,17 @@ Ref: [06-operacoes.md](../06-operacoes.md), [README.md](README.md) (Fase 3).
 - **127:** Disjuntor por épico (3 draft_rejected → congelar, RAG health check, descongelar); consumer group `disjuntor`; `rag_health_check.py` determinístico.
 - **017:** Relatório de degradação automático ao pausar; `unblock-degradation.sh` para retomada explícita.
 
+### 032–036 — Implementação operacional (five strikes, cosmético, loop consenso, QA auditor, digest)
+
+| Item | Entregável | Status |
+|------|------------|--------|
+| Strikes por issue | [scripts/strikes.py](../../scripts/strikes.py) — `increment`, `get`, `reset`; eventos 2º/5º strike em `orchestrator:events` e digest | OK |
+| Cosmético (033) | [scripts/cosmetic_omission.py](../../scripts/cosmetic_omission.py) — `is-cosmetic`, `start-timer`, `check-timers`, `write-qa-file`; [scripts/orchestration_phase3.py](../../scripts/orchestration_phase3.py) (timer 6 h, MEMORY.md, lista QA) | OK |
+| Loop consenso (034) | [scripts/orchestrator_autonomy.py](../../scripts/orchestrator_autonomy.py) — pré-freio: emite `consensus_loop_requested`, aguarda pilot; [scripts/set_consensus_pilot_result.py](../../scripts/set_consensus_pilot_result.py) — `success`/`fail` | OK |
+| QA auditor (035) | Redis SET/HASH + [docs/agents-devs/areas-for-qa-audit.md](../../agents-devs/areas-for-qa-audit.md) gerado por `cosmetic_omission.py write-qa-file` | OK |
+| Digest (036) | [scripts/digest_daily.py](../../scripts/digest_daily.py) — lê stream `digest:daily`, gera `docs/agents-devs/digest-YYYY-MM-DD.md`; opcional `--telegram` | OK |
+| Docs | [06-operacoes.md](../../06-operacoes.md) (chaves Redis Fase 3), [07-configuracao-e-prompts.md](../../07-configuracao-e-prompts.md) (§2.4 Configuração Fase 3), [agents-devs/MEMORY.md](../../agents-devs/MEMORY.md) | OK |
+
+---
+
 Próxima fase: **Fase 4** (Configuração / FinOps, etc.) conforme [README.md](README.md).

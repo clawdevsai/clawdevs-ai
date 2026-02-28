@@ -131,10 +131,11 @@ verify:
 
 # ConfigMap dos scripts do slot Revisão pós-Dev (007/125). Necessário para o deployment revisao-pos-dev.
 revisao-slot-configmap:
-	@echo "==> Criando ConfigMap revisao-slot-scripts (slot_revisao_pos_dev.py + gpu_lock.py)..."
+	@echo "==> Criando ConfigMap revisao-slot-scripts (slot + gpu_lock + orchestration_phase3)..."
 	@kubectl create configmap revisao-slot-scripts -n ai-agents \
 	  --from-file=slot_revisao_pos_dev.py=scripts/slot_revisao_pos_dev.py \
 	  --from-file=gpu_lock.py=scripts/gpu_lock.py \
+	  --from-file=orchestration_phase3.py=scripts/orchestration_phase3.py \
 	  --from-file=acefalo_redis.py=scripts/acefalo_redis.py \
 	  --dry-run=client -o yaml | kubectl apply -f -
 	@echo "==> revisao-slot-configmap concluído."

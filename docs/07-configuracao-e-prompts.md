@@ -185,6 +185,28 @@ Para evitar **amnésia arquitetural** causada pelo truncamento e sumarização a
 - **MicroADR:** Sempre que um **pull request for aprovado**, o Agente Architect usa a ferramenta Markdown (ex.: markitdown ou saída formatada — ver [27-ferramenta-markdown-converter.md](27-ferramenta-markdown-converter.md)) para gerar um **microADR** (registro de decisão arquitetural) em **JSON estrito**. Regra de ouro: o **microADR nunca é resumido**. Ele é anexado **diretamente** à memória vetorial de longo prazo (Warm Store), fora do funil de sumarização. **Auditoria de desvio (ADL):** O microADR deve incluir seção obrigatória de **auditoria de desvio**; a execução é feita por **regex** contra **lista negra de termos de justificativa fraca** (ex.: "parece melhor", "minha intuição sugere", "código mais limpo" sem métrica de complexidade). Se a justificativa casar, a submissão é **rejeitada em tempo de execução** na máquina local. Ver [13-habilidades-proativas.md](13-habilidades-proativas.md) e [28-memoria-longo-prazo-elite.md](28-memoria-longo-prazo-elite.md).
 - **Invariantes de negócio:** Manter uma **lista de invariantes** no arquivo principal de estado da sessão (ex.: SESSION-STATE.md ou arquivo dedicado). Quando o Diretor definir uma **regra absoluta** (ex.: "token de login expira em 5 minutos"), ela recebe uma **tag especial** (marcação forte no texto). O **script de limpeza do DevOps** (usado na higiene de memória e no pipeline de compactação) deve ser configurado com um **regex** que **ignore** qualquer linha contendo essa tag — a janela de memória pode ser comprimida ao limite, mas as regras críticas de negócio **sobrevivem** à compactação.
 
+### 2.4. Configuração Fase 3 (orquestrador, cosmético, digest)
+
+Variáveis de ambiente (ou config JSON) para o orquestrador e scripts de operações (Fase 3):
+
+| Variável | Default | Descrição |
+|----------|---------|-----------|
+| `DEGRADATION_THRESHOLD_PCT` | 12.0 | Percentual de tarefas na rota de fuga (5º strike + omissão cosmética) que aciona pré-freio (loop de consenso) ou freio de mão. |
+| `CONSENSUS_LOOP_TIMEOUT_SEC` | 3600 | Timeout (segundos) para aguardar resultado do pilot do loop de consenso; ao exceder, trata como falha e aciona freio de mão. |
+| `COSMETIC_TIMER_HOURS` | 6 | Timer (horas) para aprovação por omissão quando impasse classificado como cosmético. |
+| `COSMETIC_EXTENSIONS` | .css,.scss,.less,.md,.html,.htm,.svg,.json | Extensões consideradas cosméticas (determinístico, sem LLM). |
+| `MEMORY_MD_PATH` | docs/agents-devs/MEMORY.md | Arquivo onde são registradas as aprovações por omissão cosmética. |
+| `AREAS_QA_AUDIT_PATH` | docs/agents-devs/areas-for-qa-audit.md | Arquivo gerado com lista de issues/arquivos para o QA auditar (após omissão cosmética). |
+| `STREAM_DIGEST` | digest:daily | Stream Redis onde eventos de digest são publicados; [scripts/digest_daily.py](../scripts/digest_daily.py) gera o Markdown diário. |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | — | Opcional: envio do digest diário para Telegram (`digest_daily.py --telegram`). Alertas imediatos (degradação, segurança, $5/dia) podem usar o mesmo canal. |
+| **Slot Architect (Ollama)** | | [scripts/slot_revisao_pos_dev.py](../scripts/slot_revisao_pos_dev.py) chama Ollama para code review quando `OLLAMA_BASE_URL` está definido. |
+| `OLLAMA_BASE_URL` | (vazio) | URL do Ollama (ex.: `http://ollama-service.ai-agents.svc.cluster.local:11434` no cluster). Vazio = stub (aprova sempre). |
+| `ARCHITECT_MODEL` | glm-5:cloud | Modelo Ollama para o Architect (ex.: glm-5:cloud, llama3:8b). |
+| `ARCHITECT_TIMEOUT_SEC` | 120 | Timeout da chamada Ollama no slot. |
+| `ARCHITECT_ON_ERROR` | reject | Em falha de rede/timeout: `reject` (rejeita) ou `approve` (não travar esteira). |
+
+Ref: [06-operacoes.md](06-operacoes.md) (chaves Redis Fase 3), [39-consumer-groups-pipeline-revisao.md](39-consumer-groups-pipeline-revisao.md) (slot + Architect Ollama).
+
 ### 3. Parâmetros de inferência
 
 - **Temperature (0.0–1.0):** Architect 0.1 (precisão); UX 0.8 (criatividade).
