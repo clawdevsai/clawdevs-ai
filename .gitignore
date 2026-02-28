@@ -6,3 +6,4 @@ __pycache__/
 !*.env.example
 k8s/management-team/openclaw/secret.yaml
 k8s/ollama/secret.yaml
+.venv

@@ -1,5 +1,5 @@
-# Variáveis de ambiente para o slot Revisão pós-Dev (007/125).
-# Stream, consumer group e timeout; Redis vem do default em gpu_lock.py.
+# Variáveis de ambiente para o slot Revisão pós-Dev (007/125 + Fase 3).
+# Stream, consumer group, Redis; Architect real via Ollama quando OLLAMA_BASE_URL definido.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,3 +13,8 @@ data:
   SLOT_REVISAO_TIMEOUT_SEC: "300"
   REDIS_HOST: "redis-service.ai-agents.svc.cluster.local"
   REDIS_PORT: "6379"
+  # Architect via Ollama (Fase 3 — 032). Vazio = stub (aprova sempre).
+  OLLAMA_BASE_URL: "http://ollama-service.ai-agents.svc.cluster.local:11434"
+  ARCHITECT_MODEL: "glm-5:cloud"
+  ARCHITECT_TIMEOUT_SEC: "120"
+  KEY_PREFIX_PROJECT: "project:v1"
