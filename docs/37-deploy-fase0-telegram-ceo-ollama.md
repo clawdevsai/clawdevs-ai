@@ -1,6 +1,6 @@
 # Deploy Fase 0: CEO via Telegram + Ollama no Kubernetes
 
-Entrega mínima: **Diretor fala com o CEO no Telegram**; CEO usa **um único modelo local (Ollama)** no cluster. OpenClaw com sub-agents fica pronto para expandir (PO, Developer, etc.) depois.
+Entrega mínima: **Diretor fala com o CEO no Telegram**; CEO usa **um único modelo local (Ollama)** no cluster. **Slack (opcional):** todos os agentes podem conversar no Slack; discussões entre agentes no Slack usam **Ollama local GPU obrigatório**. Política: apenas o CEO usa Telegram; demais agentes só Slack. Todos compartilham o mesmo workspace.
 
 ## Pré-requisitos
 
@@ -61,6 +61,21 @@ Ou copie `k8s/management-team/openclaw/secret.yaml.example` para `secret.yaml`, 
 cp k8s/management-team/openclaw/secret.yaml.example k8s/management-team/openclaw/secret.yaml
 # Editar e colar token e chat id
 kubectl apply -f k8s/management-team/openclaw/secret.yaml
+```
+
+### 3.1. Slack (opcional)
+
+Para habilitar o canal **Slack** (todos os agentes podem conversar; discussões = Ollama local GPU), adicione ao mesmo secret `openclaw-telegram` (ou crie um secret com as chaves Slack):
+
+- **SLACK_APP_TOKEN** (xapp-...) — App Token com Socket Mode. Criar app em [Slack API](https://api.slack.com/apps) para o workspace (ex.: clawdevsai), habilitar Socket Mode, criar App Token com `connections:write`.
+- **SLACK_BOT_TOKEN** (xoxb-...) — Bot Token (após instalar o app no workspace).
+- **SLACK_DIRECTOR_USER_ID** (opcional) — ID do Diretor no Slack (ex.: U01234ABCD) para allowlist em DMs. Se omitido, usar pairing: `openclaw pairing approve slack <CODE>`.
+
+Documentação do canal Slack: [OpenClaw — Slack](https://docs.openclaw.ai/channels/slack).
+
+```bash
+kubectl patch secret openclaw-telegram -n ai-agents -p '{"stringData":{"SLACK_APP_TOKEN":"xapp-...","SLACK_BOT_TOKEN":"xoxb-...","SLACK_DIRECTOR_USER_ID":"U01234ABCD"}}'
+# Ou recriar o secret incluindo TELEGRAM_* e SLACK_*
 ```
 
 ## 4. OpenClaw (ConfigMap + Workspace CEO + Deployment)

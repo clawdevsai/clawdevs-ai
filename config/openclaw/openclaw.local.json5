@@ -9,11 +9,21 @@
   channels: {
     telegram: {
       enabled: true,
-      // Token: TELEGRAM_BOT_TOKEN no ambiente ou .env
+      // Token: TELEGRAM_BOT_TOKEN no ambiente ou .env. Apenas CEO recebe Telegram.
       dmPolicy: "allowlist",
       // allowFrom: IDs numéricos do Telegram que podem falar com o bot (ex.: Diretor). Preencher ou usar pairing.
       allowFrom: [],
       groups: {},
+    },
+    // Slack: todos os agentes. Tokens via env: SLACK_APP_TOKEN + SLACK_BOT_TOKEN (Socket Mode).
+    // Ref: https://docs.openclaw.ai/gateway/configuration-reference#slack
+    // Discussões entre agentes no Slack: obrigatório Ollama (LLM local GPU).
+    slack: {
+      enabled: false, // SLACK_TOGGLE — script define true quando tokens Slack no .env
+      mode: "socket",
+      dmPolicy: "allowlist",
+      allowFrom: [], // SLACK_ALLOW_FROM — script injeta SLACK_DIRECTOR_USER_ID se definido
+      dm: { enabled: true, groupEnabled: false },
     },
   },
   models: {
@@ -31,13 +41,13 @@
     },
   },
   agents: {
-    // workspace com SOUL.md para o CEO obedecer ao perfil (tom executivo, pt-BR). Caminho relativo ao CWD (rodar script da raiz do repo).
+    // Todos os agentes compartilham o mesmo workspace. Slack: discussões entre agentes usam obrigatoriamente Ollama (local GPU).
     defaults: {
       model: "ollama/glm-5:cloud",
       workspace: "config/openclaw/workspace-ceo",
     },
     list: [
-      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Responde no Telegram.", model: "ollama/glm-5:cloud" },
+      { id: "ceo", name: "CEO", description: "Interface com o Diretor. Único que recebe Telegram; no Slack participa com os demais.", model: "ollama/glm-5:cloud" },
     ],
   },
 }

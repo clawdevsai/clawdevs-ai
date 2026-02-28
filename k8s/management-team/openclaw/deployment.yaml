@@ -58,6 +58,24 @@ spec:
                   name: openclaw-telegram
                   key: TELEGRAM_CHAT_ID
                   optional: true
+            - name: SLACK_APP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: SLACK_APP_TOKEN
+                  optional: true
+            - name: SLACK_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: SLACK_BOT_TOKEN
+                  optional: true
+            - name: SLACK_DIRECTOR_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-telegram
+                  key: SLACK_DIRECTOR_USER_ID
+                  optional: true
           volumeMounts:
             - name: config
               mountPath: /config

@@ -38,10 +38,18 @@ if [[ -n "$TELEGRAM_CHAT_ID" ]]; then
   sed "s/\"allowFrom\": \[\]/\"allowFrom\": [\"$TELEGRAM_CHAT_ID\"]/" "$CONFIG_SRC" > "$CONFIG_RUN"
   CONFIG_TO_USE="$CONFIG_RUN"
 else
-  CONFIG_TO_USE="$CONFIG_SRC"
   # Com allowFrom vazio, use dmPolicy "pairing" e aprove o primeiro DM com: openclaw pairing approve telegram <CODE>
   sed 's/"dmPolicy": "allowlist"/"dmPolicy": "pairing"/' "$CONFIG_SRC" > "$CONFIG_RUN"
   CONFIG_TO_USE="$CONFIG_RUN"
+fi
+
+# Habilitar Slack quando SLACK_APP_TOKEN e SLACK_BOT_TOKEN estiverem definidos (e SLACK_ENABLED != false)
+if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" && "${SLACK_ENABLED:-true}" != "false" ]]; then
+  sed 's/enabled: false, \/\/ SLACK_TOGGLE/enabled: true, \/\/ SLACK_TOGGLE/' "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
+  if [[ -n "${SLACK_DIRECTOR_USER_ID:-}" ]]; then
+    sed "s/allowFrom: \[\], \/\/ SLACK_ALLOW_FROM/allowFrom: [\"$SLACK_DIRECTOR_USER_ID\"], \/\/ SLACK_ALLOW_FROM/" "$CONFIG_TO_USE" > "$CONFIG_RUN.tmp" && mv "$CONFIG_RUN.tmp" "$CONFIG_TO_USE"
+  fi
+  export SLACK_APP_TOKEN SLACK_BOT_TOKEN
 fi
 
 export TELEGRAM_BOT_TOKEN
@@ -56,8 +64,13 @@ if ! kill -0 "$PF_PID" 2>/dev/null; then
   exit 1
 fi
 
-echo "==> Iniciando OpenClaw gateway (Telegram + Ollama em 127.0.0.1:11434)..."
+echo "==> Iniciando OpenClaw gateway (Telegram: só CEO; Slack: todos os agentes; Ollama em 127.0.0.1:11434)..."
 echo "    Config: $OPENCLAW_CONFIG_PATH"
-echo "    Workspace CEO (SOUL.md): config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
-echo "    Envie uma mensagem ao seu bot no Telegram para testar."
+echo "    Workspace único: config/openclaw/workspace-ceo (CWD=$REPO_ROOT)"
+echo "    Telegram: só CEO. Slack: todos (discussões = Ollama local GPU)."
+if [[ -n "${SLACK_APP_TOKEN:-}" && -n "${SLACK_BOT_TOKEN:-}" ]]; then
+  echo "    Slack habilitado. Envie mensagem no Slack ou no Telegram para testar."
+else
+  echo "    Envie uma mensagem ao seu bot no Telegram para testar."
+fi
 exec npx --yes openclaw@latest gateway
