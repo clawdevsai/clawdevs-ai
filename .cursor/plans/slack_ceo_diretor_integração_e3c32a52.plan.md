@@ -1,6 +1,6 @@
 ---
 name: Slack CEO Diretor integração
-overview: Adicionar Slack (todos os agentes) e manter Telegram (só CEO). Política rigorosa: agentes diferentes do CEO não podem acessar nenhuma plataforma de comunicação além do Slack. Workspace único compartilhado.
+overview: Adicionar Slack (todos os agentes) e manter Telegram (só CEO). Política rigorosa: agentes não-CEO só Slack. Discussões entre agentes no Slack: obrigatório usar Ollama (LLM local GPU). Workspace único compartilhado.
 todos: []
 isProject: false
 ---
@@ -18,6 +18,11 @@ isProject: false
 - **CEO:** único agente autorizado a usar **qualquer** plataforma além do Slack (ex.: Telegram para o Diretor). Pode usar Telegram e Slack.
 - **Demais agentes (PO, DevOps, Architect, Developer, QA, CyberSec, UX, DBA):** **não é permitido** acessar outra plataforma de comunicação que não seja o **Slack**. Eles **somente** podem conversar via Slack.
 - **Implementação:** na configuração do OpenClaw, o canal Telegram deve estar restrito ao agente CEO (roteamento/allowlist por agente). Os outros canais (ex.: Telegram, WhatsApp, Discord, CLI público, etc.) não devem ser expostos aos subagentes; apenas o canal Slack deve estar disponível para a lista completa de agentes. Documentar e validar na config que nenhum agente não-CEO receba mensagens ou tenha permissão de envio em canais que não sejam Slack.
+
+## Discussões entre agentes no Slack — LLM obrigatório
+
+- **Regra:** quando os agentes **discutirem uma solução entre si no Slack**, é **obrigatório** usar **Ollama com LLM local em GPU** (não usar modelos em nuvem para essas conversas).
+- **Implementação:** na config do OpenClaw, para o canal Slack (ou para sessões/conversas de discussão entre agentes no Slack), definir o provedor de modelo como **Ollama** (baseUrl apontando para o serviço Ollama no cluster, ex.: `http://ollama-service.ai-agents.svc.cluster.local:11434/v1`). Garantir que `agents.list[]` dos agentes que participam no Slack usem `model` do provedor `ollama` (ex.: `ollama/glm-5:cloud`, `ollama/ministral-3:3b`, etc.) e que o gateway não roteie conversas do Slack para provedores em nuvem quando for discussão entre agentes. Documentar na doc e na config: "Slack (discussão entre agentes): Ollama local GPU obrigatório."
 
 ## Contexto atual
 
@@ -65,6 +70,10 @@ Objetivo: manter Telegram (só CEO) e **adicionar** Slack (todos os agentes), co
 **Config local — bloco Slack:**
 
 - Incluir `channels.slack` com: `enabled: true` quando tokens Slack estiverem no .env; `mode: "socket"`; tokens via env; `dmPolicy: "allowlist"` e `allowFrom: [SLACK_DIRECTOR_USER_ID]` se definido, senão `dmPolicy: "pairing"`. **Não** restringir Slack a um único agente: permitir que todos os agentes possam ser invocados no Slack.
+
+**Modelo obrigatório para discussões no Slack (Ollama local GPU):**
+
+- Para conversas/discussões entre agentes no Slack: garantir que o provedor de modelo seja **Ollama** (local, GPU). Em `models.providers.ollama` apontar `baseUrl` para o Ollama do cluster (ou port-forward). Em `agents.list[]` dos agentes que usam Slack, usar apenas modelos `ollama/*` (ex.: `ollama/glm-5:cloud`, `ollama/ministral-3:3b`). Não rotear sessões do canal Slack para provedores em nuvem (OpenRouter, OpenAI, etc.) quando for discussão entre agentes; documentar essa regra na config (comentário) e na doc.
 
 ---
 
@@ -190,5 +199,5 @@ flowchart LR
 
 
 
-- **Telegram:** apenas o CEO conversa com o Diretor. **Slack:** todos os agentes podem conversar; mesmo workspace compartilhado. **Política rigorosa:** agentes não-CEO não podem acessar outra plataforma além do Slack.
+- **Telegram:** apenas o CEO conversa com o Diretor. **Slack:** todos os agentes podem conversar; mesmo workspace compartilhado. **Política rigorosa:** agentes não-CEO não podem acessar outra plataforma além do Slack. **Discussões no Slack:** quando agentes discutirem soluções entre si no Slack, usar **obrigatoriamente** Ollama (LLM local com GPU).
 

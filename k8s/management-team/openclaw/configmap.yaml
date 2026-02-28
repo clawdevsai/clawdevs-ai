@@ -1,6 +1,7 @@
 # Configuração OpenClaw (sem credenciais). Token e Chat ID vêm do Secret.
+# Telegram: só CEO. Slack: todos os agentes. Todos compartilham o mesmo workspace /workspace.
+# Discussões entre agentes no Slack: Ollama local GPU obrigatório.
 # Integração padrão: Ollama GPU no cluster (ollama_local). Provedor por agente: k8s/llm-providers-configmap.yaml.
-# Opções: ollama_local | ollama_cloud | openrouter | qwen_oauth | moonshot_ai | openai | huggingface_inference.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,6 +17,13 @@ data:
           "dmPolicy": "allowlist",
           "allowFrom": ["__TELEGRAM_CHAT_ID__"],
           "groups": {}
+        },
+        "slack": {
+          "enabled": false,
+          "mode": "socket",
+          "dmPolicy": "allowlist",
+          "allowFrom": ["__SLACK_DIRECTOR_USER_ID__"],
+          "dm": { "enabled": true, "groupEnabled": false }
         }
       },
       "models": {
@@ -76,7 +84,7 @@ data:
       list:
         - id: ceo
           name: "CEO"
-          description: "Estratégia e interface com o Diretor. Único agente que recebe Telegram."
+          description: "Estratégia e interface com o Diretor. Único que recebe Telegram; no Slack participa com os demais."
           model: "ollama/ministral-3:3b-cloud"
         - id: po
           name: "Product Owner"
@@ -111,11 +119,17 @@ data:
           description: "Dados e queries. Sub-agent. Padrão Ollama GPU."
           model: "ollama/glm-5:cloud"
 
-    # Canal Telegram. Token via env TELEGRAM_BOT_TOKEN (Secret).
-    # dmPolicy: pairing = primeiro DM gera código; use "openclaw pairing approve telegram <CODE>"
-    # Para allowlist fixo: dmPolicy: allowlist e allowFrom: [ "SEU_ID_NUMERICO" ]
+    # Telegram: só CEO. Slack: todos os agentes (token via env SLACK_APP_TOKEN, SLACK_BOT_TOKEN). Discussões no Slack: Ollama local GPU.
     channels:
       telegram:
         enabled: true
         dmPolicy: "pairing"
         groups: {}
+      slack:
+        enabled: false
+        mode: "socket"
+        dmPolicy: allowlist
+        allowFrom: []
+        dm:
+          enabled: true
+          groupEnabled: false
