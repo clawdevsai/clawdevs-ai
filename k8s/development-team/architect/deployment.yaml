@@ -25,6 +25,9 @@ spec:
             - -c
             - "pip install -q redis && cd /config && exec python slot_agent_single.py"
           envFrom:
+            - secretRef:
+                name: clawdevs-github-secret
+                optional: true
             - configMapRef:
                 name: architect-slot-env
           env:

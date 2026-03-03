@@ -42,6 +42,9 @@ spec:
           image: openclaw-gateway:local
           imagePullPolicy: IfNotPresent
           envFrom:
+            - secretRef:
+                name: clawdevs-github-secret
+                optional: true
             - configMapRef:
                 name: finops-config
                 optional: true

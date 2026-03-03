@@ -28,6 +28,9 @@ spec:
             - -c
             - "pip install -q flask redis && exec python /config/gateway_redis_adapter.py"
           envFrom:
+            - secretRef:
+                name: clawdevs-github-secret
+                optional: true
             - configMapRef:
                 name: phase2-config
                 optional: true
