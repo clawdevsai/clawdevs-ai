@@ -27,6 +27,9 @@ spec:
             - -c
             - "pip install -q redis && cd /config && exec python slot_revisao_pos_dev.py"
           envFrom:
+            - secretRef:
+                name: clawdevs-github-secret
+                optional: true
             - configMapRef:
                 name: revisao-pos-dev-env
           env:

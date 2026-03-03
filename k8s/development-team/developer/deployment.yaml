@@ -25,6 +25,9 @@ spec:
             - -c
             - "pip install -q redis && cd /config && exec python developer_worker.py"
           envFrom:
+            - secretRef:
+                name: clawdevs-github-secret
+                optional: true
             - configMapRef:
                 name: developer-env
           env:
