@@ -1,5 +1,5 @@
 # Workspace CEO: templates de memória para /workspace/ceo no gateway.
-# SOUL do CEO vem de soul-management-agents (soul-merge). Aqui: MEMORY.md e memory/working-buffer.md.
+# SOUL do CEO vem de soul-management-agents (soul-merge). Aqui: MEMORY.md, SESSION-STATE.md e memory/working-buffer.md.
 # InitContainer soul-merge copia estes arquivos para /workspace/ceo (e /workspace/ceo/memory/).
 apiVersion: v1
 kind: ConfigMap
@@ -9,6 +9,26 @@ metadata:
   labels:
     app: openclaw
 data:
+  SESSION-STATE.md: |
+    # SESSION-STATE — Estado da sessão (CEO)
+
+    Regras absolutas do Diretor devem usar a tag de invariante para que o script de limpeza nunca as apague.
+    Ref: docs/07-configuracao-e-prompts.md, docs/issues/052-memoria-elite-seis-camadas.md.
+
+    ---
+
+    ## Invariantes de negócio (nunca sumarizar nem apagar)
+
+    <!-- INVARIANTE_NEGOCIO -->
+    - (adicionar regras absolutas do Diretor aqui)
+    <!-- /INVARIANTE_NEGOCIO -->
+
+    ---
+
+    ## Contexto da sessão (podem ser compactados preservando blocos acima)
+
+    - Tarefa atual: (preencher)
+    - Última decisão: (preencher)
   MEMORY.md: |
     # MEMORY — Memória curada de longo prazo
 

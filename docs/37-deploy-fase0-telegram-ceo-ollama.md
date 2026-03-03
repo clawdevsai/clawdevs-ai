@@ -213,7 +213,7 @@ Ref: [42-slack-tokens-setup.md](42-slack-tokens-setup.md), [openclaw-config-ref.
 | **openclaw**| Gateway: canal Telegram → agente CEO → Ollama|
 | **ollama-gpu** | Modelo local (ex.: stewyphoenix19/phi3-mini_v1:latest, ministral-3:3b) |
 | **redis**   | Disponível para estado/streams (fase futura) |
-| **soul-management-agents + workspace-ceo-configmap** | SOUL CEO em soul ConfigMap; MEMORY/working-buffer em workspace-ceo-configmap. CEO segue [soul/CEO.md](soul/CEO.md). |
+| **soul-management-agents + workspace-ceo-configmap** | SOUL CEO em soul ConfigMap; MEMORY, SESSION-STATE e working-buffer em workspace-ceo-configmap. CEO segue [soul/CEO.md](soul/CEO.md). No início da sessão o CEO lê SESSION-STATE.md e MEMORY.md para recall (evitar perda de contexto). Ver [openclaw-config-ref.md](openclaw-config-ref.md), [investigacao-openclaw-pod.md](investigacao-openclaw-pod.md). |
 
 Doc de arquitetura: [openclaw-sub-agents-architecture.md](openclaw-sub-agents-architecture.md).
 
