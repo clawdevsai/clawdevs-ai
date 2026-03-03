@@ -96,6 +96,7 @@ data:
       },
       "tools": {
         "profile": "messaging",
+        "allow": ["sessions_spawn"],
         "deny": ["exec", "browser", "apply_patch", "file_writer"],
         "subagents": {
           "tools": {
