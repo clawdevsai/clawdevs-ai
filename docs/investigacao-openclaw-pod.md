@@ -8,7 +8,8 @@ Resumo da investigação feita em 2026-03-03 após rodar `openclaw doctor --fix`
 |------|------------|
 | **Ollama** (`ollama-service.ai-agents.svc.cluster.local:11434`) | OK — pod consegue `fetch` e lista 6 modelos. |
 | **Config em runtime** | Gateway usa `/tmp/openclaw.json` (gerado pelo entrypoint a partir do ConfigMap). `~/.openclaw/openclaw.json` existe e foi alterado pelo `doctor`; o processo do gateway **não** usa esse arquivo (usa `OPENCLAW_CONFIG_PATH=/tmp/openclaw.json`). |
-| **Redis** | Não usado na config atual do gateway (apenas `session.dmScope`); session store é em disco em `~/.openclaw/agents/`. |
+| **Redis** | Não usado na config atual do gateway (apenas `session.dmScope`); session store é em disco. |
+| **Session store** | Persistente no PVC: `session.store` apontando para `/workspace/.openclaw-session-store/{agentId}/sessions/sessions.json`. Restarts do deployment não zeram mais as sessões. |
 
 ## 2. Problema crítico: modelo do CEO não existe no Ollama
 
@@ -54,8 +55,12 @@ Modelos atualmente disponíveis no Ollama do cluster:
 
 O erro **"Ollama API error 404: model 'deepseek-r1:14b' not found"** que apareceu na bolha do CEO no Telegram ocorreu **antes** da correção aplicada no cluster. O deployment foi reiniciado com a config nova (CEO/PO em `glm-5:cloud`) após essa mensagem. Hoje o pod está usando apenas modelos existentes no Ollama do cluster. Se mandar uma nova mensagem ao CEO no Telegram, a resposta deve sair sem 404.
 
-## 6. Resumo de ações recomendadas
+## 6. Session store persistente (implementado)
 
-1. **Imediato:** Alterar o modelo do CEO (e de outros agentes que usem `deepseek-r1:*`) no ConfigMap para um modelo presente no cluster (ex.: `ollama/glm-5:cloud`), ou fazer pull de `deepseek-r1:14b` no Ollama do cluster.
+O session store foi configurado para usar o PVC do workspace: `session.store: "/workspace/.openclaw-session-store/{agentId}/sessions/sessions.json"` no ConfigMap. O initContainer `workspace-init` cria o diretório `/workspace/.openclaw-session-store`. Assim, restarts do deployment (`kubectl rollout restart`) não zeram mais as sessões do CEO (e dos demais agentes). O modelo do CEO (e de todos os agentes) deve ser um dos listados em `models.providers.ollama.models` e esse conjunto deve coincidir com os modelos disponíveis no Ollama do cluster (`GET /api/tags`). Ver [openclaw-config-ref.md](openclaw-config-ref.md) (Modelos e Ollama; session store).
+
+## 7. Resumo de ações recomendadas
+
+1. **Modelos:** Manter CEO e demais agentes com modelos presentes no cluster (ex.: `ollama/glm-5:cloud`). Ao adicionar um modelo na config, fazer `ollama pull <modelo>` no Ollama do cluster antes de trocar o agente.
 2. **Control UI:** Se for obrigatório acessar de outro host por HTTP, consultar a documentação OpenClaw para opções de “allow insecure” / device identity; caso contrário, usar HTTPS ou localhost.
 3. **Doctor no pod:** Rodar `doctor --fix` no pod é opcional; as alterações em `~/.openclaw` não afetam o gateway que usa o ConfigMap. Pode-se ignorar os avisos do doctor nesse contexto.
