@@ -66,6 +66,7 @@ if [ -d "$K8S_DIR/security" ]; then
 fi
 if [ -d "$K8S_DIR/orchestrator" ]; then
   "$SCRIPTS_DIR/orchestrator/configmap.sh"
+  "$SCRIPTS_DIR/configmaps/acefalo.sh" || true
   kubectl apply -f "$K8S_DIR/orchestrator/"
 fi
 if [ -f "$OPENCLAW_BUILD_DIR/serviceaccount.yaml" ]; then
