@@ -124,6 +124,8 @@ spec:
               value: "--max-old-space-size=1024"
             - name: OLLAMA_API_KEY
               value: "ollama-local"
+            - name: OLLAMA_HOST
+              value: "http://ollama-service.ai-agents.svc.cluster.local:11434"
             # Identidade Master Git (ClawDevs)
             - name: GIT_AUTHOR_NAME
               value: "Master DevOps (ClawDevs)"
