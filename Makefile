@@ -258,7 +258,7 @@ shared: shared-unmount
 shared-unmount:
 	@$(SCRIPTS)/utils/shared-unmount.sh
 
-# Desmonta, remonta o shared e reinicia o deployment openclaw (evita I/O error em /workspace quando o mount 9P fica em estado ruim).
+# Desmonta, remonta o shared (bidirecional: host <-> pod) e reinicia o deployment openclaw (evita I/O error em /workspace quando o mount 9P fica em estado ruim).
 shared-restart: shared-unmount
 	@sleep 2
 	@$(MAKE) shared

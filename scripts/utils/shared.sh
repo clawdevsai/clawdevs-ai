@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Monta workspace compartilhado no Minikube (~/clawdevs-shared -> /agent-shared).
+# Sincronização bidirecional: alterações no host refletem no pod (/workspace); alterações no pod refletem no host.
 # Uso: ./scripts/utils/shared.sh
 set -e
 
-echo "==> Montando workspace compartilhado no Minikube (uid=0, gid=0)..."
+echo "==> Montando workspace compartilhado no Minikube (bidirecional, uid=0, gid=0)..."
 mkdir -p ~/clawdevs-shared
 for pid in $(pgrep -x minikube 2>/dev/null); do
   if grep -q 'mount.*agent-shared' /proc/"$pid"/cmdline 2>/dev/null; then
