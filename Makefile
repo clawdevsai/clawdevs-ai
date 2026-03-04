@@ -17,7 +17,7 @@ export K8S_DIR MINIKUBE_CPUS MINIKUBE_MEMORY
 .PHONY: configmap-po configmap-architect-draft configmap-kanban-api
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
 .PHONY: kanban-image kanban-apply kanban-url
-.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods ps secrets
+.PHONY: verify reset-memory init-memory test-github-access validate-finops-po dashboard status status-pods ps secrets gpu-setup
 .PHONY: url-sandbox-run url-sandbox-trigger-apply
 
 # ------------------------------------------------------------------------------
@@ -268,6 +268,11 @@ shared-restart: shared-unmount
 # Garante que o mount /agent-shared está ativo; se não estiver, executa make shared. Chamado internamente por make up.
 shared-ensure:
 	@$(SCRIPTS)/utils/shared-ensure.sh
+
+# Configura GPU NVIDIA dentro do Minikube: copia driver libs, configura runtime Docker nvidia, gera CDI spec e reinicia device plugin.
+# Deve ser executado APÓS "minikube start --gpus=all". Use make gpu-setup sempre que reiniciar o Minikube.
+gpu-setup:
+	@$(SCRIPTS)/ops/minikube-gpu-setup.sh
 
 # Valida que /workspace está acessível e compartilhado para todos os agentes no pod do OpenClaw (evita I/O error).
 validate-workspace:

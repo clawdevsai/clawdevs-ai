@@ -115,6 +115,19 @@ kubectl exec -n ai-agents deploy/openclaw -c gateway -- sh -c 'gh repo create $G
 ./scripts/ops/slack-devops-check.sh
 ```
 
+### 6. LLM sem GPU — timeout em modelos locais (corrigido)
+
+- **Problema:** modelos locais (`qwen2.5:3b`, `deepseek-r1:8b`) rodavam em CPU (`size_vram: 0` no `ollama ps`), causando `LLM request timed out`. Modelos cloud (`ministral-3:14b-cloud`) funcionavam mas não geravam tool calls via OpenClaw (discovery falhou: `Failed to discover Ollama models`).
+- **Causa:** Minikube iniciado com `--gpus=all` passava os devices (`/dev/nvidia*`) mas não as libs do driver NVIDIA (`libnvidia-ml.so`, `libcuda.so`, etc.) e o NVIDIA Container Toolkit não estava configurado dentro do container. O `nvidia-device-plugin` reportava `Incompatible strategy detected auto` / `No devices found`.
+- **Correção (2026-03-04):**
+  1. Copiar driver libs do host (`/usr/lib/x86_64-linux-gnu/libnvidia*.so*`, `libcuda*.so*`) + `nvidia-smi` para dentro do container Minikube.
+  2. Configurar Docker runtime nvidia via `nvidia-ctk runtime configure --runtime=docker --set-as-default`.
+  3. Gerar CDI spec via `nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`.
+  4. Reiniciar Docker (SIGHUP) + rollout restart `nvidia-device-plugin-daemonset`.
+  5. Adicionar `nvidia.com/gpu: "1"` nos `resources.requests` e `resources.limits` do deployment Ollama.
+- **Automatização:** `make gpu-setup` (`scripts/ops/minikube-gpu-setup.sh`) — deve ser executado após cada `minikube start --gpus=all`.
+- **Validação:** `kubectl exec -n ai-agents deploy/ollama-gpu -- ollama ps` deve mostrar `100% GPU` na coluna PROCESSOR.
+
 ---
 
 ## Referências
@@ -126,3 +139,5 @@ kubectl exec -n ai-agents deploy/openclaw -c gateway -- sh -c 'gh repo create $G
 - `docs/05-tools-and-skills/skills/github/SKILL.md` — skill github com fluxo de criação e tratamento de erros.
 - `docs/08-technical-notes/devops-nao-responde-slack.md` — checklist se o DevOps não responder no Slack.
 - `scripts/ops/slack-devops-check.sh` — diagnóstico de tokens e conta devops no cluster.
+- `scripts/ops/minikube-gpu-setup.sh` — setup GPU pós-restart do Minikube (make gpu-setup).
+- `k8s/ollama/deployment.yaml` — deployment Ollama com `nvidia.com/gpu: "1"`.
