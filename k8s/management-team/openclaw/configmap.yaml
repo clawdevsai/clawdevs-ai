@@ -107,6 +107,30 @@ data:
         "dmScope": "per-account-channel-peer",
         "store": "/workspace/.openclaw-session-store/{agentId}/sessions/sessions.json"
       },
+      "memorySearch": {
+        "sources": ["memory", "sessions"],
+        "query": {
+          "hybrid": {
+            "enabled": true,
+            "vectorWeight": 0.5,
+            "textWeight": 0.5
+          }
+        }
+      },
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "6h",
+        "keepLastAssistants": 3
+      },
+      "compaction": {
+        "mode": "default",
+        "reserveTokensFloor": 30000,
+        "memoryFlush": {
+          "enabled": true,
+          "softThresholdTokens": 40000,
+          "prompt": "Before this context is compacted, extract and save all important information to memory files. Focus on:\n1. DECISIONS made (what was decided, why, by whom)\n2. STATE CHANGES (what was configured, deployed, or installed)\n3. LESSONS LEARNED (what worked, what didn't, insights)\n4. BLOCKERS or pending items waiting for input\n5. Key facts about projects, systems, people, or tasks discussed\nWrite to /workspace/{agentId}/memory/ using these files: decisions.md, projects.md, lessons.md, pending.md. If the information is strategic or cross-team (architecture decisions, product strategy, incidents), also write to /workspace/shared/memory/ as appropriate. Do not skip — context lost after compaction is permanent."
+        }
+      },
       "bindings": [
         { "match": { "channel": "telegram" }, "agentId": "ceo" },
         { "match": { "channel": "slack", "accountId": "ceo" }, "agentId": "ceo" },

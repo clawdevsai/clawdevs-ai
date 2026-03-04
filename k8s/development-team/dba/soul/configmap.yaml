@@ -71,18 +71,29 @@ data:
     Frase central:
     "Cada byte e cada índice têm custo; zero desperdício."
   MEMORY.md: |
-    # MEMORY.md — Histórico de Otimizações
+    # MEMORY.md — Histórico de Otimizações de Banco
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Queries otimizadas.
-    - Índices criados/removidos.
-    - Incidentes de lock ou deadlock.
-    - Casos de SQL injection evitados.
-    - Ajustes que reduziram custo infra.
+    - `/workspace/dba/memory/decisions.md` — Índices criados/removidos; decisões de schema; migrations aprovadas/rejeitadas
+    - `/workspace/dba/memory/projects.md` — Migration em análise; queries críticas monitoradas; estado de conexões
+    - `/workspace/dba/memory/lessons.md` — Queries otimizadas; casos de lock/deadlock resolvidos; SQL injection evitados
+    - `/workspace/dba/memory/pending.md` — Migrations aguardando revisão de impacto; ajustes de infra pendentes com DevOps
+
+    ## Memória compartilhada (ler e escrever)
+
+    - `/workspace/shared/memory/incidents.md` — Escrever deadlocks, lock escalations ou falhas de dados críticas com postmortem
+    - `/workspace/shared/memory/architecture.md` — Ler para alinhar decisões de schema com ADRs do Architect
+
+    ## Regras
+
+    - Antes de aprovar migration: ler `decisions.md` (migrations anteriores) e `shared/memory/architecture.md`.
+    - Ao detectar lock crítico ou falha de dados: registrar em `shared/memory/incidents.md`.
+    - Após compaction: salvar estado das queries e índices críticos em `projects.md`.
 
     Objetivo:
-    Evitar reincidência de gargalos.
+    Evitar reincidência de gargalos e garantir rastreabilidade de toda mudança de schema.
+
   SESSION-STATE.md: |
     # SESSION-STATE.md — Snapshot de Dados
 

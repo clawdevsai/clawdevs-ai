@@ -13,7 +13,7 @@ MINIKUBE_MEMORY ?= 20g
 .PHONY: configmap-rotation configmap-url-sandbox configmap-url-sandbox-trigger configmap-quarantine
 .PHONY: security-apply security-configmaps orchestrator-apply orchestrator-configmap
 .PHONY: configmap-kanban-api kanban-image kanban-apply kanban-url
-.PHONY: verify reset-memory test-github-access dashboard status status-pods
+.PHONY: verify reset-memory init-memory test-github-access dashboard status status-pods
 
 # ------------------------------------------------------------------------------
 # Help
@@ -48,6 +48,7 @@ help:
 	@echo "    make status             -> Mostra um resumo do que está rodando e se há travamentos."
 	@echo "    make status-pods        -> Mostra o 'diário de bordo' (logs) das IAs rodando agora."
 	@echo "    make reset-memory       -> Apaga a memória das IAs (útil para recomeçar projetos do zero)."
+	@echo "    make init-memory        -> Inicializa estrutura de memória (decisions/projects/lessons/pending) para todos os agentes e shared/memory/."
 	@echo "    make test-github-access -> Testa se as IAs conseguem ler arquivos no Github."
 	@echo "    make dashboard          -> Abre uma tela visual no seu navegador para ver o motor do sistema."
 	@echo "    make shared             -> Cria uma pasta compartilhada para você ver os arquivos que a IA cria."
@@ -431,6 +432,20 @@ status-pods:
 # AMNÉSIA: Apaga a memória dos agentes do sistema.
 reset-memory:
 	@$(CURDIR)/scripts/reset_agent_memory.sh
+
+# INICIALIZA MEMÓRIA: Cria estrutura de memória por domínio (decisions/projects/lessons/pending)
+# para todos os agentes e shared/memory/ cross-agent. Roda uma vez após 'make up'.
+init-memory:
+	@echo "==> Aplicando ConfigMap de scripts de init-memory..."
+	@kubectl apply -f $(K8S_DIR)/management-team/openclaw/init-memory-configmap.yaml
+	@echo "==> Removendo Job anterior (se existir)..."
+	@kubectl delete job init-memory-structure -n ai-agents --ignore-not-found=true
+	@echo "==> Rodando Job init-memory-structure..."
+	@kubectl apply -f $(K8S_DIR)/management-team/openclaw/init-memory-job.yaml
+	@echo "  Aguardando conclusão (timeout 120s)..."
+	@kubectl wait --for=condition=complete job/init-memory-structure -n ai-agents --timeout=120s \
+		&& echo "==> init-memory concluído com sucesso." \
+		|| (kubectl logs -n ai-agents -l component=init-memory --tail=30 2>/dev/null; echo "ERRO: job falhou. Veja logs acima."; exit 1)
 
 # CONEXÃO COM GITHUB: Confirma se o sistema consegue acessar repósitórios sem problemas.
 test-github-access:

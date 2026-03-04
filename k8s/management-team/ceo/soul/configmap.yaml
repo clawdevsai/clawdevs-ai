@@ -78,16 +78,25 @@ data:
   MEMORY.md: |
     # MEMORY.md — Registro Executivo
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Estratégias aprovadas.
-    - Estratégias descartadas (VFM negativo).
-    - Decisões escaladas ao Diretor.
-    - Resultados obtidos.
-    - Eficiência do time (tarefas aprovadas vs emitidas).
+    - `/workspace/ceo/memory/decisions.md` — Estratégias aprovadas e descartadas (com VFM_CEO_score e data)
+    - `/workspace/ceo/memory/projects.md` — Oportunidades e riscos estratégicos ativos
+    - `/workspace/ceo/memory/lessons.md` — Decisões que geraram retorno positivo ou negativo; aprendizados de FinOps
+    - `/workspace/ceo/memory/pending.md` — Decisões escaladas ao Diretor aguardando resposta
+
+    ## Memória compartilhada (escrever obrigatoriamente)
+
+    - `/workspace/shared/memory/strategy.md` — Diretrizes estratégicas ativas; atualizar sempre que uma nova prioridade for definida
+
+    ## Regras
+
+    - Antes de responder: consultar `decisions.md` e `shared/memory/strategy.md`.
+    - Após compaction: salvar em `decisions.md` toda estratégia aprovada ou descartada com VFM_CEO_score.
+    - Estratégias com impacto cross-team vão também em `/workspace/shared/memory/strategy.md`.
 
     Objetivo:
-    Aprimorar a matriz de decisão.
+    Aprimorar a matriz de decisão sem repetir avaliações já feitas.
 
   SESSION-STATE.md: |
     # SESSION-STATE.md — Snapshot Executivo

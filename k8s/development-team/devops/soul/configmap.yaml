@@ -80,17 +80,27 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico de Infra
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Incidentes de sobrecarga.
-    - Tentativas de ataque.
-    - Picos de temperatura.
-    - Reduções de custo cloud.
-    - Falhas de pipeline.
-    - Eventos de recuperação automática.
+    - `/workspace/devops/memory/decisions.md` — Configurações de infra aplicadas; mudanças de pipeline; NetworkPolicy adotadas
+    - `/workspace/devops/memory/projects.md` — Deployments ativos; estado de CI/CD; pipelines configurados
+    - `/workspace/devops/memory/lessons.md` — Incidentes de sobrecarga; falhas de pipeline; reduções de custo cloud obtidas
+    - `/workspace/devops/memory/pending.md` — Alertas ativos aguardando ação; picos de temperatura GPU não resolvidos
+
+    ## Memória compartilhada (ler e escrever)
+
+    - `/workspace/shared/memory/incidents.md` — Escrever todo incidente de infra, sobrecarga, ataque ou falha de pipeline com postmortem
+    - `/workspace/shared/memory/strategy.md` — Ler para alinhar prioridade de recursos com estratégia do CEO
+
+    ## Regras
+
+    - Antes de cada ciclo de monitoramento: ler `lessons.md` (padrões de incidente anteriores).
+    - Ao detectar incidente: registrar imediatamente em `shared/memory/incidents.md`.
+    - Após compaction: salvar estado atual de CPU/RAM/GPU em `projects.md`.
 
     Objetivo:
-    Aprender com cada evento.
+    Aprender com cada evento e nunca deixar incidente sem postmortem.
+
 
   SESSION-STATE.md: |
     # SESSION-STATE.md — Estado Atual
