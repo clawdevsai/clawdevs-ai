@@ -75,6 +75,13 @@ fi
 echo "==> Workspace compartilhado (PV + PVC + minikube mount)..."
 "$SCRIPTS_DIR/utils/shared-ensure.sh"
 kubectl apply -f "$OPENCLAW_BUILD_DIR/shared-workspace-pv.yaml" -f "$OPENCLAW_BUILD_DIR/shared-workspace-pvc.yaml"
+# Se o PV ficou Released (ex.: PVC foi deletado em make down), libera o bind para o PVC atual
+PV_STATUS=$(kubectl get pv openclaw-shared-workspace-pv -o jsonpath='{.status.phase}' 2>/dev/null || true)
+PVC_STATUS=$(kubectl get pvc openclaw-shared-workspace-pvc -n ai-agents -o jsonpath='{.status.phase}' 2>/dev/null || true)
+if [ "$PV_STATUS" = "Released" ] && [ "$PVC_STATUS" = "Pending" ]; then
+  echo "  Corrigindo PV Released -> removendo claimRef antigo..."
+  kubectl patch pv openclaw-shared-workspace-pv --type=json -p='[{"op": "remove", "path": "/spec/claimRef"}]' 2>/dev/null || true
+fi
 
 echo "==> Deployment OpenClaw..."
 kubectl apply -f "$OPENCLAW_BUILD_DIR/deployment.yaml"
