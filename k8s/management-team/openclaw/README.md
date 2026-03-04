@@ -29,6 +29,17 @@ Ou em background: `nohup minikube mount ~/clawdevs-shared:/agent-shared --uid=0 
 
 **Importante:** sem esse mount, o PV fica vazio/inacessível dentro do VM.
 
+### Sincronização bidirecional
+
+O mount **é bidirecional**: a mesma pasta é usada pelo host e pelo pod.
+
+| Onde altera | Onde reflete |
+|-------------|--------------|
+| **Você edita no host** (`~/clawdevs-shared/` ou `~/clawdevs-shared/repos/`, etc.) | O pod vê em **`/workspace/`** (e em `/workspace/repos/`). Os agentes leem o que você colocou ou alterou. |
+| **O pod/K8s altera** (agentes escrevem em `/workspace/`, ex.: `/workspace/repos/user-api/`) | Você vê em **`~/clawdevs-shared/`** (ex.: `~/clawdevs-shared/repos/user-api/`). |
+
+Ou seja: se você ajustar arquivos na pasta shared no host, o K8s (pod OpenClaw) passa a ver a atualização; se o K8s ou os agentes criarem/alterarem algo em `/workspace`, a pasta shared no host é atualizada. Use `make shared-restart` se o mount ficar em estado ruim (I/O error) ou após reiniciar o Minikube.
+
 > **Nota:** `make up` agora verifica e inicia o mount automaticamente (target `shared-ensure`). Para subir tudo de uma vez, basta `make up`.
 
 ### 3. Aplicar PV e PVC do workspace compartilhado
