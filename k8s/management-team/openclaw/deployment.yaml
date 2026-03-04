@@ -63,6 +63,11 @@ spec:
                 cp /architect-memory/$f /workspace/architect/ 2>/dev/null
               done
 
+              # Developer bootstrap files (padrão completo)
+              for f in AGENTS.md HEARTBEAT.md IDENTITY.md MEMORY.md SESSION-STATE.md SOUL.md TOOLS.md USER.md; do
+                cp /developer-memory/$f /workspace/developer/ 2>/dev/null
+              done
+
               # Permissões
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
@@ -84,6 +89,9 @@ spec:
               readOnly: true
             - name: workspace-architect-configmap
               mountPath: /architect-memory
+              readOnly: true
+            - name: workspace-developer-configmap
+              mountPath: /developer-memory
               readOnly: true
       containers:
         - name: gateway
@@ -290,6 +298,10 @@ spec:
         - name: workspace-architect-configmap
           configMap:
             name: workspace-architect-configmap
+            optional: true
+        - name: workspace-developer-configmap
+          configMap:
+            name: workspace-developer-configmap
             optional: true
         - name: workspace
           persistentVolumeClaim:
