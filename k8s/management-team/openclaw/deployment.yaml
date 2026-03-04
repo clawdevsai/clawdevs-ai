@@ -23,7 +23,7 @@ spec:
         # Criar pasta de repositórios compartilhados com permissão de leitura/escrita para todos os agentes.
         - name: workspace-init
           image: busybox:1.36
-          command: ["sh", "-c", "mkdir -p /workspace/.openclaw-session-store /workspace/.ssh /workspace/workspace && chmod -R u+rwX /workspace/.openclaw-session-store && chmod 700 /workspace/.ssh && chmod 777 /workspace/workspace"]
+          command: ["sh", "-c", "mkdir -p /workspace/.openclaw-session-store /workspace/.ssh /workspace/repos && chmod -R u+rwX /workspace/.openclaw-session-store && chmod 700 /workspace/.ssh && chmod 777 /workspace/repos"]
           volumeMounts:
             - name: workspace
               mountPath: /workspace
@@ -74,8 +74,8 @@ spec:
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
               done
-              mkdir -p /workspace/workspace
-              chmod 777 /workspace/workspace
+              mkdir -p /workspace/repos
+              chmod 777 /workspace/repos
           volumeMounts:
             - name: workspace
               mountPath: /workspace

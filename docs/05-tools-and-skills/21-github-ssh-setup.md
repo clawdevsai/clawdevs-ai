@@ -84,7 +84,7 @@ Os agentes (CEO, PO, etc.) usam a chave em **`/workspace/.ssh/`** no pod (= **`~
    chmod 600 ~/clawdevs-shared/.ssh/id_ed25519_github
    ```
 
-3. O deployment do OpenClaw já define `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. Os agentes devem usar URL SSH nos clones, ex.: `git clone git@github.com:clawdevsai/clawdevs /workspace/workspace/clawdevs`.
+3. O deployment do OpenClaw já define `GIT_SSH_COMMAND` apontando para `/workspace/.ssh/id_ed25519_github`. Os agentes devem usar URL SSH nos clones, ex.: `git clone git@github.com:clawdevsai/clawdevs /workspace/repos/clawdevs`.
 
 ## 8. Resolver "Permission denied (publickey)" no pod
 
@@ -92,7 +92,7 @@ Se no pod aparecer `git@github.com: Permission denied (publickey)` ao clonar:
 
 **Opção A — Corrigir SSH:** A chave pública usada no pod deve estar no GitHub na **conta que tem acesso** ao repositório. No host, veja a chave: `cat ~/clawdevs-shared/.ssh/id_ed25519_github.pub`. No GitHub: **Settings** → **SSH and GPG keys** → **New SSH key** → cole o conteúdo e salve.
 
-**Opção B — Usar HTTPS com token (fallback):** O pod recebe `GITHUB_TOKEN` do Secret `clawdevs-github-secret`. Clone assim: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/clawdevs.git /workspace/workspace/clawdevs`. Funciona sem configurar SSH no GitHub.
+**Opção B — Usar HTTPS com token (fallback):** O pod recebe `GITHUB_TOKEN` do Secret `clawdevs-github-secret`. Clone assim: `git clone https://x-access-token:$GITHUB_TOKEN@github.com/clawdevsai/clawdevs.git /workspace/repos/clawdevs`. Funciona sem configurar SSH no GitHub.
 
 ## Referências
 

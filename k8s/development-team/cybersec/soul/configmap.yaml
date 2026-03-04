@@ -84,8 +84,8 @@ data:
 
     ## Workspace compartilhado (projetos)
 
-    - **Projetos (repositórios):** `/workspace/workspace/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
-    - Sempre buscar, ler e clonar repositórios em `/workspace/workspace/<nome-repo>`. Nunca usar outra raiz para código de projeto.
+    - **Projetos (repositórios):** `/workspace/repos/` — pasta compartilhada onde ficam os projetos; visível a todos os agentes e no host.
+    - Sempre buscar, ler e clonar repositórios em `/workspace/repos/<nome-repo>`. Nunca usar outra raiz para código de projeto.
     - Memória compartilhada entre agentes: `/workspace/shared/memory/`.
 
     ## Arquivos de memória estruturada (ler/escrever)
@@ -161,7 +161,7 @@ data:
 
     Regras:
 
-    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/workspace/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/workspace/<nome-repo>`.
+    - **Workspace compartilhado:** sempre buscar e trabalhar com projetos em `/workspace/repos/` (pasta compartilhada share onde ficam os repositórios). Clonar repositórios em `/workspace/repos/<nome-repo>`.
     - Operar localmente sempre que possível.
     - Segurança não pode elevar uso > 65%.
     - Automatizar verificações determinísticas.

@@ -67,7 +67,7 @@ Você não fará o `make prepare` todos os dias. No seu fluxo normal, os comando
 | **Erro no Github?** | `make test-github-access` | Valida as credenciais do seu `.env` contra o Github para ver se a IA pode baixar o código. |
 | **Reconectar workspace** | `kubectl rollout restart deployment/openclaw -n ai-agents` | Use após rodar `make shared` com o OpenClaw já no ar; evita I/O error em `/workspace` no pod. |
 | **Desmontar e remontar workspace (I/O error)** | `make shared-restart` | Desmonta o mount 9P, remonta e reinicia o pod OpenClaw. Use quando `make validate-workspace` falhar com "Input/output error". |
-| **Validar acesso ao workspace** | `make validate-workspace` | Confirma que `/workspace` está liberado e compartilhado para todos os agentes (CEO, PO, Developer, etc.). Lista `/workspace/` e `/workspace/workspace/`; sem I/O error = OK. |
+| **Validar acesso ao workspace** | `make validate-workspace` | Confirma que `/workspace` está liberado e compartilhado para todos os agentes (CEO, PO, Developer, etc.). Lista `/workspace/` e `/workspace/repos/`; sem I/O error = OK. |
 | **Dashboad Visual do K8s** | `make dashboard` | Abre o painel oficial do Kubernetes diretamente no seu navegador. |
 | **Parar e apagar tudo** | `make down` | Desliga todos os processos e zera o cluster. Útil quando algo corrompeu e você quer um início limpo. |
 
@@ -78,4 +78,4 @@ Você não fará o `make prepare` todos os dias. No seu fluxo normal, os comando
 1. **Nunca crie código se o OpenClaw já fizer:** Nosso sistema é baseado 100% no OpenClaw. Não reinvente a roda!
 2. **K8s Ecosystem:** Nenhuma persistência de dados de runtime fica no "host" (seu PC). Tudo vive no Minikube e usa PVCs e Redis.
 3. **Gratuito e Open Source:** Este projeto foca no uso estrito de Ollama e ferramentas abertas (sem OpenAI paga na infra principal).
-4. **Workspace dos agentes:** O diretório `/workspace` no pod é **compartilhado com acesso de leitura e escrita** para todos os agentes (CEO, PO, Developer, DevOps, QA, etc.). Qualquer agente pode ler e escrever em qualquer pasta sob `/workspace` (incluindo `/workspace/workspace/` para repositórios). Cada agente usa um subdir próprio (`/workspace/ceo`, `/workspace/po`, …). Para validar: `make validate-workspace`. Após (re)iniciar o mount (`make shared`), reinicie o deployment do OpenClaw para o pod reconectar ao volume.
+4. **Workspace dos agentes:** O diretório `/workspace` no pod é **compartilhado com acesso de leitura e escrita** para todos os agentes (CEO, PO, Developer, DevOps, QA, etc.). Qualquer agente pode ler e escrever em qualquer pasta sob `/workspace` (incluindo `/workspace/repos/` para repositórios). Cada agente usa um subdir próprio (`/workspace/ceo`, `/workspace/po`, …). Para validar: `make validate-workspace`. Após (re)iniciar o mount (`make shared`), reinicie o deployment do OpenClaw para o pod reconectar ao volume.
