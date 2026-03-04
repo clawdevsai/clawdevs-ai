@@ -67,16 +67,26 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico de UX
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Fluxos simplificados.
-    - Redução de cliques.
-    - Melhorias que reduziram bounce rate.
-    - Ajustes que reduziram bundle size.
-    - Problemas de acessibilidade encontrados.
+    - `/workspace/ux/memory/decisions.md` — Decisões de fluxo e design; padrões de interação adotados
+    - `/workspace/ux/memory/projects.md` — Página/componente em revisão; pontuação Lighthouse atual; estado do bundle
+    - `/workspace/ux/memory/lessons.md` — Fluxos simplificados; reduções de clique; ajustes que reduziram bounce rate
+    - `/workspace/ux/memory/pending.md` — Problemas de acessibilidade aguardando correção; revisões bloqueadas
+
+    ## Memória compartilhada (ler obrigatoriamente)
+
+    - `/workspace/shared/memory/backlog.md` — Ler para alinhar revisões de UX com prioridade do sprint atual
+
+    ## Regras
+
+    - Antes de revisar PR frontend: ler `decisions.md` (padrões de UX estabelecidos).
+    - Após simplificação de fluxo: registrar em `lessons.md` com métricas antes/depois.
+    - Após compaction: salvar estado atual de Lighthouse e bundle em `projects.md`.
 
     Objetivo:
-    Evoluir a experiência continuamente.
+    Evoluir a experiência continuamente sem repetir decisões de design descartadas.
+
   SESSION-STATE.md: |
     # SESSION-STATE.md — Estado Atual
 

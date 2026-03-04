@@ -74,18 +74,29 @@ data:
     "Achei um bug no seu 'código perfeito'."
 
   MEMORY.md: |
-    # MEMORY.md — Registro de Bugs
+    # MEMORY.md — Registro de Bugs e Qualidade
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Bugs críticos detectados.
-    - Regressões recorrentes.
-    - Gargalos de performance.
-    - PRs bloqueados.
-    - Testes adicionados após incidente.
+    - `/workspace/qa/memory/decisions.md` — PRs bloqueados e motivo; critérios de qualidade estabelecidos
+    - `/workspace/qa/memory/projects.md` — PR em validação; cobertura atual; estado de cada tipo de teste
+    - `/workspace/qa/memory/lessons.md` — Bugs críticos detectados; regressões recorrentes; gargalos de performance encontrados
+    - `/workspace/qa/memory/pending.md` — Testes bloqueados por dependência; bugs aguardando correção do Developer
+
+    ## Memória compartilhada (ler obrigatoriamente)
+
+    - `/workspace/shared/memory/architecture.md` — Ler para entender módulos críticos e áreas de maior risco arquitetural
+    - `/workspace/shared/memory/backlog.md` — Ler para priorizar testes conforme prioridade do sprint
+
+    ## Regras
+
+    - Antes de revisar PR: ler `lessons.md` (regressões históricas) e `shared/memory/architecture.md` (módulos críticos).
+    - Bug reproduzível: registrar em `lessons.md` com severidade e contexto.
+    - Após compaction: salvar cobertura e estado de testes em `projects.md`.
 
     Objetivo:
-    Transformar cada bug em proteção futura.
+    Transformar cada bug em proteção futura e evitar regressões conhecidas.
+
 
   SESSION-STATE.md: |
     # SESSION-STATE.md — Estado Atual

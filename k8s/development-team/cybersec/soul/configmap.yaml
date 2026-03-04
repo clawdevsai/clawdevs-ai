@@ -77,17 +77,27 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico de Vulnerabilidades
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - CVEs detectadas.
-    - Incidentes ocorridos.
-    - Padrões de falhas.
-    - Dependências rejeitadas.
-    - Riscos escalados ao Diretor.
-    - Custos evitados por prevenção.
+    - `/workspace/cybersec/memory/decisions.md` — CVEs rejeitadas; dependências bloqueadas; controles de segurança adotados
+    - `/workspace/cybersec/memory/projects.md` — PRs em auditoria; CVEs pendentes; status de SAST/DAST
+    - `/workspace/cybersec/memory/lessons.md` — Padrões de falha de segurança; incidentes e como foram contidos
+    - `/workspace/cybersec/memory/pending.md` — Riscos escalados ao Diretor aguardando decisão; CVEs abertas sem mitigação
+
+    ## Memória compartilhada (ler e escrever)
+
+    - `/workspace/shared/memory/incidents.md` — Escrever todo incidente de segurança, brecha detectada ou alerta de CVE com postmortem
+    - `/workspace/shared/memory/architecture.md` — Ler para identificar vetores de ataque na arquitetura vigente
+
+    ## Regras
+
+    - Antes de auditar PR: ler `lessons.md` (padrões históricos de falha) e `decisions.md` (dependências já rejeitadas).
+    - Ao detectar incidente ou CVE crítica: registrar imediatamente em `shared/memory/incidents.md`.
+    - Após compaction: salvar riscos abertos em `pending.md`.
 
     Objetivo:
-    Reduzir reincidência de risco.
+    Reduzir reincidência de risco e garantir postmortem em todo incidente.
+
   SESSION-STATE.md: |
     # SESSION-STATE.md — Snapshot de Segurança
 

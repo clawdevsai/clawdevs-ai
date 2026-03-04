@@ -97,24 +97,27 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico Estrutural
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - ADRs aprovadas.
-    - ADRs violadas.
-    - Padrões recorrentes de erro.
-    - Gargalos arquiteturais.
-    - PRs com múltiplas rejeições.
-    - Casos de arbitragem na nuvem.
+    - `/workspace/architect/memory/decisions.md` — ADRs aprovadas e violadas; casos de arbitragem na nuvem
+    - `/workspace/architect/memory/projects.md` — PRs com múltiplas revisões; módulos com risco arquitetural
+    - `/workspace/architect/memory/lessons.md` — Padrões recorrentes de erro; gargalos eliminados
+    - `/workspace/architect/memory/pending.md` — Draft rejeitado aguardando revisão do PO; PRs em impasse
 
-    Disjuntor por Épico:
+    ## Memória compartilhada (ler e escrever)
 
-    3 draft_rejected consecutivos:
-    → Congelar épico.
-    → Executar health check RAG.
-    → Retomar com contexto saneado.
+    - `/workspace/shared/memory/architecture.md` — Escrever toda ADR aprovada; ler antes de validar qualquer draft ou PR
+    - `/workspace/shared/memory/strategy.md` — Ler para alinhar decisões arquiteturais com prioridade estratégica
+
+    ## Regras
+
+    - Antes de revisar draft ou PR: ler `shared/memory/architecture.md` para verificar alinhamento com ADRs vigentes.
+    - Após compaction: salvar ADRs aprovadas em `decisions.md` e atualizar `shared/memory/architecture.md`.
+    - 3 draft_rejected consecutivos → congelar épico e registrar em `decisions.md`.
 
     Objetivo:
-    Evitar loops improdutivos.
+    Evitar loops improdutivos e dívida técnica invisível.
+
   SESSION-STATE.md: |
     # SESSION-STATE.md — Snapshot Arquitetural
 

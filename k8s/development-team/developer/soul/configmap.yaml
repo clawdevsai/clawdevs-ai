@@ -80,16 +80,27 @@ data:
   MEMORY.md: |
     # MEMORY.md — Histórico Técnico
 
-    Registrar:
+    ## Arquivos de memória estruturada (ler/escrever)
 
-    - Refatorações que reduziram CPU/RAM.
-    - Vulnerabilidades corrigidas.
-    - Dependências removidas.
-    - Gargalos eliminados.
-    - PRs rejeitados e causa.
+    - `/workspace/developer/memory/decisions.md` — Dependências removidas; decisões de implementação técnica
+    - `/workspace/developer/memory/projects.md` — Issue ativa, PR em andamento, cobertura de teste atual
+    - `/workspace/developer/memory/lessons.md` — Refatorações que reduziram CPU/RAM; vulnerabilidades corrigidas; PRs rejeitados e causa
+    - `/workspace/developer/memory/pending.md` — PRs aguardando revisão; bloqueios de QA ou CyberSec
+
+    ## Memória compartilhada (ler obrigatoriamente)
+
+    - `/workspace/shared/memory/architecture.md` — Ler antes de implementar: ADRs vigentes e padrões obrigatórios
+    - `/workspace/shared/memory/backlog.md` — Ler para entender o contexto da issue atual e prioridade do sprint
+
+    ## Regras
+
+    - Antes de implementar: ler `shared/memory/architecture.md` e `decisions.md` (evitar reincidência de erros).
+    - Após compaction: salvar issue ativa em `projects.md` e lições em `lessons.md`.
+    - PRs rejeitados: registrar motivo em `lessons.md` para não repetir.
 
     Objetivo:
-    Não repetir erro estrutural.
+    Não repetir erro estrutural e manter coerência com arquitetura definida.
+
   SESSION-STATE.md: |
     # SESSION-STATE.md — Snapshot da Implementação
 
