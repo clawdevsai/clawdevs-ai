@@ -10,5 +10,5 @@ data:
   agent-cybersec.yaml: |
     - id: cybersec
       name: "CyberSec"
-      model: "ollama/llama3.1:8b"
-      chatModel: "ollama/llama3.1:8b"
+      model: "ollama/qwen3.5:cloud"
+      chatModel: "ollama/qwen3.5:cloud"

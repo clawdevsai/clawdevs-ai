@@ -10,5 +10,5 @@ data:
   agent-devops.yaml: |
     - id: devops
       name: "DevOps/SRE"
-      model: "ollama/qwen2.5-coder:14b"
-      chatModel: "ollama/qwen2.5-coder:7b"
+      model: "ollama/qwen3.5:cloud"
+      chatModel: "ollama/qwen3.5:cloud"
