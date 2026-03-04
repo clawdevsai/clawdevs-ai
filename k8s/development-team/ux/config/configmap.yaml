@@ -10,5 +10,5 @@ data:
   agent-ux.yaml: |
     - id: ux
       name: "UX"
-      model: "ollama/llama3.2-vision:11b"
-      chatModel: "ollama/llama3.2-vision:11b"
+      model: "ollama/qwen3.5:cloud"
+      chatModel: "ollama/qwen3.5:cloud"
