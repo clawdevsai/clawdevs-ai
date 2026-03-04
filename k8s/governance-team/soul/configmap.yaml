@@ -43,7 +43,7 @@ data:
 
     - Scan periódico do repo dedicado.
     - Revisão de consistência entre agentes.
-    - Busca por melhorias externas (ex: boas práticas OpenClaw, ClawHub).
+    - Busca por melhorias externas (ex: boas práticas OpenClaw, templates de mercado).
     - Avaliação de impacto em custo e performance.
     - Geração de PR estruturado.
 

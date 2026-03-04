@@ -116,9 +116,24 @@ spec:
               value: "--max-old-space-size=1024"
             - name: OLLAMA_API_KEY
               value: "ollama-local"
-            # Agentes usam chave SSH em /workspace/.ssh (host: ~/clawdevs-shared/.ssh); o arquivo não vem gerado — coloque id_ed25519_github (e .pub) lá.
+            # Identidade Master Git (ClawDevs)
+            - name: GIT_AUTHOR_NAME
+              value: "Master DevOps (ClawDevs)"
+            - name: GIT_AUTHOR_EMAIL
+              value: "devops@clawdevs.ai"
+            - name: GIT_COMMITTER_NAME
+              value: "Master DevOps (ClawDevs)"
+            - name: GIT_COMMITTER_EMAIL
+              value: "devops@clawdevs.ai"
+            - name: GITHUB_SSH_KEY_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-github-secret
+                  key: GITHUB_SSH_KEY_NAME
+                  optional: true
+            # Agentes usam chave SSH em /workspace/.ssh (host: ~/clawdevs-shared/.ssh).
             - name: GIT_SSH_COMMAND
-              value: "ssh -i /workspace/.ssh/id_ed25519_github -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+              value: "ssh -i /workspace/.ssh/$(GITHUB_SSH_KEY_NAME) -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
             - name: TELEGRAM_BOT_TOKEN
               valueFrom:
                 secretKeyRef:

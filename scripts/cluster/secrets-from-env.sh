@@ -64,6 +64,11 @@ if [[ -n "$GITHUB_TOKEN" || -n "$GH_TOKEN" || -n "$GITHUB_SSH_PRIVATE_KEY" ]]; t
   [[ -n "$GITHUB_ORG" ]]   && GARGS+=(--from-literal=GITHUB_ORG="$GITHUB_ORG")
   # Chave SSH privada em base64 — montada no pod DevOps em /root/.ssh/
   [[ -n "$GITHUB_SSH_PRIVATE_KEY" ]] && GARGS+=(--from-literal=GITHUB_SSH_PRIVATE_KEY="$GITHUB_SSH_PRIVATE_KEY")
+  # Nome da chave extraído do path no host
+  if [[ -n "$GIT_SSH_KEY_PATH" ]]; then
+    SSH_KEY_NAME=$(basename "$GIT_SSH_KEY_PATH")
+    GARGS+=(--from-literal=GITHUB_SSH_KEY_NAME="$SSH_KEY_NAME")
+  fi
   kubectl create secret generic clawdevs-github-secret -n "$NS" "${GARGS[@]}" \
     --dry-run=client -o yaml | kubectl apply -f -
   CREATED=1
