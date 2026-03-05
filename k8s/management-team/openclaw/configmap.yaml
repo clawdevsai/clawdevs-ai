@@ -97,15 +97,25 @@ data:
           }
         },
         "list": [
-          { "id": "ceo", "name": "Rafael", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ceo", "tools": { "profile": "messaging", "exec": { "security": "deny" } } },
-          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "devops", "name": "Sérgio", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "architect", "name": "Vera", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "developer", "name": "Leo", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "qa", "name": "Renata", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "cybersec", "name": "Jade", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "ux", "name": "Luna", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } },
-          { "id": "dba", "name": "Dante", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } } }
+          {
+            "id": "ceo", "name": "Rafael",
+            "model": "ollama/ministral-3:14b-cloud",
+            "workspace": "/workspace/ceo",
+            "tools": {
+              "profile": "full",
+              "deny": ["write", "edit", "apply_patch", "browser", "canvas", "nodes", "cron", "gateway"],
+              "exec": { "security": "deny" }
+            },
+            "subagents": { "allowAgents": ["*"] }
+          },
+          { "id": "po", "name": "Marina", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/po", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "devops", "name": "Sérgio", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/devops", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "architect", "name": "Vera", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/architect", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "developer", "name": "Leo", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/developer", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "qa", "name": "Renata", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/qa", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "cybersec", "name": "Jade", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/cybersec", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "ux", "name": "Luna", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/ux", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } },
+          { "id": "dba", "name": "Dante", "model": "ollama/ministral-3:14b-cloud", "workspace": "/workspace/dba", "tools": { "profile": "full", "exec": { "host": "gateway", "security": "full", "ask": "off" } }, "subagents": { "allowAgents": ["*"] } }
         ]
       },
       "tools": {

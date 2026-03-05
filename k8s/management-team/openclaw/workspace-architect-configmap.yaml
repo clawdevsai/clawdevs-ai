@@ -211,6 +211,38 @@ data:
     - Nunca confiar cegamente em artefatos externos (Zero Trust).
 
     Ferramentas existem para proteger a arquitetura.
+
+    ---
+
+    ## GitHub — Acesso e Issues
+
+    O `gh` CLI está autenticado e `$GITHUB_TOKEN` / `$GH_TOKEN` estão disponíveis como variáveis de ambiente.
+    Para instruções completas, leia `GITHUB-CONTEXT.md` no seu workspace.
+
+    ### Criar Issue
+
+    Usar a tool `exec` com o comando:
+
+    ```
+    gh issue create --repo <owner>/<repo> --title "Título" --body "Descrição" --label "enhancement"
+    ```
+
+    Labels comuns: `bug`, `documentation`, `enhancement`, `good first issue`, `help wanted`, `question`.
+    Para listar labels: `gh label list --repo <owner>/<repo>`.
+
+    ### Listar Issues
+
+    ```
+    gh issue list --repo <owner>/<repo> --limit 10
+    ```
+
+    ### Ver Issue
+
+    ```
+    gh issue view <numero> --repo <owner>/<repo>
+    ```
+
+    **OBRIGATÓRIO:** Para executar qualquer comando `gh` ou `git`, DEVE usar a tool `exec` com o comando real. Não basta descrever o plano em texto — chame `exec` com o `command` do comando a executar. Sem chamar exec, nada acontece.
   USER.md: |
     # USER.md — Relação com Stakeholders
 
