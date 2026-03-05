@@ -75,6 +75,19 @@ spec:
                 cp /devops-memory/$f /workspace/devops/ 2>/dev/null
               done
 
+              # GITHUB-CONTEXT.md compartilhado para todos os agentes (exceto CEO)
+              for id in po devops architect developer qa cybersec ux dba; do
+                cp /shared-github/GITHUB-CONTEXT.md /workspace/$id/GITHUB-CONTEXT.md 2>/dev/null
+              done
+
+              # Agentes sem configmap proprio (qa, cybersec, ux, dba): garantir TOOLS.md com secao GitHub
+              for id in qa cybersec ux dba; do
+                touch /workspace/$id/TOOLS.md
+                if ! grep -q "GitHub" /workspace/$id/TOOLS.md 2>/dev/null; then
+                  cat /shared-github/TOOLS-GITHUB-SECTION.md >> /workspace/$id/TOOLS.md
+                fi
+              done
+
               # Permissões: cada agente pode ler/escrever na sua pasta; pasta compartilhada (repos) acessível a todos
               for id in ceo po devops architect developer qa cybersec ux dba; do
                 chmod -R u+rwX /workspace/$id
@@ -104,6 +117,9 @@ spec:
               readOnly: true
             - name: workspace-devops-configmap
               mountPath: /devops-memory
+              readOnly: true
+            - name: shared-github-context
+              mountPath: /shared-github
               readOnly: true
       containers:
         - name: gateway
@@ -341,6 +357,10 @@ spec:
         - name: workspace-devops-configmap
           configMap:
             name: workspace-devops-configmap
+            optional: true
+        - name: shared-github-context
+          configMap:
+            name: shared-github-context
             optional: true
         - name: workspace
           persistentVolumeClaim:
