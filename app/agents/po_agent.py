@@ -20,7 +20,7 @@ class POAgent(BaseRoleAgent):
             policy=ExecutionPolicy.from_env("PO", default_block_ms=5000, default_timeout_sec=0),
         )
         self.strategy_doc_key = os.getenv("STRATEGY_DOC_KEY", f"{KEY_PREFIX}:strategy_doc")
-        self.github_repo = os.getenv("GITHUB_REPO", os.getenv("GH_REPO", ""))
+        self.github_repo = os.getenv("GITHUB_REPO", "")
 
     def prepare(self, redis_client, ctx: RunContext) -> PreparedRun:
         return PreparedRun()
