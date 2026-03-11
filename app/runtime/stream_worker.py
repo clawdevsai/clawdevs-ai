@@ -8,6 +8,7 @@ from typing import Any, Callable
 
 from .agent_runtime import AgentResult, GatewayOutput, PreparedRun, RedisClient, StreamAgent
 from .logging import log_error, log_event
+from .openclaw_assets import render_openclaw_message
 from .run_context import RunContext
 
 Sender = Callable[[str, str, int], tuple[bool, GatewayOutput]]
@@ -97,6 +98,8 @@ def process_stream_message(
             print(result.summary)
         return result
     instruction = prepared.instruction or agent.build_instruction(redis_client, ctx)
+    allowed_tools = tuple(getattr(sender, "allowed_tools", ()))
+    instruction = render_openclaw_message(agent.role_name, instruction, allowed_tools=allowed_tools)
     log_event(
         "runtime.message_dispatching",
         role=agent.role_name,
@@ -107,6 +110,8 @@ def process_stream_message(
         issue_id=ctx.issue_id,
         attempt=ctx.attempt,
         timeout_sec=ctx.policy.timeout_sec,
+        openclaw_context_applied=True,
+        allowed_tools=list(allowed_tools),
     )
     ok, output = sender(agent.session_key, instruction, ctx.policy.timeout_sec)
     if not ok:

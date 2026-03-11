@@ -5,17 +5,28 @@ from app.runtime import (
     PreparedRun,
     RunContext,
     ToolRegistry,
+    TOOL_PUBLISH_BACKLOG,
+    TOOL_PUBLISH_CODE_READY,
+    TOOL_PUBLISH_DEPLOY_EVENT,
+    TOOL_PUBLISH_DRAFT_REJECTED,
     build_session_sender,
     build_runtime_tool_registry,
     extract_issue_id,
+    get_role_openclaw_config,
     increment_attempt,
     load_runtime_stack_config,
     log_event,
     payload_to_dict,
     process_stream_message,
+    publish_backlog,
+    publish_code_ready,
+    publish_deploy_event,
+    publish_draft_rejected,
+    render_openclaw_message,
     should_stop_task,
     validate_runtime_stack,
 )
+from app.runtime.check_stack import main as check_stack_main
 from app.agents.base import AgentSettings, BaseRoleAgent
 from app.agents.architect_agent import ArchitectDraftAgent
 from app.agents.developer_agent import DeveloperAgent
@@ -23,6 +34,7 @@ from app.agents.devops_agent import DevOpsAgent
 import io
 from contextlib import redirect_stdout
 import os
+from app.shared.issue_state import STATE_DEPLOYED, STATE_READY, STATE_REFINAMENTO
 
 
 class FakeRedis:
@@ -63,6 +75,19 @@ class FakeRedis:
 
     def expire(self, key, ttl_sec):
         return True
+
+    def smembers(self, key):
+        return set()
+
+    def sadd(self, key, value):
+        return 1
+
+    def hset(self, key, mapping):
+        self.store[key] = mapping
+        return True
+
+    def hgetall(self, key):
+        return self.store.get(key, {})
 
 
 class FakeAgent:
@@ -177,7 +202,10 @@ def test_process_stream_message_acks_when_sender_succeeds():
 
     def sender(session_key, message, timeout_sec):
         assert session_key == "agent:po:test"
-        assert message == "directive=Priorizar 2FA"
+        assert "OpenClaw role profile: po" in message
+        assert "[rule:core]" in message
+        assert "[skill:github_issue_flow]" in message
+        assert "directive=Priorizar 2FA" in message
         assert timeout_sec == 0
         return True, {"queued": True}
 
@@ -294,14 +322,137 @@ def test_tool_registry_dispatches_session_sender():
         calls.append((session_key, message, timeout_sec))
         return True, {"queued": True}
 
-    registry.register("openclaw.sessions.send", fake_tool)
-    sender = build_session_sender(registry)
+    registry.register("openclaw.sessions.send", fake_tool, allowed_roles=("PO",))
+    sender = build_session_sender(registry, role_name="PO")
 
     ok, output = sender("agent:po:test", "ship it", 3)
 
     assert ok is True
     assert output == {"queued": True}
     assert calls == [("agent:po:test", "ship it", 3)]
+    assert sender.allowed_tools == ("openclaw.sessions.send",)
+
+
+def test_tool_registry_blocks_role_without_permission():
+    registry = ToolRegistry()
+    registry.register(
+        "openclaw.sessions.send",
+        lambda session_key, message, timeout_sec: (True, {"queued": True}),
+        allowed_roles=("Developer",),
+    )
+    sender = build_session_sender(registry, role_name="PO")
+
+    try:
+        sender("agent:po:test", "ship it", 3)
+    except PermissionError as error:
+        assert "role sem permissao" in str(error)
+    else:
+        raise AssertionError("PermissionError esperado para role sem acesso")
+
+
+def test_publish_backlog_sets_ready_and_emits_task_backlog():
+    redis_client = FakeRedis()
+
+    ok, output = publish_backlog(
+        redis_client=redis_client,
+        issue_id="42",
+        title="Login",
+        summary="Ship login",
+        priority="1",
+    )
+
+    assert ok is True
+    assert output["stream"] == "task:backlog"
+    assert redis_client.store["project:v1:issue:42:state"] == STATE_READY
+    assert redis_client.added[-1] == (
+        "task:backlog",
+        {"issue_id": "42", "title": "Login", "summary": "Ship login", "priority": "1"},
+    )
+
+
+def test_publish_draft_rejected_sets_refinamento():
+    redis_client = FakeRedis()
+
+    ok, output = publish_draft_rejected(
+        redis_client=redis_client,
+        issue_id="51",
+        reason="missing acceptance criteria",
+        title="Feature X",
+    )
+
+    assert ok is True
+    assert output["state"] == STATE_REFINAMENTO
+    assert redis_client.store["project:v1:issue:51:state"] == STATE_REFINAMENTO
+    assert redis_client.added[-1] == (
+        "draft_rejected",
+        {"issue_id": "51", "reason": "missing acceptance criteria", "title": "Feature X"},
+    )
+
+
+def test_publish_code_ready_emits_code_ready_stream():
+    redis_client = FakeRedis()
+
+    ok, output = publish_code_ready(
+        redis_client=redis_client,
+        issue_id="88",
+        branch="feat/login",
+        repo="org/repo",
+    )
+
+    assert ok is True
+    assert output["stream"] == "code:ready"
+    assert redis_client.added[-1] == (
+        "code:ready",
+        {"issue_id": "88", "branch": "feat/login", "repo": "org/repo"},
+    )
+
+
+def test_publish_deploy_event_sets_deployed_and_emits_feature_complete():
+    redis_client = FakeRedis()
+
+    ok, output = publish_deploy_event(
+        redis_client=redis_client,
+        issue_id="90",
+        branch="main",
+        repo="org/repo",
+        pr="123",
+    )
+
+    assert ok is True
+    assert output["state"] == STATE_DEPLOYED
+    assert redis_client.store["project:v1:issue:90:state"] == STATE_DEPLOYED
+    assert redis_client.added[0] == (
+        "event:devops",
+        {"issue_id": "90", "branch": "main", "repo": "org/repo", "pr": "123"},
+    )
+    assert redis_client.added[1][0] == "orchestrator:events"
+    assert redis_client.added[1][1]["type"] == "feature_complete"
+
+
+def test_runtime_tool_registry_registers_role_tools():
+    previous = {
+        key: os.environ.get(key)
+        for key in ("OPENCLAW_GATEWAY_WS", "MODEL_PROVIDER", "MODEL_MODE", "OLLAMA_BASE_URL", "OLLAMA_MODEL")
+    }
+    os.environ["OPENCLAW_GATEWAY_WS"] = "ws://127.0.0.1:18789"
+    os.environ["MODEL_PROVIDER"] = "ollama"
+    os.environ["MODEL_MODE"] = "cloud"
+    os.environ["OLLAMA_BASE_URL"] = "https://ollama.example"
+    os.environ["OLLAMA_MODEL"] = "qwen2.5-coder:32b"
+
+    try:
+        registry = build_runtime_tool_registry()
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+    assert TOOL_PUBLISH_BACKLOG in registry._tools
+    assert TOOL_PUBLISH_DRAFT_REJECTED in registry._tools
+    assert TOOL_PUBLISH_CODE_READY in registry._tools
+    assert TOOL_PUBLISH_DEPLOY_EVENT in registry._tools
 
 
 def test_runtime_stack_defaults_to_openclaw_plus_ollama():
@@ -363,6 +514,34 @@ def test_runtime_tool_registry_validates_stack_before_build():
                 os.environ[key] = value
 
 
+def test_check_stack_returns_success_for_valid_openclaw_ollama_stack():
+    previous = {
+        key: os.environ.get(key)
+        for key in ("OPENCLAW_GATEWAY_WS", "MODEL_PROVIDER", "MODEL_MODE", "OLLAMA_BASE_URL", "OLLAMA_MODEL")
+    }
+    os.environ["OPENCLAW_GATEWAY_WS"] = "ws://127.0.0.1:18789"
+    os.environ["MODEL_PROVIDER"] = "ollama"
+    os.environ["MODEL_MODE"] = "cloud"
+    os.environ["OLLAMA_BASE_URL"] = "https://ollama.example"
+    os.environ["OLLAMA_MODEL"] = "qwen2.5-coder:32b"
+
+    try:
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            exit_code = check_stack_main()
+    finally:
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+    output = buffer.getvalue()
+    assert exit_code == 0
+    assert '"ok": true' in output
+    assert '"stack": "openclaw+ollama"' in output
+
+
 def test_log_event_writes_json_line():
     buffer = io.StringIO()
     with redirect_stdout(buffer):
@@ -373,6 +552,36 @@ def test_log_event_writes_json_line():
     assert '"event": "runtime.test"' in output
     assert '"run_id": "r1"' in output
     assert '"trace_id": "t1"' in output
+
+
+def test_openclaw_role_assets_are_bound_for_developer():
+    config = get_role_openclaw_config("Developer")
+
+    assert config is not None
+    assert config.profile == "developer"
+    assert "code_delivery" in config.skills
+    assert "change_safety" in config.rules
+    assert config.output_schema == "developer"
+
+
+def test_render_openclaw_message_includes_profile_rules_and_skills():
+    message = render_openclaw_message(
+        "Developer",
+        "Implementar issue 42",
+        allowed_tools=("openclaw.sessions.send", "redis.publish_code_ready"),
+    )
+
+    assert "OpenClaw role profile: developer" in message
+    assert "[rule:core]" in message
+    assert "[rule:change_safety]" in message
+    assert "[skill:code_delivery]" in message
+    assert "[skill:test_execution]" in message
+    assert "Allowed runtime tools:" in message
+    assert "- redis.publish_code_ready" in message
+    assert "[output_schema:developer]" in message
+    assert "Expected output schema for Developer." in message
+    assert "Task instruction:" in message
+    assert "Implementar issue 42" in message
 
 
 def test_architect_agent_acks_without_sending_when_issue_missing():

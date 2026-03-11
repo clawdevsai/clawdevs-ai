@@ -1,0 +1,101 @@
+#!/usr/bin/env python3
+"""Assets de profiles, rules e skills usados no contexto do OpenClaw."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+
+ASSETS_ROOT = Path(__file__).resolve().parents[1] / "openclaw"
+
+
+@dataclass(frozen=True, slots=True)
+class OpenClawRoleConfig:
+    profile: str
+    rules: tuple[str, ...]
+    skills: tuple[str, ...]
+    output_schema: str
+
+
+ROLE_CONFIGS: dict[str, OpenClawRoleConfig] = {
+    "PO": OpenClawRoleConfig(
+        profile="po",
+        rules=("core", "product_scope"),
+        skills=("backlog_decomposition", "acceptance_criteria", "github_issue_flow", "redis_streams"),
+        output_schema="po",
+    ),
+    "Architect-draft": OpenClawRoleConfig(
+        profile="architect",
+        rules=("core", "solution_simplicity"),
+        skills=("solution_design", "architecture_review", "implementation_planning", "redis_streams"),
+        output_schema="architect",
+    ),
+    "Developer": OpenClawRoleConfig(
+        profile="developer",
+        rules=("core", "engineering", "change_safety"),
+        skills=("code_delivery", "implementation_planning", "test_execution", "redis_streams"),
+        output_schema="developer",
+    ),
+    "DevOps": OpenClawRoleConfig(
+        profile="devops",
+        rules=("core", "release_integrity"),
+        skills=("release_ops", "deploy_validation", "redis_streams"),
+        output_schema="devops",
+    ),
+}
+
+
+def _read_asset(kind: str, name: str) -> str:
+    path = ASSETS_ROOT / kind / f"{name}.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def get_role_openclaw_config(role_name: str) -> OpenClawRoleConfig | None:
+    return ROLE_CONFIGS.get(role_name)
+
+
+def render_openclaw_context(role_name: str, allowed_tools: tuple[str, ...] = ()) -> str:
+    config = get_role_openclaw_config(role_name)
+    if config is None:
+        return ""
+
+    parts = [f"OpenClaw role profile: {config.profile}"]
+    profile_text = _read_asset("profiles", config.profile)
+    if profile_text:
+        parts.append(profile_text)
+
+    rule_blocks = []
+    for rule_name in config.rules:
+        rule_text = _read_asset("rules", rule_name)
+        if rule_text:
+            rule_blocks.append(f"[rule:{rule_name}]\n{rule_text}")
+    if rule_blocks:
+        parts.append("\n".join(rule_blocks))
+
+    skill_blocks = []
+    for skill_name in config.skills:
+        skill_text = _read_asset("skills", skill_name)
+        if skill_text:
+            skill_blocks.append(f"[skill:{skill_name}]\n{skill_text}")
+    if skill_blocks:
+        parts.append("\n".join(skill_blocks))
+
+    if allowed_tools:
+        tool_lines = ["Allowed runtime tools:"]
+        tool_lines.extend(f"- {tool_name}" for tool_name in allowed_tools)
+        parts.append("\n".join(tool_lines))
+
+    output_schema_text = _read_asset("output_schemas", config.output_schema)
+    if output_schema_text:
+        parts.append(f"[output_schema:{config.output_schema}]\n{output_schema_text}")
+
+    return "\n\n".join(parts).strip()
+
+
+def render_openclaw_message(role_name: str, instruction: str, allowed_tools: tuple[str, ...] = ()) -> str:
+    context = render_openclaw_context(role_name, allowed_tools=allowed_tools)
+    if not context:
+        return instruction
+    return f"{context}\n\n---\n\nTask instruction:\n\n{instruction}"

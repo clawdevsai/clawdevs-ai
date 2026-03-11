@@ -19,6 +19,7 @@ O nucleo ativo ja possui:
 - budgets de execucao com enforcement no loop do runtime
 - `ToolRegistry` minimo para envio ao OpenClaw
 - stack explicita `OpenClaw + Ollama`
+- assets explicitos de `profiles`, `rules` e `skills` para o OpenClaw
 - governanca centralizada em um unico modulo
 - logs estruturados em JSON
 - resultados de agente com `status_code` e `event_name`
@@ -39,6 +40,7 @@ tests/
 ## Modulos principais
 
 - `app/runtime/`: contrato publico do runtime, envelope, budgets, logging, tool registry, cliente OpenClaw e configuracao de provider
+- `app/openclaw/`: assets de profiles, rules e skills por papel
 - `app/agents/`: implementacoes de PO, Architect, Developer e DevOps
 - `app/core/orchestration.py`: governanca, degradacao, consenso e emissao de eventos
 - `app/shared/`: Redis e estado de issue
@@ -51,6 +53,14 @@ O runtime atual assume explicitamente esta stack:
 ```text
 Workers -> OpenClaw Gateway -> Ollama
 ```
+
+Contexto do agente no OpenClaw:
+
+```text
+profile + rules + skills + allowed tools + output schema + instruction
+```
+
+O runtime monta esse pacote automaticamente por papel antes do dispatch para o Gateway.
 
 Padrao operacional:
 
@@ -72,6 +82,7 @@ OLLAMA_MODEL=seu-modelo
 
 ```bash
 make test
+make check-runtime-stack
 python -m app.agents.po_worker
 python -m app.agents.architect_worker
 python -m app.agents.developer_worker
@@ -82,6 +93,7 @@ Se `make` nao estiver instalado no ambiente local, use o fallback direto:
 
 ```bash
 python -m pytest -q
+python -m app.runtime.check_stack
 ```
 
 ## Escopo removido

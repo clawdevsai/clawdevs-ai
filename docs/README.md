@@ -2,7 +2,7 @@
 
 Documentacao viva restante do repositorio:
 
-- [19-tecnico-runtime-roadmap-refatoracao.md](./19-tecnico-runtime-roadmap-refatoracao.md)
+- [runtime-roadmap.md](./runtime-roadmap.md)
 
 Esse documento agora serve como registro do alvo arquitetural e do que ja foi consolidado no runtime atual.
 
