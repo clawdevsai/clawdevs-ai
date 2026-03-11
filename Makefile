@@ -6,6 +6,8 @@ IMAGE ?= clawdevs-ai:latest
 NAMESPACE ?= clawdevs-ai
 OLLAMA_MODEL ?= qwen3-next:80b-cloud
 OLLAMA_POD_SELECTOR ?= app=ollama
+OLLAMA_AUTO_PULL ?= 1
+OLLAMA_MODELS ?= rnj-1:8b-cloud,devstral-small-2:24b-cloud,nemotron-3-nano:30b-cloud,gpt-oss:120b-cloud,qwen3-coder-next:cloud,qwen3-coder:480b-cloud,devstral-2:123b-cloud,ministral-3:14b-cloud,qwen3-next:80b-cloud,qwen3.5:397b-cloud
 OPENCLAW_GATEWAY_IMAGE ?= clawdevs-ai:latest
 TELEGRAM_BOT_TOKEN ?=
 TELEGRAM_CHAT_ID ?=
@@ -14,7 +16,7 @@ MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull telegram-enable telegram-disable telegram-logs gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard
 
 help:
 	@echo "make test      - executa a suite"
@@ -42,8 +44,12 @@ help:
 	@echo "make gpu-debug - diagnostico rapido de GPU no cluster"
 	@echo "make gpu-smoke - valida GPU no cluster (nvidia-smi)"
 	@echo "make ollama-pull OLLAMA_MODEL=<modelo> - baixa modelo no pod Ollama"
+	@echo "make ollama-pull-all - baixa automaticamente a lista OLLAMA_MODELS no pod Ollama"
+	@echo "OLLAMA_MODELS=<m1,m2,...> pode sobrescrever a lista padrao de modelos"
+	@echo "make ollama-signin - gera URL de login para Ollama Cloud (necessario p/ modelos cloud)"
 	@echo "make gh-check - valida gh CLI em gateway e todos os agentes"
-	@echo "make gh-token-sync - sincroniza .env -> configmap (inclui GITHUB_TOKEN/GH_TOKEN) e reinicia deployments"
+	@echo "make env-sync - sincroniza .env -> configmap (nao sensivel) + secret (sensivel)"
+	@echo "make gh-token-sync - alias para make env-sync"
 	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
 	@echo "OPENCLAW_GATEWAY_IMAGE=<img> pode sobrescrever imagem do gateway"
 	@echo "make clean     - remove caches Python"
@@ -111,11 +117,15 @@ image-build:
 
 deploy:
 	@$(KUBECTL) apply -f k8s/stack.yaml
+	@$(MAKE) env-sync
+	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 
 deploy-host:
 	@$(KUBECTL) delete deploy/ollama svc/ollama -n $(NAMESPACE) --ignore-not-found=true
 	@$(KUBECTL) apply -f k8s/stack-host-ollama.yaml
+	@$(MAKE) env-sync
+	@powershell -NoProfile -Command "if ('$(OLLAMA_AUTO_PULL)' -eq '1') { & $(MAKE) ollama-pull-all } else { Write-Host 'OLLAMA_AUTO_PULL=0, pulando bootstrap de modelos' }"
 	@$(KUBECTL) set image deployment/openclaw-gateway gateway=$(OPENCLAW_GATEWAY_IMAGE) -n $(NAMESPACE)
 	@$(KUBECTL) rollout restart deployment/po-worker -n $(NAMESPACE)
 	@$(KUBECTL) get pods -n $(NAMESPACE)
@@ -186,6 +196,12 @@ ollama-pull:
 	@$(KUBECTL) get pods -n $(NAMESPACE) -l $(OLLAMA_POD_SELECTOR)
 	@$(KUBECTL) exec -n $(NAMESPACE) deployment/ollama -- ollama pull $(OLLAMA_MODEL)
 
+ollama-pull-all:
+	@powershell -NoProfile -Command "$$models = @(); foreach ($$item in '$(OLLAMA_MODELS)'.Split(',')) { $$m = $$item.Trim(); if (-not [string]::IsNullOrWhiteSpace($$m)) { $$models += $$m } }; if (-not $$models -or $$models.Count -eq 0) { Write-Host 'ERRO: OLLAMA_MODELS vazio.'; exit 1 }; & $(KUBECTL) -n $(NAMESPACE) rollout status deployment/ollama --timeout=300s; if ($$LASTEXITCODE -ne 0) { exit $$LASTEXITCODE }; foreach ($$m in $$models) { Write-Host ('[ollama] pulling ' + $$m); & $(KUBECTL) -n $(NAMESPACE) exec deployment/ollama -- ollama pull $$m; if ($$LASTEXITCODE -ne 0) { Write-Host ('ERRO no pull: ' + $$m); exit $$LASTEXITCODE } }; Write-Host '[ollama] modelos instalados:'; & $(KUBECTL) -n $(NAMESPACE) exec deployment/ollama -- ollama list"
+
+ollama-signin:
+	@$(KUBECTL) -n $(NAMESPACE) exec -it deployment/ollama -- ollama signin
+
 telegram-enable:
 	@powershell -NoProfile -Command "if ([string]::IsNullOrWhiteSpace('$(TELEGRAM_BOT_TOKEN)')) { Write-Host 'ERRO: informe TELEGRAM_BOT_TOKEN'; exit 1 }"
 	@$(KUBECTL) set env deployment/telegram-director -n $(NAMESPACE) TELEGRAM_BOT_TOKEN="$(TELEGRAM_BOT_TOKEN)" TELEGRAM_CHAT_ID="$(TELEGRAM_CHAT_ID)"
@@ -210,10 +226,15 @@ gh-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/devops-worker -- gh --version
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/telegram-director -- gh --version
 
-gh-token-sync:
-	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env --dry-run=client -o yaml | $(KUBECTL) apply -f -
+env-sync:
+	@powershell -NoProfile -Command "$$envPath='.env'; if (-not (Test-Path $$envPath)) { Write-Host 'ERRO: arquivo .env nao encontrado.'; exit 1 }; $$all=Get-Content $$envPath; $$secretPatterns='^(GITHUB_TOKEN|GH_TOKEN|TELEGRAM_BOT_TOKEN|OPENCLAW_GATEWAY_TOKEN|REDIS_PASSWORD)='; $$secret=$$all | Where-Object { $$_ -match $$secretPatterns }; $$config=$$all | Where-Object { $$_ -notmatch $$secretPatterns }; Set-Content -Path '.env.configmap.tmp' -Value $$config -Encoding Ascii; Set-Content -Path '.env.secret.tmp' -Value $$secret -Encoding Ascii"
+	@$(KUBECTL) -n $(NAMESPACE) create configmap clawdevs-config --from-env-file=.env.configmap.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	@$(KUBECTL) -n $(NAMESPACE) create secret generic clawdevs-secrets --from-env-file=.env.secret.tmp --dry-run=client -o yaml | $(KUBECTL) apply -f -
+	@powershell -NoProfile -Command "Remove-Item '.env.configmap.tmp','.env.secret.tmp' -Force -ErrorAction SilentlyContinue"
 	@$(KUBECTL) -n $(NAMESPACE) rollout restart deployment
 	@$(KUBECTL) -n $(NAMESPACE) get pods
+
+gh-token-sync: env-sync
 
 gh-auth-check:
 	@$(KUBECTL) -n $(NAMESPACE) exec deployment/openclaw-gateway -- sh -lc "gh api user --jq .login"

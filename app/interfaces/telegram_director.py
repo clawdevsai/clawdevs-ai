@@ -19,6 +19,7 @@ STREAM_DRAFT_ISSUE = os.getenv("STREAM_DRAFT_ISSUE", "draft.2.issue")
 STREAM_CODE_READY = os.getenv("QA_STREAM", "code:ready")
 STREAM_EVENT_DEVOPS = os.getenv("STREAM_EVENT_DEVOPS", "event:devops")
 STATE_KEY_OFFSET = os.getenv("TELEGRAM_OFFSET_KEY", "telegram:director:last_update_id")
+STATE_KEY_PENDING_PREFIX = os.getenv("TELEGRAM_PENDING_KEY_PREFIX", "telegram:director:pending_start")
 OLLAMA_BASE_URL = (os.getenv("OLLAMA_BASE_URL") or os.getenv("OLLAMA_HOST") or "http://ollama:11434").rstrip("/")
 OLLAMA_MODEL = (
     os.getenv("OPENCLAW_MODEL_CEO_PRIMARY")
@@ -67,6 +68,25 @@ SEARCH_HINTS = (
     "últimas notícias",
     "ultimas noticias",
     "latest",
+)
+CONFIRM_KEYWORDS = (
+    "sim",
+    "pode iniciar",
+    "pode iniciar desenvolvimento",
+    "inicie",
+    "iniciar agora",
+    "autorizo",
+    "confirmo",
+    "ok iniciar",
+)
+DENY_KEYWORDS = (
+    "não",
+    "nao",
+    "aguarde",
+    "espera",
+    "ainda não",
+    "ainda nao",
+    "cancelar",
 )
 
 
@@ -335,6 +355,41 @@ def should_search_web(text: str) -> bool:
     return any(keyword in lowered for keyword in SEARCH_HINTS)
 
 
+def is_confirmation(text: str) -> bool:
+    lowered = text.lower().strip()
+    return any(keyword == lowered or keyword in lowered for keyword in CONFIRM_KEYWORDS)
+
+
+def is_denial(text: str) -> bool:
+    lowered = text.lower().strip()
+    return any(keyword == lowered or keyword in lowered for keyword in DENY_KEYWORDS)
+
+
+def pending_key(chat_id: str) -> str:
+    return f"{STATE_KEY_PENDING_PREFIX}:{chat_id}"
+
+
+def get_pending_start(redis_client, chat_id: str) -> dict | None:
+    raw = redis_client.get(pending_key(chat_id))
+    if not raw:
+        return None
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8", errors="replace")
+    try:
+        data = json.loads(str(raw))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def save_pending_start(redis_client, chat_id: str, data: dict) -> None:
+    redis_client.set(pending_key(chat_id), json.dumps(data), ex=60 * 60 * 6)
+
+
+def clear_pending_start(redis_client, chat_id: str) -> None:
+    redis_client.delete(pending_key(chat_id))
+
+
 def get_updates(offset: int) -> list[dict]:
     body = _telegram_request(
         "getUpdates",
@@ -370,7 +425,8 @@ def handle_message(redis_client, update: dict) -> None:
             chat_id,
             "Comandos disponíveis:\n"
             "- /status: status estruturado do projeto\n"
-            "- iniciar desenvolvimento <demanda>: inicia pipeline com agentes\n"
+            "- iniciar desenvolvimento <demanda>: CEO analisa e pede confirmação\n"
+            "- sim / pode iniciar: confirma e inicia pipeline assíncrono (retorna Ref TG-...)\n"
             "- /pesquisar <tema>: CEO responde com contexto web + estratégia\n\n"
             "Também aceito mensagens livres para o CEO.",
         )
@@ -381,19 +437,44 @@ def handle_message(redis_client, update: dict) -> None:
         send_message(chat_id, format_progress_message(progress))
         return
 
-    wants_start = is_start_command(text)
-    issue_id = normalize_issue_id(update_id) if wants_start else None
+    pending = get_pending_start(redis_client, chat_id)
+    if is_denial(text) and pending:
+        clear_pending_start(redis_client, chat_id)
+        send_message(chat_id, "Perfeito. Não vou iniciar o desenvolvimento agora. Quando quiser, me peça novamente.")
+        return
 
-    if wants_start:
+    if is_confirmation(text):
+        if not pending:
+            send_message(chat_id, "Não há nenhuma demanda pendente para iniciar. Me diga a demanda primeiro.")
+            return
+        issue_id = str(pending.get("issue_id") or normalize_issue_id(update_id))
+        directive = str(pending.get("directive") or "").strip()
+        if not directive:
+            send_message(chat_id, "Não consegui recuperar a demanda pendente. Pode reenviar o pedido de início?")
+            clear_pending_start(redis_client, chat_id)
+            return
+
         payload = {
             "issue_id": issue_id,
-            "directive": f"[START_DEVELOPMENT]\n{text}",
+            "directive": directive,
             "source": "telegram",
             "event_name": "cmd.strategy.start_development",
             "chat_id": chat_id,
             "update_id": str(update_id),
         }
         redis_client.xadd(STREAM_CMD_STRATEGY, payload, maxlen=5000, approximate=True)
+        clear_pending_start(redis_client, chat_id)
+        send_message(
+            chat_id,
+            "✅ Desenvolvimento iniciado de forma assíncrona.\n"
+            f"Ref: {issue_id}\n\n"
+            "Posso te atualizar com o status a qualquer momento usando /status.",
+        )
+        print(f"[telegram] publicado em {STREAM_CMD_STRATEGY}: {issue_id}")
+        return
+
+    wants_start = is_start_command(text)
+    issue_id = normalize_issue_id(update_id) if wants_start else None
 
     research = ""
     if should_search_web(text):
@@ -401,35 +482,81 @@ def handle_message(redis_client, update: dict) -> None:
 
     progress = collect_progress(redis_client)
     status_context = format_progress_message(progress)
-    ceo_prompt = (
-        f"Solicitação do diretor:\n{text}\n\n"
-        "Você deve responder em formato estruturado com:\n"
-        "1) Entendimento da demanda\n"
-        "2) Plano objetivo\n"
-        "3) Status atual do projeto\n"
-        "4) Próximos passos\n\n"
-        f"Status atual interno:\n{status_context}\n\n"
-    )
+    if wants_start:
+        ceo_prompt = (
+            "Você é o CEO do ClawDevs falando com o diretor no Telegram.\n"
+            "Tom: natural, direto, sem formato engessado.\n"
+            "Objetivo: confirmar entendimento da demanda e apresentar plano curto.\n"
+            "Regra obrigatória: NÃO iniciar desenvolvimento ainda; encerre perguntando literalmente:\n"
+            "\"Posso iniciar o desenvolvimento?\"\n\n"
+            f"Demanda recebida:\n{text}\n\n"
+            f"Status atual interno:\n{status_context}\n\n"
+        )
+    else:
+        ceo_prompt = (
+            "Você é o CEO do ClawDevs falando com o diretor no Telegram.\n"
+            "Responda em português, de forma natural, objetiva e útil para decisão.\n"
+            "Não use template fixo numerado.\n"
+            "Quando fizer sentido, traga: o que já está pronto, o que falta e próximo passo recomendado.\n\n"
+            f"Mensagem do diretor:\n{text}\n\n"
+            f"Status atual interno:\n{status_context}\n\n"
+        )
     if research:
         ceo_prompt += f"Contexto web (best-effort):\n{research}\n\n"
 
     ceo_reply = generate_ceo_reply(ceo_prompt)
     if ceo_reply:
         if wants_start:
+            save_pending_start(
+                redis_client,
+                chat_id,
+                {
+                    "issue_id": issue_id,
+                    "directive": f"[START_DEVELOPMENT]\n{text}",
+                    "requested_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
+                    "source_update_id": str(update_id),
+                },
+            )
             send_message(
                 chat_id,
-                "✅ Desenvolvimento iniciado no pipeline de agentes.\n\n"
-                f"Ref: {issue_id}\n\nCEO:\n{ceo_reply}",
+                f"CEO:\n{ceo_reply}\n\n"
+                "Se você confirmar, eu inicio em modo assíncrono e te envio o Ref (TG-...).",
             )
         else:
             send_message(chat_id, f"CEO:\n{ceo_reply}")
     else:
         if wants_start:
-            send_message(chat_id, f"✅ Desenvolvimento iniciado e enfileirado ({issue_id}).")
+            save_pending_start(
+                redis_client,
+                chat_id,
+                {
+                    "issue_id": issue_id,
+                    "directive": f"[START_DEVELOPMENT]\n{text}",
+                    "requested_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
+                    "source_update_id": str(update_id),
+                },
+            )
+            send_message(
+                chat_id,
+                "Entendi a demanda. Posso iniciar o desenvolvimento?\n"
+                "Se você confirmar, eu inicio assíncrono e retorno o Ref (TG-...).",
+            )
         else:
-            send_message(chat_id, "CEO indisponível no momento para resposta completa. Tente novamente.")
-    if wants_start and issue_id:
-        print(f"[telegram] publicado em {STREAM_CMD_STRATEGY}: {issue_id}")
+            fallback = (
+                "CEO:\n"
+                "Recebi sua mensagem e já analisei com os dados internos do projeto. "
+                "Agora temos o fluxo de confirmação ativo: eu só inicio desenvolvimento após sua autorização explícita.\n\n"
+                "Se quiser, posso te passar um posicionamento objetivo agora com:\n"
+                "- o que está pronto\n"
+                "- o que falta\n"
+                "- próximo passo recomendado\n"
+                "- status atual do pipeline\n\n"
+                "Me diga: \"me dá um status do projeto\" ou descreva a demanda para eu preparar e perguntar "
+                "\"Posso iniciar o desenvolvimento?\"."
+            )
+            if research:
+                fallback += f"\n\nContexto web (best-effort):\n{research}"
+            send_message(chat_id, fallback)
 
 
 def main() -> int:
