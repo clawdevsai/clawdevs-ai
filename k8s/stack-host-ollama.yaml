@@ -124,6 +124,12 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 11434
+          env:
+            - name: OLLAMA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: clawdevs-secrets
+                  key: OLLAMA_API_KEY
           resources:
             requests:
               cpu: "500m"
