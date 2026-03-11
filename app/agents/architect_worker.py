@@ -15,7 +15,8 @@ from app.shared.redis_client import get_redis
 def main() -> None:
     r = get_redis()
     registry = build_runtime_tool_registry()
-    run_stream_worker(r, ArchitectDraftAgent(), build_session_sender(registry))
+    agent = ArchitectDraftAgent()
+    run_stream_worker(r, agent, build_session_sender(registry, role_name=agent.role_name))
 
 
 if __name__ == "__main__":

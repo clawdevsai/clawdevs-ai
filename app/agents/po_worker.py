@@ -2,9 +2,7 @@
 """
 PO trigger: consome cmd:strategy (evento do CEO), envia contexto ao agente PO no OpenClaw.
 O agente PO (no Gateway) usa ferramentas para ler Memoria, criar issues no GitHub,
-gravar project:v1:issue:{id}, publicar em draft.2.issue. Sem LLM neste script (openclaw-first).
-Ref: docs/38-redis-streams-estado-global.md, docs/agents-devs/state-machine-issues.md,
-     .cursor/rules/openclaw-first.mdc
+gravar project:v1:issue:{id} e publicar em draft.2.issue. Sem LLM neste script.
 """
 import os
 import sys
@@ -21,7 +19,8 @@ from app.shared.redis_client import get_redis
 def main() -> None:
     r = get_redis()
     registry = build_runtime_tool_registry()
-    run_stream_worker(r, POAgent(), build_session_sender(registry))
+    agent = POAgent()
+    run_stream_worker(r, agent, build_session_sender(registry, role_name=agent.role_name))
 
 
 if __name__ == "__main__":

@@ -203,7 +203,7 @@ def get_qa_audit_detail(r, issue_id: str) -> dict:
 
 
 def write_areas_qa_audit_file(r, path: str | None = None) -> None:
-    """Escreve docs/agents-devs/areas-for-qa-audit.md a partir do Redis."""
+    """Gera arquivo markdown com áreas para auditoria de QA a partir do Redis."""
     path = path or AREAS_QA_AUDIT_PATH
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
