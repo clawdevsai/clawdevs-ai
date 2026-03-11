@@ -58,6 +58,13 @@ def _read_asset(kind: str, name: str) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
+def _read_soul(profile: str) -> str:
+    path = ASSETS_ROOT / "souls" / profile / "SOUL.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
 def get_role_openclaw_config(role_name: str) -> OpenClawRoleConfig | None:
     return ROLE_CONFIGS.get(role_name)
 
@@ -71,6 +78,9 @@ def render_openclaw_context(role_name: str, allowed_tools: tuple[str, ...] = ())
     profile_text = _read_asset("profiles", config.profile)
     if profile_text:
         parts.append(profile_text)
+    soul_text = _read_soul(config.profile)
+    if soul_text:
+        parts.append(f"[soul:{config.profile}]\n{soul_text}")
 
     rule_blocks = []
     for rule_name in config.rules:
