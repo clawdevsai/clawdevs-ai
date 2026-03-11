@@ -33,14 +33,10 @@ data:
   QA_STREAM: code:ready
   OPENCLAW_REQUIRED: "true"
   OPENCLAW_GATEWAY_WS: ws://openclaw-gateway:18789
-  OPENCLAW_GATEWAY_TOKEN: local-dev-token
   OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: "1"
   GITHUB_REPO: ""
   GH_REPO: ""
-  GITHUB_TOKEN: ""
-  GH_TOKEN: ""
   TELEGRAM_ENABLE_WEB_SEARCH: "1"
-  TELEGRAM_BOT_TOKEN: ""
   TELEGRAM_CHAT_ID: ""
 ---
 apiVersion: v1
@@ -95,6 +91,18 @@ spec:
       port: 11434
       targetPort: 11434
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-models
+  namespace: clawdevs-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -130,7 +138,8 @@ spec:
               mountPath: /root/.ollama
       volumes:
         - name: ollama-models
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: ollama-models
 ---
 apiVersion: v1
 kind: Service
@@ -196,18 +205,18 @@ spec:
                   key: MODEL_MODE
             - name: OPENCLAW_GATEWAY_TOKEN
               valueFrom:
-                configMapKeyRef:
-                  name: clawdevs-config
+                secretKeyRef:
+                  name: clawdevs-secrets
                   key: OPENCLAW_GATEWAY_TOKEN
             - name: GITHUB_TOKEN
               valueFrom:
-                configMapKeyRef:
-                  name: clawdevs-config
+                secretKeyRef:
+                  name: clawdevs-secrets
                   key: GITHUB_TOKEN
             - name: GH_TOKEN
               valueFrom:
-                configMapKeyRef:
-                  name: clawdevs-config
+                secretKeyRef:
+                  name: clawdevs-secrets
                   key: GH_TOKEN
 ---
 apiVersion: apps/v1
@@ -233,6 +242,10 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -257,6 +270,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -281,6 +296,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -305,6 +322,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -329,6 +348,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -353,6 +374,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -377,4 +400,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: clawdevs-config
+            - secretRef:
+                name: clawdevs-secrets
 
