@@ -117,6 +117,13 @@ def send_message(chat_id: str, text: str) -> None:
         print(f"[telegram] erro ao responder chat {chat_id}: {error}")
 
 
+def send_chat_action(chat_id: str, action: str = "typing") -> None:
+    try:
+        _telegram_request("sendChatAction", {"chat_id": chat_id, "action": action})
+    except Exception as error:
+        print(f"[telegram] erro ao enviar chat action {chat_id}: {error}")
+
+
 def ensure_polling_mode() -> None:
     """Force getUpdates mode (disable webhook) to prevent transport conflicts."""
     try:
@@ -492,6 +499,9 @@ def handle_message(redis_client, update: dict) -> None:
     if TELEGRAM_CHAT_ID and chat_id != TELEGRAM_CHAT_ID:
         send_message(chat_id, "Chat não autorizado para este bot.")
         return
+
+    # Sinaliza que o CEO está digitando (melhora UX enquanto gera resposta).
+    send_chat_action(chat_id, "typing")
 
     if text in {"/start", "/help"}:
         send_message(
