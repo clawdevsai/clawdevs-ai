@@ -35,6 +35,11 @@ GITHUB_REPO = (os.getenv("GITHUB_REPO") or os.getenv("GH_REPO") or "").strip()
 GITHUB_TOKEN = (os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN") or "").strip()
 ENABLE_WEB_SEARCH = (os.getenv("TELEGRAM_ENABLE_WEB_SEARCH") or "1").strip().lower() in {"1", "true", "yes", "on"}
 MAX_MESSAGE_CHARS = 3800
+CEO_SYSTEM_PROMPT = (
+    "Você é o CEO técnico do ClawDevs AI. Responda em português, de forma natural e direta. "
+    "Não use listas numeradas, não use marcadores e não use markdown. "
+    "Preferir 2 a 6 frases curtas. Se a pergunta for simples, responda direto."
+)
 
 STATE_BACKLOG = "Backlog"
 STATE_REFINAMENTO = "Refinamento"
@@ -148,10 +153,7 @@ def generate_ceo_reply(instruction: str) -> str | None:
             "messages": [
                 {
                     "role": "system",
-                    "content": (
-                        "Você é o CEO técnico do ClawDevs AI. Responda em português, "
-                        "de forma objetiva, com foco em estratégia de produto e execução."
-                    ),
+                    "content": CEO_SYSTEM_PROMPT,
                 },
                 {"role": "user", "content": instruction},
             ],
@@ -202,10 +204,7 @@ def generate_ceo_reply(instruction: str) -> str | None:
                 "messages": [
                     {
                         "role": "system",
-                        "content": (
-                            "Você é o CEO técnico do ClawDevs AI. Responda em português, "
-                            "de forma objetiva, com foco em estratégia de produto e execução."
-                        ),
+                        "content": CEO_SYSTEM_PROMPT,
                     },
                     {"role": "user", "content": instruction},
                 ],
@@ -346,6 +345,29 @@ def format_progress_message(progress: dict) -> str:
         f"- Demandas recebidas no CEO (cmd:strategy): {progress['commands_received_total']}\n\n"
         "3) Git / PRs\n"
         f"- PRs: {prs_line}\n"
+    )
+
+
+def format_progress_context(progress: dict) -> str:
+    states = progress["states"]
+    prs_open = progress["prs_open"]
+    prs_total = progress["prs_total"]
+    prs_note = progress["prs_note"]
+    prs_text = f"{prs_open}/{prs_total}" if prs_open is not None and prs_total is not None else f"indisponivel ({prs_note})"
+    return (
+        f"timestamp_utc={progress['timestamp_utc']}; "
+        f"issues_total={progress['issues_total']}; "
+        f"backlog={states[STATE_BACKLOG]}; "
+        f"refinamento={states[STATE_REFINAMENTO]}; "
+        f"ready={states[STATE_READY]}; "
+        f"in_progress={states[STATE_IN_PROGRESS]}; "
+        f"deployed={states[STATE_DEPLOYED]}; "
+        f"done={states[STATE_DONE]}; "
+        f"po_tasks_created={progress['po_tasks_created_total']}; "
+        f"qa_ready={progress['code_ready_total']}; "
+        f"devops_events={progress['devops_events_total']}; "
+        f"ceo_commands={progress['commands_received_total']}; "
+        f"prs={prs_text}"
     )
 
 
@@ -532,7 +554,7 @@ def handle_message(redis_client, update: dict) -> None:
         research = run_web_search(text)
 
     progress = collect_progress(redis_client)
-    status_context = format_progress_message(progress)
+    status_context = format_progress_context(progress)
     if wants_start:
         ceo_prompt = (
             "Você é o CEO do ClawDevs falando com o diretor no Telegram.\n"
