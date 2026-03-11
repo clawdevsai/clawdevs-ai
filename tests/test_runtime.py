@@ -2,6 +2,7 @@ from app.runtime import (
     AgentResult,
     EventEnvelope,
     ExecutionPolicy,
+    OpenClawSessionConfig,
     PreparedRun,
     RunContext,
     ToolRegistry,
@@ -14,14 +15,18 @@ from app.runtime import (
     extract_issue_id,
     get_role_openclaw_config,
     increment_attempt,
+    resolve_openclaw_session_config,
     load_runtime_stack_config,
     log_event,
+    inspect_openclaw_output,
+    normalize_openclaw_output,
     payload_to_dict,
     process_stream_message,
     publish_backlog,
     publish_code_ready,
     publish_deploy_event,
     publish_draft_rejected,
+    build_runtime_session_sender,
     render_openclaw_message,
     should_stop_task,
     validate_runtime_stack,
@@ -318,26 +323,34 @@ def test_tool_registry_dispatches_session_sender():
     registry = ToolRegistry()
     calls = []
 
-    def fake_tool(session_key, message, timeout_sec):
-        calls.append((session_key, message, timeout_sec))
+    def fake_tool(session_key, message, timeout_sec, session_config=None):
+        calls.append((session_key, message, timeout_sec, session_config))
         return True, {"queued": True}
 
     registry.register("openclaw.sessions.send", fake_tool, allowed_roles=("PO",))
-    sender = build_session_sender(registry, role_name="PO")
+    session_config = OpenClawSessionConfig(
+        session_key="agent:po:test",
+        provider="ollama",
+        mode="cloud",
+        model="qwen2.5-coder:32b",
+        base_url="https://ollama.example",
+    )
+    sender = build_session_sender(registry, role_name="PO", session_config=session_config)
 
     ok, output = sender("agent:po:test", "ship it", 3)
 
     assert ok is True
     assert output == {"queued": True}
-    assert calls == [("agent:po:test", "ship it", 3)]
+    assert calls == [("agent:po:test", "ship it", 3, session_config)]
     assert sender.allowed_tools == ("openclaw.sessions.send",)
+    assert sender.session_config == session_config
 
 
 def test_tool_registry_blocks_role_without_permission():
     registry = ToolRegistry()
     registry.register(
         "openclaw.sessions.send",
-        lambda session_key, message, timeout_sec: (True, {"queued": True}),
+        lambda session_key, message, timeout_sec, session_config=None: (True, {"queued": True}),
         allowed_roles=("Developer",),
     )
     sender = build_session_sender(registry, role_name="PO")
@@ -453,6 +466,46 @@ def test_runtime_tool_registry_registers_role_tools():
     assert TOOL_PUBLISH_DRAFT_REJECTED in registry._tools
     assert TOOL_PUBLISH_CODE_READY in registry._tools
     assert TOOL_PUBLISH_DEPLOY_EVENT in registry._tools
+    assert registry.default_session_config.model_provider == "ollama"
+
+
+def test_resolve_openclaw_session_config_uses_stack_settings():
+    stack = load_runtime_stack_config()
+    session = resolve_openclaw_session_config(
+        "agent:developer:main",
+        stack,
+    )
+
+    assert session.session_key == "agent:developer:main"
+    assert session.provider == stack.model_provider
+    assert session.mode == stack.model_mode
+    assert session.model == stack.ollama_model
+    assert session.base_url == stack.ollama_base_url
+
+
+def test_build_runtime_session_sender_resolves_ollama_session():
+    registry = ToolRegistry()
+    calls = []
+
+    def fake_tool(session_key, message, timeout_sec, session_config=None):
+        calls.append((session_key, message, timeout_sec, session_config))
+        return True, {"queued": True}
+
+    registry.register("openclaw.sessions.send", fake_tool, allowed_roles=("Developer",))
+    registry.default_session_config = load_runtime_stack_config()
+    sender = build_runtime_session_sender(
+        registry,
+        role_name="Developer",
+        session_key="agent:developer:main",
+    )
+
+    ok, output = sender("agent:developer:main", "implementar", 5)
+
+    assert ok is True
+    assert output == {"queued": True}
+    assert calls[0][0] == "agent:developer:main"
+    assert calls[0][3] is not None
+    assert calls[0][3].provider == "ollama"
 
 
 def test_runtime_stack_defaults_to_openclaw_plus_ollama():
@@ -582,6 +635,64 @@ def test_render_openclaw_message_includes_profile_rules_and_skills():
     assert "Expected output schema for Developer." in message
     assert "Task instruction:" in message
     assert "Implementar issue 42" in message
+
+
+def test_normalize_openclaw_output_parses_raw_json():
+    normalized = normalize_openclaw_output({"raw": '{"status":"implemented","summary":"ok"}'})
+
+    assert normalized["status"] == "implemented"
+    assert normalized["summary"] == "ok"
+
+
+def test_inspect_openclaw_output_validates_schema_fields():
+    inspection = inspect_openclaw_output(
+        "Developer",
+        {
+            "status": "implemented",
+            "summary": "done",
+            "files_changed": ["app/x.py"],
+            "verification": ["pytest"],
+            "next_action": "code:ready",
+        },
+    )
+
+    assert inspection["schema"] == "developer"
+    assert inspection["valid"] is True
+    assert inspection["missing_fields"] == ()
+
+
+def test_inspect_openclaw_output_flags_missing_fields():
+    inspection = inspect_openclaw_output(
+        "Developer",
+        {"status": "implemented", "summary": "done"},
+    )
+
+    assert inspection["schema"] == "developer"
+    assert inspection["valid"] is False
+    assert "files_changed" in inspection["missing_fields"]
+
+
+def test_process_stream_message_marks_invalid_openclaw_output():
+    redis_client = FakeRedis()
+    agent = FakeAgent()
+    agent.policy = ExecutionPolicy(block_ms=10, timeout_sec=5)
+
+    def sender(session_key, message, timeout_sec):
+        return True, {"status": "implemented", "summary": "done"}
+
+    result = process_stream_message(
+        redis_client,
+        agent,
+        sender,
+        "cmd:strategy",
+        "7-0",
+        {"directive": "Priorizar 2FA"},
+    )
+
+    assert result.status == "invalid_output"
+    assert result.status_code == "openclaw_invalid_output"
+    assert result.event_name == "runtime.openclaw_invalid_output"
+    assert result.metadata["output_valid"] is False
 
 
 def test_architect_agent_acks_without_sending_when_issue_missing():

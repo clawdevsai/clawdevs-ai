@@ -9,6 +9,7 @@ from typing import Any, Callable
 from .agent_runtime import AgentResult, GatewayOutput, PreparedRun, RedisClient, StreamAgent
 from .logging import log_error, log_event
 from .openclaw_assets import render_openclaw_message
+from .openclaw_output import inspect_openclaw_output
 from .run_context import RunContext
 
 Sender = Callable[[str, str, int], tuple[bool, GatewayOutput]]
@@ -116,7 +117,30 @@ def process_stream_message(
     ok, output = sender(agent.session_key, instruction, ctx.policy.timeout_sec)
     if not ok:
         raise RuntimeError(str(output))
+    output_inspection = _inspect_output_if_available(agent, ctx, output)
+    log_event(
+        "runtime.openclaw_output_inspected",
+        role=agent.role_name,
+        stream=stream_name,
+        message_id=message_id,
+        run_id=ctx.run_id,
+        trace_id=ctx.trace_id,
+        schema=output_inspection["schema"],
+        valid=output_inspection["valid"],
+        missing_fields=list(output_inspection["missing_fields"]),
+    )
     result = agent.on_success(redis_client, ctx, output) or AgentResult()
+    if output_inspection["checked"] and not output_inspection["valid"]:
+        from app.core.orchestration import record_invalid_output
+
+        record_invalid_output(
+            redis_client,
+            role_name=agent.role_name,
+            issue_id=ctx.issue_id,
+            schema=output_inspection.get("schema"),
+            missing_fields=list(output_inspection.get("missing_fields") or ()),
+        )
+        result = _mark_invalid_openclaw_output(result, output_inspection)
     redis_client.xack(agent.stream_name, agent.consumer_group, message_id)
     log_event(
         "runtime.message_completed",
@@ -130,6 +154,8 @@ def process_stream_message(
         status=result.status,
         status_code=result.status_code,
         event_name=result.event_name,
+        output_schema=output_inspection["schema"],
+        output_valid=output_inspection["valid"],
         elapsed_runtime_sec=round(ctx.elapsed_runtime_sec, 6),
     )
     if result.summary:
@@ -144,6 +170,33 @@ def _prepare_run(agent: StreamAgent, redis_client: RedisClient, ctx: RunContext)
     if prepared is None:
         return PreparedRun()
     raise TypeError(f"{agent.role_name}.prepare() deve retornar PreparedRun ou None")
+
+
+def _mark_invalid_openclaw_output(result: AgentResult, inspection: dict[str, Any]) -> AgentResult:
+    metadata = dict(result.metadata)
+    metadata["output_schema"] = inspection.get("schema")
+    metadata["output_valid"] = False
+    metadata["missing_fields"] = list(inspection.get("missing_fields") or ())
+    return AgentResult(
+        status="invalid_output",
+        status_code="openclaw_invalid_output",
+        event_name="runtime.openclaw_invalid_output",
+        summary=result.summary or "Saida do OpenClaw fora do schema esperado",
+        metadata=metadata,
+    )
+
+
+def _inspect_output_if_available(agent: StreamAgent, ctx: RunContext, output: GatewayOutput) -> dict[str, Any]:
+    if ctx.policy.timeout_sec <= 0:
+        return {
+            "schema": None,
+            "valid": True,
+            "missing_fields": (),
+            "checked": False,
+        }
+    inspection = inspect_openclaw_output(agent.role_name, output)
+    inspection["checked"] = True
+    return inspection
 
 
 def _enforce_execution_budget(
