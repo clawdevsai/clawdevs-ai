@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from app.runtime import EventEnvelope, log_error, log_event
+from app.shared.issue_state import STATE_BACKLOG, set_issue_state
 from app.shared.redis_client import get_redis
 
 KEY_PREFIX = os.environ.get("KEY_PREFIX_PROJECT", "project:v1")
@@ -23,6 +24,8 @@ KEY_FIVE_STRIKES = f"{KEY_PREFIX}:orchestrator:five_strikes_count"
 KEY_OMISSION_COUNT = f"{KEY_PREFIX}:orchestrator:omission_cosmetic_count"
 KEY_SPRINT_TASKS = f"{KEY_PREFIX}:orchestrator:sprint_task_count"
 KEY_PAUSE_DEGRADATION = "orchestration:pause_degradation"
+KEY_INVALID_OUTPUT_COUNT = f"{KEY_PREFIX}:orchestrator:invalid_output_count"
+INVALID_OUTPUT_THRESHOLD = int(os.environ.get("INVALID_OUTPUT_THRESHOLD", "3"))
 
 # --- Loop de consenso (034) ---
 KEY_CONSENSUS_IN_PROGRESS = f"{KEY_PREFIX}:orchestrator:consensus_loop_in_progress"
@@ -105,6 +108,56 @@ def record_architect_rejection(r, issue_id: str) -> int:
             five_strikes_total=str(r.get(KEY_FIVE_STRIKES) or "0"),
         )
     return n
+
+
+def record_invalid_output(r, *, role_name: str, issue_id: str | None, schema: str | None, missing_fields: list[str]) -> int:
+    total = r.incr(KEY_INVALID_OUTPUT_COUNT)
+    role_key = f"{KEY_PREFIX}:orchestrator:invalid_output:role:{role_name}"
+    role_total = r.incr(role_key)
+    issue_total = 0
+    if issue_id:
+        issue_key = f"{KEY_PREFIX}:issue:{issue_id}:invalid_output_count"
+        issue_total = r.incr(issue_key)
+    emit_event(
+        r,
+        "openclaw_invalid_output",
+        issue_id=issue_id or "",
+        role_name=role_name,
+        schema=schema or "",
+        missing_fields=",".join(missing_fields),
+        total=total,
+        role_total=role_total,
+        issue_total=issue_total,
+        status_code="openclaw_invalid_output",
+        event_name="orchestration.openclaw_invalid_output",
+    )
+    if issue_id and issue_total >= INVALID_OUTPUT_THRESHOLD:
+        increment_strike(r, issue_id)
+        set_issue_state(r, issue_id, STATE_BACKLOG)
+        emit_event(
+            r,
+            "openclaw_invalid_output_threshold",
+            issue_id=issue_id,
+            role_name=role_name,
+            schema=schema or "",
+            issue_total=issue_total,
+            threshold=INVALID_OUTPUT_THRESHOLD,
+            status_code="openclaw_invalid_output_threshold",
+            event_name="orchestration.openclaw_invalid_output_threshold",
+        )
+        emit_event(
+            r,
+            "issue_back_to_po",
+            issue_id=issue_id,
+            role_name=role_name,
+            reason="openclaw_invalid_output_threshold",
+            issue_total=issue_total,
+            threshold=INVALID_OUTPUT_THRESHOLD,
+            target_state=STATE_BACKLOG,
+            status_code="issue_back_to_po",
+            event_name="orchestration.issue_back_to_po",
+        )
+    return total
 
 
 # --- Cosmético determinístico (033) ---

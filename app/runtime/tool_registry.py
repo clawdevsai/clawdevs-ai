@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .agent_runtime import GatewayOutput
+from .openclaw_session import OpenClawSessionConfig
 
 ToolHandler = Callable[..., tuple[bool, GatewayOutput]]
 
@@ -47,6 +48,7 @@ def build_session_sender(
     registry: ToolRegistry,
     *,
     role_name: str,
+    session_config: OpenClawSessionConfig | None = None,
 ) -> Callable[[str, str, int], tuple[bool, GatewayOutput]]:
     def sender(session_key: str, message: str, timeout_sec: int) -> tuple[bool, GatewayOutput]:
         return registry.execute(
@@ -55,8 +57,10 @@ def build_session_sender(
             session_key=session_key,
             message=message,
             timeout_sec=timeout_sec,
+            session_config=session_config,
         )
 
     sender.role_name = role_name  # type: ignore[attr-defined]
     sender.allowed_tools = registry.list_tools_for_role(role_name)  # type: ignore[attr-defined]
+    sender.session_config = session_config  # type: ignore[attr-defined]
     return sender

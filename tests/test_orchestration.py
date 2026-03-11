@@ -73,6 +73,47 @@ def test_run_degradation_cycle_requests_consensus():
     assert redis_client.added[0][1]["run_id"]
     assert redis_client.added[0][1]["trace_id"]
 
+
+def test_record_invalid_output_emits_event_and_counts():
+    from app.core.orchestration import KEY_INVALID_OUTPUT_COUNT, record_invalid_output
+
+    redis_client = FakeRedis()
+
+    total = record_invalid_output(
+        redis_client,
+        role_name="Developer",
+        issue_id="42",
+        schema="developer",
+        missing_fields=["files_changed", "verification"],
+    )
+
+    assert total == 1
+    assert redis_client.store[KEY_INVALID_OUTPUT_COUNT] == "1"
+    assert redis_client.added[0][0] == "orchestrator:events"
+    assert redis_client.added[0][1]["type"] == "openclaw_invalid_output"
+
+
+def test_record_invalid_output_threshold_increments_issue_strike():
+    from app.core.orchestration import INVALID_OUTPUT_THRESHOLD, record_invalid_output, strike_key
+    from app.shared.issue_state import STATE_BACKLOG
+
+    redis_client = FakeRedis()
+
+    for _ in range(INVALID_OUTPUT_THRESHOLD):
+        record_invalid_output(
+            redis_client,
+            role_name="Developer",
+            issue_id="77",
+            schema="developer",
+            missing_fields=["files_changed"],
+        )
+
+    assert redis_client.store[strike_key("77")] == "1"
+    assert redis_client.store["project:v1:issue:77:state"] == STATE_BACKLOG
+    assert redis_client.added[-2][1]["type"] == "openclaw_invalid_output_threshold"
+    assert redis_client.added[-1][1]["type"] == "issue_back_to_po"
+    assert redis_client.added[-1][1]["target_state"] == STATE_BACKLOG
+
 def test_redis_integration():
     try:
         from app.core.orchestration import get_redis, get_strikes, increment_strike, reset_strikes

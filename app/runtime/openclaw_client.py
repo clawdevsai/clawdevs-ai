@@ -7,6 +7,7 @@ import os
 import subprocess
 
 from .agent_runtime import GatewayOutput
+from .openclaw_session import OpenClawSessionConfig
 
 TOOL_OPENCLAW_SESSIONS_SEND = "openclaw.sessions.send"
 
@@ -60,11 +61,14 @@ def send_to_session(
     session_key: str,
     message: str,
     timeout_sec: int = 0,
+    session_config: OpenClawSessionConfig | None = None,
 ) -> tuple[bool, GatewayOutput]:
     params = {
         "sessionKey": session_key,
         "message": message,
     }
+    if session_config is not None:
+        params["sessionConfig"] = session_config.to_payload()
     if timeout_sec > 0:
         params["timeoutSeconds"] = timeout_sec
     return gateway_call("sessions.send", params, timeout_sec=max(90, timeout_sec + 30))

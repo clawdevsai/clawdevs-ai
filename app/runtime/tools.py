@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.core.orchestration import emit_event
 from app.runtime.logging import log_event
 from app.runtime.model_provider import load_runtime_stack_config, validate_runtime_stack
+from app.runtime.openclaw_session import resolve_openclaw_session_config
 from app.runtime.tool_registry import ToolRegistry
 from app.runtime.openclaw_client import TOOL_OPENCLAW_SESSIONS_SEND, send_to_session
 from app.shared.issue_state import STATE_DEPLOYED, STATE_READY, STATE_REFINAMENTO, set_issue_state
@@ -77,6 +77,8 @@ def publish_deploy_event(
     repo: str = "",
     pr: str = "",
 ) -> tuple[bool, dict[str, str]]:
+    from app.core.orchestration import emit_event
+
     set_issue_state(redis_client, issue_id, STATE_DEPLOYED)
     payload = {
         "issue_id": issue_id,
@@ -129,6 +131,7 @@ def build_runtime_tool_registry() -> ToolRegistry:
         publish_deploy_event,
         allowed_roles=("DevOps",),
     )
+    registry.default_session_config = stack  # type: ignore[attr-defined]
     log_event(
         "runtime.tools_registered",
         tools=[
@@ -140,3 +143,13 @@ def build_runtime_tool_registry() -> ToolRegistry:
         ],
     )
     return registry
+
+
+def build_runtime_session_sender(registry: ToolRegistry, *, role_name: str, session_key: str):
+    stack = getattr(registry, "default_session_config", None)
+    session_config = None
+    if stack is not None:
+        session_config = resolve_openclaw_session_config(session_key, stack)
+    from app.runtime.tool_registry import build_session_sender
+
+    return build_session_sender(registry, role_name=role_name, session_config=session_config)
