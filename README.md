@@ -58,7 +58,7 @@ profile + rules + skills + allowed tools + output schema + instruction
 A stack Kubernetes foi preparada para GPU:
 
 - `ollama` com `resources.requests/limits.nvidia.com/gpu: 1`
-- `openclaw-gateway` com `resources.requests/limits.nvidia.com/gpu: 1`
+- `openclaw-gateway` em CPU (gateway chama Ollama via rede)
 - `minikube` inicializado com `--gpus all`
 - addon `nvidia-device-plugin` habilitado no `make up`
 
@@ -114,3 +114,4 @@ Foram excluidos da repo:
 ## Licenca
 
 MIT
+
