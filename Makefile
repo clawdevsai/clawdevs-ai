@@ -18,7 +18,7 @@ MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console
 
 help:
 	@echo "make test      - executa a suite"
@@ -30,6 +30,7 @@ help:
 	@echo "make up-cdi    - fallback usando --gpus nvidia.com (CDI)"
 	@echo "make up-host-ollama - sobe stack no cluster e usa Ollama no host"
 	@echo "make restart   - reinicia todos os deployments"
+	@echo "make console   - abre o diretor-console bloqueando a porta 3000 local para acesso"
 	@echo "make down      - remove stack do Minikube"
 	@echo "make down-host - remove stack host-ollama do Minikube"
 	@echo "make cluster-reset - recria profile minikube do zero"
@@ -136,16 +137,16 @@ deploy-host:
 	@$(KUBECTL) rollout restart deployment/po-worker -n $(NAMESPACE)
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 
-up: preflight gpu-host-check minikube-start-host image-build deploy-host status
+up: preflight gpu-host-check minikube-start-host image-build deploy-host status console
 
-up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status
+up-gpu: preflight gpu-host-check minikube-start gpu-assert image-build deploy status console
 
-up-force: preflight gpu-host-check cluster-reset image-build deploy status
+up-force: preflight gpu-host-check cluster-reset image-build deploy status console
 
 up-cdi:
 	@$(MAKE) MINIKUBE_GPU_REQUEST=nvidia.com up-force
 
-up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status
+up-host-ollama: preflight gpu-host-check minikube-start-host image-build deploy-host status console
 
 down:
 	@$(KUBECTL) delete -f k8s/stack.yaml --ignore-not-found=true
@@ -183,6 +184,10 @@ status:
 	@$(KUBECTL) get pods -n $(NAMESPACE)
 	@$(KUBECTL) get svc -n $(NAMESPACE)
 	@$(KUBECTL) get nodes -o custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu
+
+console:
+	@echo ">>> Abrindo Director Console na porta :3000 no background..."
+	@powershell -NoProfile -Command "Start-Process -WindowStyle Hidden $(KUBECTL) -ArgumentList 'port-forward','svc/director-console','3000:3000','-n','$(NAMESPACE)'"
 
 logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/orchestration --tail=100
