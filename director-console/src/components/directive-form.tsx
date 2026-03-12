@@ -14,7 +14,7 @@ export function DirectiveForm({ onCompleted }: DirectiveFormProps) {
 
   return (
     <form
-      className="panel panel-strong rounded-3xl p-6"
+      className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6"
       onSubmit={(event) => {
         event.preventDefault();
         setMessage(null);
@@ -47,8 +47,8 @@ export function DirectiveForm({ onCompleted }: DirectiveFormProps) {
     >
       <div className="mb-4 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold text-white">Console do diretor</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">
+          <h2 className="text-xl font-semibold text-slate-900">Console do diretor</h2>
+          <p className="mt-1 text-sm text-slate-500">
             Envie uma demanda unica para o stream `cmd:strategy`.
           </p>
         </div>
@@ -56,24 +56,24 @@ export function DirectiveForm({ onCompleted }: DirectiveFormProps) {
       <textarea
         value={directive}
         onChange={(event) => setDirective(event.target.value)}
-        placeholder="Exemplo: criar backlog inicial para um CRUD de usuarios em Go, com auth JWT e persistencia Postgres."
-        className="min-h-40 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300"
+        placeholder="Exemplo: criar backlog inicial para um CRUD de usuarios em Go, com auth JWT e persistencia Postgres..."
+        className="min-h-40 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 placeholder-slate-400"
       />
-      <label className="mt-4 flex items-center gap-3 text-sm text-[var(--muted)]">
+      <label className="mt-4 flex items-center gap-3 text-sm text-slate-600 font-medium">
         <input
           type="checkbox"
           checked={requiresApproval}
           onChange={(event) => setRequiresApproval(event.target.checked)}
-          className="h-4 w-4 rounded border-white/20 bg-black/40 text-cyan-300"
+          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
         />
         Requer aprovacao humana antes de iniciar o pipeline.
       </label>
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <p className="text-sm text-[var(--muted)]">{message ?? "O envio gera um item para o PO consumir."}</p>
+      <div className="mt-5 flex items-center justify-between gap-4">
+        <p className="text-sm font-medium text-slate-500">{message ?? "O envio gera um item para o PO consumir."}</p>
         <button
           type="submit"
           disabled={isPending || !directive.trim()}
-          className="rounded-full bg-cyan-300 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Enviando..." : "Enviar diretiva"}
         </button>
