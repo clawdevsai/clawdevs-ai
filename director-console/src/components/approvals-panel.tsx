@@ -59,31 +59,33 @@ export function ApprovalsPanel({ pendingItems, onChanged }: ApprovalsPanelProps)
   };
 
   return (
-    <div className="panel panel-strong rounded-3xl p-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold text-white">Aprovacoes pendentes</h2>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+    <div className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">Aprovacoes pendentes</h2>
+        <p className="mt-1 text-sm text-slate-500 font-medium">
           Itens aguardando autorizacao humana (UI e Telegram).
         </p>
       </div>
       {grouped.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">Sem aprovacoes pendentes no momento.</p>
+        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center p-8">
+          <p className="text-sm font-semibold text-slate-400">Sem aprovacoes pendentes no momento.</p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {grouped.map((item) => (
-            <div key={item.key} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--muted)]">
+            <div key={item.key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 <span>{item.requestedAt}</span>
-                <span className="rounded-full border border-white/10 px-2 py-1">{item.source}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 shadow-sm text-slate-700">{item.source}</span>
               </div>
-              <div className="mt-2 text-sm text-white">{item.issueId}</div>
-              <div className="mt-2 text-xs text-[var(--muted)] whitespace-pre-wrap">{item.directive}</div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 text-sm font-bold text-slate-900">{item.issueId}</div>
+              <div className="mt-3 text-sm text-slate-600 font-medium whitespace-pre-wrap leading-relaxed bg-slate-50 border border-slate-100 rounded-xl p-3">{item.directive}</div>
+              <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   type="button"
                   disabled={isBusy}
                   onClick={() => runAction("approve", item.key)}
-                  className="rounded-full bg-cyan-300 px-4 py-1 text-xs font-semibold text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full bg-indigo-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 shadow-sm shadow-indigo-200 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Aprovar
                 </button>
@@ -91,7 +93,7 @@ export function ApprovalsPanel({ pendingItems, onChanged }: ApprovalsPanelProps)
                   type="button"
                   disabled={isBusy}
                   onClick={() => runAction("deny", item.key)}
-                  className="rounded-full border border-white/20 px-4 py-1 text-xs font-semibold text-white transition hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
                 >
                   Recusar
                 </button>
@@ -100,7 +102,7 @@ export function ApprovalsPanel({ pendingItems, onChanged }: ApprovalsPanelProps)
           ))}
         </div>
       )}
-      <div className="mt-4 text-xs text-[var(--muted)]">
+      <div className="mt-5 text-sm font-medium text-slate-500">
         {isBusy ? "Processando..." : actionState.message ?? "Aprovacoes disparam cmd:strategy."}
       </div>
     </div>

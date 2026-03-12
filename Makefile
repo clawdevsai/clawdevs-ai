@@ -18,7 +18,7 @@ MINIKUBE_WAIT ?= all
 MINIKUBE_WAIT_TIMEOUT ?= 10m
 MINIKUBE_GPU_REQUEST ?= all
 
-.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status health-check logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs ensure-gateway-token env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console
+.PHONY: help test clean check-runtime-stack preflight gpu-host-check gpu-cdi-check gpu-cdi-help minikube-start minikube-start-host gpu-wait gpu-assert gpu-debug image-build deploy deploy-host up up-gpu up-force up-cdi up-host-ollama down down-host restart status health-check logs gpu-smoke ollama-pull ollama-pull-all ollama-signin telegram-enable telegram-disable telegram-logs ensure-gateway-token env-sync gh-check gh-token-sync gh-auth-check cluster-reset cluster-reset-hard console reset-total-safe
 
 help:
 	@echo "make test      - executa a suite"
@@ -56,6 +56,7 @@ help:
 	@echo "make env-sync - sincroniza .env -> configmap (nao sensivel) + secret (sensivel)"
 	@echo "make gh-token-sync - alias para make env-sync"
 	@echo "make gh-auth-check - valida autenticacao do gh CLI em todos os deployments"
+	@echo "make reset-total-safe - pausa runtime, executa reset total e restaura replicas"
 	@echo "OPENCLAW_GATEWAY_IMAGE=<img> pode sobrescrever imagem do gateway"
 	@echo "DIRECTOR_IMAGE=<img> pode sobrescrever imagem do director-console"
 	@echo "make clean     - remove caches Python"
@@ -193,6 +194,9 @@ health-check:
 console:
 	@echo ">>> Abrindo Director Console na porta :3000 no background..."
 	@powershell -NoProfile -Command "Start-Process -WindowStyle Hidden $(KUBECTL) -ArgumentList 'port-forward','svc/director-console','3000:3000','-n','$(NAMESPACE)'"
+
+reset-total-safe:
+	@powershell -NoProfile -Command "$$ErrorActionPreference='Stop'; $$ns='$(NAMESPACE)'; $$deploys=@('orchestration','po-worker','architect-worker','developer-worker','qa-worker','dba-worker','cybersec-worker','architect-review-worker','devops-worker','telegram-director','github-webhook'); $$rep=@{}; $$pf=$$null; try { Write-Host '[reset-safe] lendo replicas atuais...'; foreach ($$d in $$deploys) { $$r=& $(KUBECTL) -n $$ns get deployment $$d -o jsonpath='{.spec.replicas}'; if ([string]::IsNullOrWhiteSpace($$r)) { $$rep[$$d]=1 } else { $$rep[$$d]=[int]$$r } }; Write-Host '[reset-safe] pausando runtime (scale=0)...'; foreach ($$d in $$deploys) { & $(KUBECTL) -n $$ns scale deployment $$d --replicas=0 | Out-Null }; Write-Host '[reset-safe] aguardando pods encerrarem...'; Start-Sleep -Seconds 5; Write-Host '[reset-safe] abrindo port-forward diretor-console :3000...'; $$pf = Start-Process -WindowStyle Hidden $(KUBECTL) -ArgumentList '-n',$$ns,'port-forward','svc/director-console','3000:3000' -PassThru; Start-Sleep -Seconds 2; Write-Host '[reset-safe] executando reset total...'; $$body = '{\"confirmationText\":\"RESET TOTAL\"}'; $$result = Invoke-RestMethod -Uri 'http://localhost:3000/api/reset-total' -Method POST -ContentType 'application/json' -Body $$body; Write-Host '[reset-safe] resultado:'; $$result | ConvertTo-Json -Depth 10 | Write-Output } finally { if ($$pf -and -not $$pf.HasExited) { Write-Host '[reset-safe] encerrando port-forward...'; Stop-Process -Id $$pf.Id -Force -ErrorAction SilentlyContinue }; if ($$rep.Count -gt 0) { Write-Host '[reset-safe] restaurando replicas originais...'; foreach ($$k in $$rep.Keys) { & $(KUBECTL) -n $$ns scale deployment $$k --replicas=$$($$rep[$$k]) | Out-Null }; Write-Host '[reset-safe] aguardando rollout...'; foreach ($$k in $$rep.Keys) { & $(KUBECTL) -n $$ns rollout status deployment $$k --timeout=180s | Out-Null } } }; Write-Host '[reset-safe] concluido.'"
 
 logs:
 	@$(KUBECTL) logs -n $(NAMESPACE) deployment/orchestration --tail=100

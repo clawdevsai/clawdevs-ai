@@ -276,27 +276,27 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
   return (
     <main className="mx-auto min-h-screen max-w-[1400px] px-4 py-6 md:px-6">
       <div className="grid gap-6 lg:grid-cols-[250px_1fr]">
-        <aside className="panel panel-strong rounded-3xl p-4 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-auto">
-          <div className="border-b border-white/10 pb-4">
-            <div className="text-xs uppercase tracking-[0.32em] text-cyan-300">Director Console</div>
-            <h1 className="mt-3 text-2xl font-semibold text-white">ClawDevs</h1>
-            <p className="mt-2 text-sm text-[var(--muted)]">Menu lateral com subareas do painel executivo.</p>
+        <aside className="bg-slate-900 shadow-xl border-r border-slate-800 rounded-3xl p-5 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-auto">
+          <div className="border-b border-slate-800 pb-5">
+            <div className="text-[10px] uppercase tracking-[0.32em] text-indigo-400 font-semibold mb-3">Director Console</div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">ClawDevs</h1>
+            <p className="mt-2 text-[13px] leading-snug text-slate-400">Menu lateral com subareas do painel executivo.</p>
           </div>
 
-          <nav className="mt-4 space-y-5">
+          <nav className="mt-6 space-y-6">
             {MENU_GROUPS.map((group) => (
               <div key={group.title}>
-                <div className="px-2 text-[11px] uppercase tracking-[0.22em] text-[var(--muted)]">{group.title}</div>
-                <div className="mt-2 space-y-1">
+                <div className="px-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{group.title}</div>
+                <div className="mt-3 space-y-1">
                   {group.items.map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => setActiveMenu(item.id)}
-                      className={`w-full rounded-xl px-3 py-2 text-left text-sm transition ${
+                      className={`w-full rounded-xl px-3 py-2.5 text-left text-sm transition-all duration-200 font-medium ${
                         activeMenu === item.id
-                          ? "bg-cyan-300/20 text-cyan-100 border border-cyan-300/40"
-                          : "text-[var(--muted)] hover:bg-white/5 hover:text-white"
+                          ? "bg-indigo-500/10 text-indigo-400 shadow-sm border border-indigo-500/20"
+                          : "text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent"
                       }`}
                     >
                       {item.label}
@@ -309,22 +309,25 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
         </aside>
 
         <section className="space-y-6">
-          <header className="panel panel-strong rounded-3xl p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <header className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6 relative overflow-hidden">
+            {/* Subtle background abstract element */}
+            <div className="absolute top-0 right-0 -mt-16 -mr-16 bg-gradient-to-br from-indigo-50 to-emerald-50 w-64 h-64 rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+            
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between relative z-10">
               <div>
-                <h2 className="text-3xl font-semibold text-white">Uma superficie limpa para operar o time de agentes</h2>
-                <p className="mt-2 text-sm text-[var(--muted)]">{headerDescription}</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Uma superficie limpa para operar o time de agentes</h2>
+                <p className="mt-2 text-sm text-slate-500 font-medium">{headerDescription}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--muted)]">
-                <span className="rounded-full border border-white/10 px-3 py-1">
-                  Ultima leitura: <span className="text-white">{data.overview.generatedAt}</span>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 font-medium">
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-sm">
+                  Ultima leitura: <span className="text-slate-900">{data.overview.generatedAt}</span>
                 </span>
-                <label className="rounded-full border border-white/10 px-3 py-1">
+                <label className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-sm flex items-center">
                   Refresh:
                   <select
                     value={refreshSeconds}
                     onChange={(event) => setRefreshSeconds(Number(event.target.value))}
-                    className="ml-2 bg-transparent text-white outline-none"
+                    className="ml-2 bg-transparent text-slate-900 font-semibold outline-none cursor-pointer"
                   >
                     <option value={60}>60s</option>
                     <option value={120}>120s</option>
@@ -333,12 +336,12 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                     <option value={600}>600s</option>
                   </select>
                 </label>
-                <label className="rounded-full border border-white/10 px-3 py-1">
+                <label className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-sm flex items-center cursor-pointer hover:bg-slate-100 transition">
                   <input
                     type="checkbox"
                     checked={autoRefreshEnabled}
                     onChange={(event) => setAutoRefreshEnabled(event.target.checked)}
-                    className="mr-2 align-middle"
+                    className="mr-2 align-middle text-indigo-600 focus:ring-indigo-600 rounded border-slate-300"
                   />
                   auto
                 </label>
@@ -346,21 +349,21 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                   type="button"
                   onClick={() => void refreshDashboard()}
                   disabled={isRefreshing}
-                  className="rounded-full border border-cyan-300/50 px-3 py-1 text-cyan-100 transition hover:bg-cyan-300/15 disabled:opacity-60"
+                  className="rounded-full border border-indigo-200 bg-indigo-50 px-4 py-1.5 text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-60 shadow-sm"
                 >
                   {isRefreshing ? "Atualizando..." : "Atualizar agora"}
                 </button>
                 <button
                   type="button"
                   onClick={openResetModal}
-                  className="rounded-full border border-rose-300/55 px-3 py-1 text-rose-100 transition hover:bg-rose-300/15"
+                  className="rounded-full border border-rose-200 bg-white px-4 py-1.5 text-rose-600 transition hover:bg-rose-50 hover:border-rose-300 shadow-sm"
                 >
                   Reset total
                 </button>
               </div>
             </div>
-            {refreshError ? <p className="mt-3 text-xs text-amber-300">Falha no refresh: {refreshError}</p> : null}
-            {resetTotalMessage ? <p className="mt-3 text-xs text-[var(--muted)]">{resetTotalMessage}</p> : null}
+            {refreshError ? <p className="mt-3 text-xs font-semibold text-rose-500 bg-rose-50 inline-block px-3 py-1 rounded-full relative z-10">Falha no refresh: {refreshError}</p> : null}
+            {resetTotalMessage ? <p className="mt-3 text-xs font-medium text-slate-500 relative z-10">{resetTotalMessage}</p> : null}
           </header>
 
           {activeMenu === "overview" ? (
@@ -372,35 +375,35 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                 <StatCard label="Done" value={data.overview.byState.Done} tone="success" />
               </section>
 
-              <section className="panel panel-strong rounded-3xl p-6">
-                <div className="mb-5 flex items-center justify-between gap-4">
+              <section className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6">
+                <div className="mb-6 flex items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-xl font-semibold text-white">Radar operacional</h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">Volumes por stream e saude do fluxo principal.</p>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Radar operacional</h3>
+                    <p className="mt-1 text-sm text-slate-500 font-medium">Volumes por stream e saude do fluxo principal.</p>
                   </div>
-                  <div className="rounded-full border border-white/10 px-3 py-1 text-xs text-[var(--muted)]">
-                    Repo: <span className="text-white">{data.overview.githubRepo || "nao configurado"}</span>
+                  <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 shadow-sm">
+                    Repo: <span className="text-slate-900">{data.overview.githubRepo || "nao configurado"}</span>
                   </div>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                   <StatCard label="cmd:strategy" value={data.overview.streams.strategy} />
                   <StatCard label="draft.2.issue" value={data.overview.streams.draftIssue} />
                   <StatCard label="pr:review" value={data.overview.streams.prReview} />
                   <StatCard label="code:ready" value={data.overview.streams.codeReady} />
                   <StatCard label="event:devops" value={data.overview.streams.devopsEvents} />
                 </div>
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-[var(--muted)]">
+                <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-sm font-medium text-slate-600">
                   PRs GitHub:{" "}
-                  <span className="text-white">
+                  <span className="text-slate-900 font-bold ml-1">
                     {formatPrs(data.overview.prs.open, data.overview.prs.total, data.overview.prs.note)}
                   </span>
                 </div>
               </section>
 
-              <section className="panel panel-strong rounded-3xl p-6">
-                <div className="mb-5">
-                  <h3 className="text-xl font-semibold text-white">Webhook GitHub</h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
+              <section className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Webhook GitHub</h3>
+                  <p className="mt-1 text-sm text-slate-500 font-medium">
                     Saude de ingestao de eventos pull_request em tempo real.
                   </p>
                 </div>
@@ -420,28 +423,28 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                   <StatCard label="PRs em review" value={data.overview.webhook.inReview} tone="accent" />
                   <StatCard label="PRs mergeadas" value={data.overview.webhook.merged} tone="success" />
                 </div>
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-[var(--muted)]">
-                  last_delivery_id: <span className="text-white">{data.overview.webhook.lastDeliveryId || "n/a"}</span>{" "}
-                  | last_event: <span className="text-white">{data.overview.webhook.lastEvent || "n/a"}</span> |
-                  last_result: <span className="text-white">{data.overview.webhook.lastResult || "n/a"}</span>
+                <div className="mt-5 flex flex-wrap gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <span>last_delivery_id: <span className="text-slate-900">{data.overview.webhook.lastDeliveryId || "n/a"}</span></span>
+                  <span>last_event: <span className="text-slate-900">{data.overview.webhook.lastEvent || "n/a"}</span></span>
+                  <span>last_result: <span className="text-slate-900">{data.overview.webhook.lastResult || "n/a"}</span></span>
                 </div>
               </section>
 
-              <section className="panel panel-strong rounded-3xl p-6">
-                <div className="mb-5 flex items-center justify-between gap-3">
+              <section className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6">
+                <div className="mb-6 flex items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-xl font-semibold text-white">Webhook Live</h3>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Webhook Live</h3>
+                    <p className="mt-1 text-sm text-slate-500 font-medium">
                       Taxa por minuto desde a ultima leitura e alerta de subida abrupta.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {webhookLive?.abruptDuplicateSpike || webhookLive?.abruptInvalidSignatureSpike ? (
-                      <span className="rounded-full border border-rose-300/70 bg-rose-400/20 px-3 py-1 text-xs font-semibold text-rose-200">
+                      <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-rose-600 shadow-sm animate-pulse">
                         ALERTA DE ANOMALIA
                       </span>
                     ) : (
-                      <span className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-200">
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-600 shadow-sm">
                         Estavel
                       </span>
                     )}
@@ -449,7 +452,7 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                       type="button"
                       onClick={() => void resetWebhookMetrics()}
                       disabled={isResettingWebhookMetrics}
-                      className="rounded-full border border-amber-300/50 px-3 py-1 text-xs font-semibold text-amber-100 transition hover:bg-amber-300/15 disabled:opacity-60"
+                      className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 disabled:opacity-60 shadow-sm"
                     >
                       {isResettingWebhookMetrics ? "Resetando..." : "Reset métricas"}
                     </button>
@@ -477,19 +480,15 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                     tone={webhookLive?.abruptInvalidSignatureSpike ? "warning" : "default"}
                   />
                 </div>
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs text-[var(--muted)]">
-                  janela_min: <span className="text-white">{webhookLive ? webhookLive.minutes.toFixed(2) : "n/a"}</span>{" "}
-                  | delta_duplicates: <span className="text-white">{webhookLive?.duplicateDelta ?? 0}</span> |
-                  delta_invalid_signature:{" "}
-                  <span className="text-white">{webhookLive?.invalidSignatureDelta ?? 0}</span> | threshold_delta:{" "}
-                  <span className="text-white">{webhookLive?.spikeDeltaThreshold ?? data.overview.webhook.spikeDeltaThreshold}</span>{" "}
-                  | threshold_per_min:{" "}
-                  <span className="text-white">
-                    {webhookLive?.spikePerMinuteThreshold ?? data.overview.webhook.spikePerMinuteThreshold}
-                  </span>
+                <div className="mt-5 flex flex-wrap gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <span>janela_min: <span className="text-slate-900">{webhookLive ? webhookLive.minutes.toFixed(2) : "n/a"}</span></span>
+                  <span>delta_duplicates: <span className="text-slate-900">{webhookLive?.duplicateDelta ?? 0}</span></span>
+                  <span>delta_invalid_sig: <span className="text-slate-900">{webhookLive?.invalidSignatureDelta ?? 0}</span></span>
+                  <span>threshold_delta: <span className="text-slate-900">{webhookLive?.spikeDeltaThreshold ?? data.overview.webhook.spikeDeltaThreshold}</span></span>
+                  <span>threshold_per_min: <span className="text-slate-900">{webhookLive?.spikePerMinuteThreshold ?? data.overview.webhook.spikePerMinuteThreshold}</span></span>
                 </div>
                 {webhookMetricsMessage ? (
-                  <p className="mt-3 text-xs text-[var(--muted)]">{webhookMetricsMessage}</p>
+                  <p className="mt-4 text-xs font-medium text-slate-500">{webhookMetricsMessage}</p>
                 ) : null}
               </section>
             </div>
@@ -514,35 +513,35 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
           ) : null}
 
           {activeMenu === "issues" ? (
-            <div className="panel panel-strong rounded-3xl p-6">
-              <div className="mb-5">
-                <h3 className="text-xl font-semibold text-white">Issues acompanhadas</h3>
-                <p className="mt-1 text-sm text-[var(--muted)]">Estados persistidos no Redis pelo runtime.</p>
+            <div className="bg-white shadow-sm border border-slate-200 rounded-3xl p-6">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Issues acompanhadas</h3>
+                <p className="mt-1 text-sm text-slate-500 font-medium">Estados persistidos no Redis pelo runtime.</p>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-white/10">
-                <table className="min-w-full divide-y divide-white/10 text-sm">
-                  <thead className="bg-white/5 text-left text-[var(--muted)]">
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50 text-left text-slate-500 font-semibold">
                     <tr>
-                      <th className="px-4 py-3 font-medium">Issue</th>
-                      <th className="px-4 py-3 font-medium">Estado</th>
-                      <th className="px-4 py-3 font-medium">Strikes</th>
-                      <th className="px-4 py-3 font-medium">Invalid output</th>
+                      <th className="px-5 py-3.5">Issue</th>
+                      <th className="px-5 py-3.5">Estado</th>
+                      <th className="px-5 py-3.5">Strikes</th>
+                      <th className="px-5 py-3.5">Invalid output</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {data.overview.issues.length === 0 ? (
                       <tr>
-                        <td className="px-4 py-5 text-[var(--muted)]" colSpan={4}>
+                        <td className="px-5 py-6 text-center text-slate-500 font-medium" colSpan={4}>
                           Nenhuma issue registrada ainda.
                         </td>
                       </tr>
                     ) : (
                       data.overview.issues.map((issue) => (
-                        <tr key={issue.issueId}>
-                          <td className="px-4 py-3 text-white">{issue.issueId}</td>
-                          <td className="px-4 py-3 text-[var(--muted)]">{issue.state}</td>
-                          <td className="px-4 py-3 text-[var(--muted)]">{issue.strikes}</td>
-                          <td className="px-4 py-3 text-[var(--muted)]">{issue.invalidOutputCount}</td>
+                        <tr key={issue.issueId} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-5 py-4 text-slate-900 font-medium">{issue.issueId}</td>
+                          <td className="px-5 py-4 text-slate-500">{issue.state}</td>
+                          <td className="px-5 py-4 text-slate-500">{issue.strikes}</td>
+                          <td className="px-5 py-4 text-slate-500">{issue.invalidOutputCount}</td>
                         </tr>
                       ))
                     )}
@@ -553,30 +552,31 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
           ) : null}
         </section>
       </div>
+
       {isResetModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="panel panel-strong w-full max-w-xl rounded-3xl border border-rose-300/35 p-6">
-            <h3 className="text-xl font-semibold text-white">Confirmar reset total</h3>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-xl rounded-3xl border border-slate-200 shadow-2xl p-8 transform transition-all">
+            <h3 className="text-2xl font-bold text-slate-900">Confirmar reset total</h3>
+            <p className="mt-3 text-sm text-slate-500 leading-relaxed">
               Esta acao apaga eventos, historico e issues no Redis, remove streams operacionais e fecha issues abertas
               no GitHub.
             </p>
-            <p className="mt-2 text-sm text-rose-200">
-              Para continuar, digite <span className="font-semibold">{REQUIRED_RESET_CONFIRMATION}</span>.
+            <p className="mt-4 text-sm font-medium text-rose-600 bg-rose-50 px-4 py-3 rounded-xl border border-rose-100">
+              Para continuar, digite <span className="font-bold">{REQUIRED_RESET_CONFIRMATION}</span> abaixo.
             </p>
             <input
               type="text"
               value={resetConfirmationText}
               onChange={(event) => setResetConfirmationText(event.target.value)}
               placeholder={REQUIRED_RESET_CONFIRMATION}
-              className="mt-4 w-full rounded-xl border border-white/20 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-rose-300/60"
+              className="mt-5 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 font-medium outline-none transition focus:bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10 placeholder-slate-400"
             />
-            <div className="mt-5 flex justify-end gap-3">
+            <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={closeResetModal}
                 disabled={isResettingTotal}
-                className="rounded-xl border border-white/20 px-4 py-2 text-sm text-[var(--muted)] transition hover:bg-white/10 disabled:opacity-60"
+                className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 shadow-sm"
               >
                 Cancelar
               </button>
@@ -584,12 +584,12 @@ export function DashboardShell({ initialData }: DashboardShellProps) {
                 type="button"
                 onClick={() => void runTotalReset()}
                 disabled={isResettingTotal}
-                className="rounded-xl border border-rose-300/60 px-4 py-2 text-sm font-semibold text-rose-100 transition hover:bg-rose-300/15 disabled:opacity-60"
+                className="rounded-xl border border-rose-600 bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200 transition hover:bg-rose-700 disabled:opacity-60"
               >
                 {isResettingTotal ? "Resetando..." : "Confirmar reset"}
               </button>
             </div>
-            {resetTotalMessage ? <p className="mt-3 text-xs text-[var(--muted)]">{resetTotalMessage}</p> : null}
+            {resetTotalMessage ? <p className="mt-4 text-sm font-medium text-rose-600">{resetTotalMessage}</p> : null}
           </div>
         </div>
       ) : null}
