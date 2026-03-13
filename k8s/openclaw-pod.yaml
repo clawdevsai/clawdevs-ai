@@ -29,27 +29,27 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: gateway-token
+                  key: OPENCLAW_GATEWAY_TOKEN
             - name: TELEGRAM_BOT_TOKEN_CEO
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: telegram-bot-token-ceo
+                  key: TELEGRAM_BOT_TOKEN_CEO
             - name: TELEGRAM_CHAT_ID
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: telegram-chat-id-ceo
+                  key: TELEGRAM_CHAT_ID_CEO
             - name: GH_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: github-token
+                  key: GITHUB_TOKEN
             - name: GITHUB_REPOSITORY
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: github-repository
+                  key: GITHUB_REPOSITORY
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -296,18 +296,6 @@ spec:
       port: 18789
       targetPort: 18789
       nodePort: 31879
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: openclaw-auth
-type: Opaque
-stringData:
-  gateway-token: ***REMOVED***
-  telegram-bot-token-ceo: "***REMOVED***"
-  telegram-chat-id-ceo: "***REMOVED***"
-  github-token: "***REMOVED***"
-  github-repository: "lukeware-ai/user-api"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

@@ -1,1 +1,3 @@
 .openclaw-forward.pid
+.env
+k8s/.env

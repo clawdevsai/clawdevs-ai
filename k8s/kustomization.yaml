@@ -6,6 +6,11 @@ resources:
   - ollama-pod.yaml
   - networkpolicy-allow-egress.yaml
 
+secretGenerator:
+  - name: openclaw-auth
+    envs:
+      - .env
+
 configMapGenerator:
   - name: openclaw-agent-config
     files:
