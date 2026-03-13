@@ -3,9 +3,11 @@ KUBE_CONTEXT ?= clawdevs-ai
 CPUS ?= 4
 MEMORY ?= 8192
 K8S_VERSION ?= v1.34.1
+PF_SERVICE ?= service/openclaw
+PF_PORTS ?= 18789:18789
 
 
-.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status openclaw-forward-start openclaw-forward-stop openclaw-forward-status net-allow-egress net-test-openclaw
+.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -22,9 +24,9 @@ help:
 	@echo "  make openclaw-apply - aplica k8s via kustomize"
 	@echo "  make openclaw-kustomization - aplica k8s via kustomize"
 	@echo "  make openclaw-logs  - mostra logs do deployment openclaw"
-	@echo "  make openclaw-forward-start  - inicia port-forward em background"
-	@echo "  make openclaw-forward-stop   - para port-forward em background"
-	@echo "  make openclaw-forward-status - status do port-forward"
+	@echo "  make port-forward-start PF_SERVICE=service/openclaw PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
+	@echo "  make port-forward-stop  PF_PID=.openclaw-forward.pid"
+	@echo "  make port-forward-status PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
 	@echo "  make net-allow-egress        - aplica policy liberando egress"
 	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
 	@echo "  make stack-apply    - aplica ollama + openclaw"
@@ -83,19 +85,16 @@ ollama-sign:
 ollama-list:
 	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama list
 
+net-allow-egress:
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/networkpolicy-allow-egress.yaml
+
+net-test-openclaw:
+	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
+
 openclaw-apply: net-allow-egress
 	kubectl --context=$(KUBE_CONTEXT) delete pod openclaw --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) delete deployment openclaw --ignore-not-found
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s
-
-openclaw-forward-start:
-	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (Test-Path $$pidPath) { try { $$oldPid=Get-Content $$pidPath; if ($$oldPid -and (Get-Process -Id $$oldPid -ErrorAction SilentlyContinue)) { Write-Host 'Port-forward ja esta rodando. PID:' $$oldPid; exit 0 } } catch {} }; $$p=Start-Process -FilePath kubectl -ArgumentList '--context=$(KUBE_CONTEXT)','port-forward','service/openclaw','18789:18789' -PassThru -WindowStyle Hidden; Set-Content -Path $$pidPath -Value $$p.Id; Write-Host 'Port-forward iniciado. PID:' $$p.Id; Write-Host 'URL: http://127.0.0.1:18789'"
-
-openclaw-forward-stop:
-	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (!(Test-Path $$pidPath)) { Write-Host 'Sem PID file (.openclaw-forward.pid).'; exit 0 }; $$pid=Get-Content $$pidPath; if ($$pid -and (Get-Process -Id $$pid -ErrorAction SilentlyContinue)) { Stop-Process -Id $$pid -Force; Write-Host 'Port-forward parado. PID:' $$pid } else { Write-Host 'Processo nao encontrado para PID:' $$pid }; Remove-Item $$pidPath -ErrorAction SilentlyContinue"
-
-openclaw-forward-status:
-	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (!(Test-Path $$pidPath)) { Write-Host 'Port-forward: parado'; exit 0 }; $$pid=Get-Content $$pidPath; if ($$pid -and (Get-Process -Id $$pid -ErrorAction SilentlyContinue)) { Write-Host 'Port-forward: rodando (PID' $$pid ')'; Write-Host 'URL: http://127.0.0.1:18789' } else { Write-Host 'Port-forward: parado (PID stale:' $$pid ')'; exit 1 }"
 
 openclaw-logs:
 	kubectl --context=$(KUBE_CONTEXT) logs -f deployment/openclaw
@@ -110,8 +109,11 @@ stack-status:
 	kubectl --context=$(KUBE_CONTEXT) get pods -l app=openclaw
 	kubectl --context=$(KUBE_CONTEXT) get svc ollama openclaw
 
-net-allow-egress:
-	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/networkpolicy-allow-egress.yaml
+port-forward-start:
+	kubectl --context=$(KUBE_CONTEXT) port-forward $(PF_SERVICE) $(PF_PORTS)
 
-net-test-openclaw:
-	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
+port-forward-stop:
+	@echo "Sem PID/daemon. Use Ctrl+C na sessao onde o port-forward esta rodando."
+
+port-forward-status:
+	@echo "Sem PID/daemon. Rode o port-forward na sessao atual para acompanhar o status."
