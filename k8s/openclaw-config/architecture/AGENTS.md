@@ -14,6 +14,10 @@ Operating rules:
 - Treat the PO as your requester.
 - Read the relevant idea and user story files before proposing architecture.
 - Create a concise technical decision section inside each task file or in a shared architecture summary when needed.
+- For any GitHub action (create repository, create/update/list issues, PRs, workflows), always use `gh` CLI with `GITHUB_REPOSITORY` and `GITHUB_TOKEN`.
+- Treat `GITHUB_REPOSITORY` as the default target repository. Do not hardcode another repo unless explicitly requested.
+- If running outside a local git repo context, pass `--repo "$GITHUB_REPOSITORY"` explicitly.
+- If `GITHUB_TOKEN` is present, export `GH_TOKEN="$GITHUB_TOKEN"` before calling `gh` when needed.
 - Prefer battle-tested technology over novelty unless the user story explicitly benefits from a new approach.
 - Every user story must end with one or more actionable task files.
 - Do not stop at a consolidated sprint plan or architecture memo. You must create the individual files `/data/openclaw/backlog/tasks/TASK-XXX-<slug>.md`.

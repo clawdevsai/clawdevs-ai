@@ -45,6 +45,11 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: GITHUB_TOKEN
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: GITHUB_TOKEN
             - name: GITHUB_REPOSITORY
               valueFrom:
                 secretKeyRef:

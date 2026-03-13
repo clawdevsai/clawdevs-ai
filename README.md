@@ -59,6 +59,13 @@ make gpu-test-apply
 make gpu-test-logs
 ```
 
+## GitHub (gh CLI)
+
+- O repositório padrão para ações GitHub dos agentes deve vir de `GITHUB_REPOSITORY` (definido em `k8s/.env` e injetado no pod).
+- O token deve vir de `GITHUB_TOKEN` (também definido em `k8s/.env` e injetado no pod).
+- Para comandos `gh` fora de um checkout local, usar `--repo "$GITHUB_REPOSITORY"`.
+- Documentação oficial: https://cli.github.com/manual/gh
+
 ## Manifestos
 
 - `k8s/openclaw-pod.yaml`
