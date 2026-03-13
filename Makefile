@@ -3,7 +3,7 @@ CPUS ?= 4
 MEMORY ?= 8192
 K8S_VERSION ?= v1.35.1
 
-.PHONY: help minikube-up minikube-status minikube-logs minikube-delete dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-logs stack-apply stack-status openclaw-forward-start openclaw-forward-stop openclaw-forward-status
+.PHONY: help minikube-up minikube-status minikube-logs minikube-delete dashboard dashboard-url openclaw-apply openclaw-logs ollama-apply ollama-logs stack-apply stack-status openclaw-forward-start openclaw-forward-stop openclaw-forward-status net-allow-egress net-test-openclaw
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -17,6 +17,8 @@ help:
 	@echo "  make openclaw-forward-start  - inicia port-forward em background"
 	@echo "  make openclaw-forward-stop   - para port-forward em background"
 	@echo "  make openclaw-forward-status - status do port-forward"
+	@echo "  make net-allow-egress        - aplica policy liberando egress"
+	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
 	@echo "  make stack-apply    - aplica ollama + openclaw"
 	@echo "  make stack-status   - status de pods e service do stack"
 	@echo "  make minikube-status|minikube-logs|minikube-delete"
@@ -55,7 +57,7 @@ ollama-logs:
 ollama-sign:
 	kubectl exec -it pod/ollama -- ollama signin
 
-openclaw-apply:
+openclaw-apply: net-allow-egress
 	kubectl --context=$(PROFILE) delete pod openclaw --ignore-not-found
 	kubectl --context=$(PROFILE) apply -f k8s/openclaw-pod.yaml
 
@@ -82,3 +84,9 @@ openclaw-forward-stop:
 
 openclaw-forward-status:
 	powershell -NoProfile -Command "$$pidPath='.openclaw-forward.pid'; if (!(Test-Path $$pidPath)) { Write-Host 'Port-forward: parado'; exit 0 }; $$pid=Get-Content $$pidPath; if ($$pid -and (Get-Process -Id $$pid -ErrorAction SilentlyContinue)) { Write-Host 'Port-forward: rodando (PID' $$pid ')'; Write-Host 'URL: http://127.0.0.1:18789' } else { Write-Host 'Port-forward: parado (PID stale:' $$pid ')'; exit 1 }"
+
+net-allow-egress:
+	kubectl --context=$(PROFILE) apply -f k8s/networkpolicy-allow-egress.yaml
+
+net-test-openclaw:
+	kubectl --context=$(PROFILE) exec pod/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
