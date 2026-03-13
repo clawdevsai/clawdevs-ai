@@ -64,6 +64,10 @@ spec:
               export OPENCLAW_NO_ONBOARD=1
               export OPENCLAW_NO_PROMPT=1
               export OPENCLAW_STATE_DIR=/data/openclaw
+              # Garantir que todos os agentes tenham o repo default mesmo se o Secret vier sem essa chave
+              export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-lukeware-ai/user-api}"
+              # Alinhar GH CLI caso GH_TOKEN venha em outro nome
+              export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh
               rm -rf /var/lib/apt/lists/*
