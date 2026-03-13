@@ -167,10 +167,19 @@ spec:
                 ],
                 "channels": {
                   "telegram": {
+                    "dmPolicy": "allowlist",
+                    "allowFrom": ["__TELEGRAM_CHAT_ID__"],
+                    "groupPolicy": "allowlist",
+                    "groupAllowFrom": ["__TELEGRAM_CHAT_ID__"],
+                    "streaming": "partial",
                     "accounts": {
                       "default": {
                         "botToken": "__TELEGRAM_BOT_TOKEN_CEO__",
-                        "dmPolicy": "pairing"
+                        "dmPolicy": "allowlist",
+                        "allowFrom": ["__TELEGRAM_CHAT_ID__"],
+                        "groupPolicy": "allowlist",
+                        "groupAllowFrom": ["__TELEGRAM_CHAT_ID__"],
+                        "streaming": "partial"
                       }
                     }
                   }
@@ -179,12 +188,10 @@ spec:
               EOF
               sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
               sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+              sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+              mkdir -p ~/.openclaw
               cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
-              openclaw config set gateway.mode local
-              openclaw config set gateway.bind lan
-              openclaw config set gateway.port 18789
-              openclaw config set gateway.auth.token "${OPENCLAW_GATEWAY_TOKEN}"
-              openclaw gateway --port 18789 --token "${OPENCLAW_GATEWAY_TOKEN}" &
+              openclaw gateway &
               sleep 3
               echo "Gerando URL do dashboard..."
               openclaw dashboard --no-open || true
