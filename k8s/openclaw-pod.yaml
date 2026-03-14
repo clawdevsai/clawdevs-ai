@@ -307,6 +307,60 @@ spec:
                   .agents.ceo.allowlist = (.agents.ceo.allowlist // [])' \
                 "${EXEC_APPROVALS_FILE}" > "${EXEC_APPROVALS_FILE}.tmp"
               mv "${EXEC_APPROVALS_FILE}.tmp" "${EXEC_APPROVALS_FILE}"
+              # Repair agent main sessions when the persisted transcript is missing, invalid,
+              # or contains no assistant text messages that the chat UI can render.
+              repair_main_session() {
+                agent_id="$1"
+                workspace_dir="$2"
+                seed_text="$3"
+                sess_dir="${OPENCLAW_STATE_DIR}/agents/${agent_id}/sessions"
+                sess_key="agent:${agent_id}:main"
+                mkdir -p "${sess_dir}"
+                if [ ! -f "${sess_dir}/sessions.json" ]; then
+                  return 0
+                fi
+                main_file="$(jq -r --arg key "${sess_key}" '.[$key].sessionFile // empty' "${sess_dir}/sessions.json" 2>/dev/null || true)"
+                main_ok=0
+                if [ -n "${main_file}" ] && [ -f "${main_file}" ]; then
+                  if jq -c . "${main_file}" >/dev/null 2>&1; then
+                    if jq -e 'select(.type=="message" and .message.role=="assistant") | .message.content[]? | select(.type=="text" and ((.text // "") | length > 0))' "${main_file}" >/dev/null 2>&1; then
+                      main_ok=1
+                    fi
+                  fi
+                fi
+                if [ "${main_ok}" -eq 1 ]; then
+                  return 0
+                fi
+                ts="$(date -u +%Y%m%dT%H%M%SZ)"
+                new_id="$(cat /proc/sys/kernel/random/uuid)"
+                now_ms="$(($(date -u +%s)*1000))"
+                cp "${sess_dir}/sessions.json" "${sess_dir}/sessions.json.bak.${ts}"
+                if [ -n "${main_file}" ] && [ -f "${main_file}" ]; then
+                  cp "${main_file}" "${main_file}.bak.${ts}"
+                fi
+                cat > "${sess_dir}/${new_id}.jsonl" <<EOF
+              {"type":"session","version":3,"id":"${new_id}","timestamp":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","cwd":"${workspace_dir}"}
+              {"type":"message","id":"seed-${agent_id}-main","parentId":null,"timestamp":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","message":{"role":"assistant","content":[{"type":"text","text":"${seed_text}"}],"stopReason":"stop","provider":"system","model":"seed"}}
+              EOF
+                jq --arg key "${sess_key}" \
+                   --arg newId "${new_id}" \
+                   --arg newFile "${sess_dir}/${new_id}.jsonl" \
+                   --argjson now "${now_ms}" \
+                   '.[$key].sessionId = $newId |
+                    .[$key].updatedAt = $now |
+                    .[$key].chatType = "direct" |
+                    .[$key].deliveryContext = {"channel":"webchat"} |
+                    .[$key].lastChannel = "webchat" |
+                    .[$key].origin = {"provider":"webchat","surface":"webchat","chatType":"direct"} |
+                    .[$key].sessionFile = $newFile |
+                    .[$key].abortedLastRun = false |
+                    .[$key].compactionCount = 0' \
+                   "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
+                mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
+              }
+              repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Architecture."
+              repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Architecture."
+              repair_main_session "architecture" "/data/openclaw/workspace-architecture" "Architecture pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
               openclaw gateway &
               sleep 3
               echo "Gerando URL do dashboard..."
