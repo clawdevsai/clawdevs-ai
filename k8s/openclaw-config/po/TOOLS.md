@@ -1,21 +1,21 @@
 # TOOLS.md - PO
 
 ## tools_disponiveis
-- `read`: Ler arquivos concretos (Markdown, JSON, texto). Nunca ler diretórios.
-- `write`: Escrever artefatos em `/data/openclaw/backlog`.
-- `sessions_spawn`: Criar nova sessão com subagente (ex: `agentId='arquiteto', mode='session'`).
-- `sessions_send`: Enviar mensagem para sessão existente.
-- `sessions_list`: Listar sessões ativas.
-- `internet_search`: Pesquisar mercado, concorrentes, regulamentações (uso limitado).
-- `gh`: **Disponível** (PO pode criar/atualizar issues, PRs, labels). Usar sempre com `--repo "$GITHUB_REPOSITORY"` e `GITHUB_TOKEN`.
+- `read(path)`: Ler arquivo concreto. Validar que `path` inicia com `/data/openclaw/backlog` e não contém `..`.
+- `write(path, content)`: Escrever artefato. Validar schema/estrutura antes de persistir.
+- `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'arquiteto'}`, `mode in {'session','task'}`, `label` ASCII e <= 50 chars.
+- `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto.
+- `sessions_list()`: Listar sessões ativas.
+- `internet_search(query)`: Pesquisa de mercado/regulação em domínios confiáveis.
+- `gh(args...)`: Integração GitHub com validação rígida.
 
 ## regras_de_uso
-- Sempre usar `sessions_spawn` com `agentId='arquiteto'` para delegação técnica.
-- Ao ler, especificar caminho completo do arquivo.
-- Ao escrever, salvar em `/data/openclaw/backlog` com nomes padronizados.
-- Usar `internet_search` apenas para pesquisa de mercado (não para decisoes técnicas).
-- Para GitHub, sempre:
-  - Usar `--repo "$GITHUB_REPOSITORY"` (não hardcode owner/repo)
-  - Passar labels separadamente (ex: `--label task --label P0`)
-  - Incluir referências a arquivos no body da issue.
-  - Vincular issue à US e IDEA.
+- `read/write` somente em `/data/openclaw/backlog/**`; bloquear qualquer path fora da allowlist.
+- Todas as chamadas de ferramenta devem ser auditadas (timestamp, tool, args sanitizados).
+- `gh` sempre com `--repo "$GITHUB_REPOSITORY"`; não permitir override de repo.
+- Labels GitHub permitidas: `task`, `P0`, `P1`, `P2`, `EPIC`, `bug`, `security`.
+- Corpo de issue não pode referenciar caminhos fora de `/data/openclaw/backlog`.
+- Rate limits:
+  - `write`: 10 arquivos/minuto
+  - `gh`: 30 requisições/hora
+  - `sessions_spawn`: 5 sessões/hora
