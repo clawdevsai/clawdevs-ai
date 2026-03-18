@@ -18,19 +18,31 @@ configMapGenerator:
   - name: openclaw-agent-config
     files:
       - ceo-AGENTS.md=openclaw-config/ceo/AGENTS.md
+      - ceo-BOOT.md=openclaw-config/ceo/BOOT.md
+      - ceo-BOOTSTRAP.md=openclaw-config/ceo/BOOTSTRAP.md
+      - ceo-HEARTBEAT.md=openclaw-config/ceo/HEARTBEAT.md
       - ceo-IDENTITY.md=openclaw-config/ceo/IDENTITY.md
       - ceo-SOUL.md=openclaw-config/ceo/SOUL.md
       - ceo-USER.md=openclaw-config/ceo/USER.md
+      - ceo-TOOLS.md=openclaw-config/ceo/TOOLS.md
       - ceo-skill-SKILL.md=openclaw-config/ceo/SKILL.md
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
+      - po-BOOT.md=openclaw-config/po/BOOT.md
+      - po-BOOTSTRAP.md=openclaw-config/po/BOOTSTRAP.md
+      - po-HEARTBEAT.md=openclaw-config/po/HEARTBEAT.md
       - po-IDENTITY.md=openclaw-config/po/IDENTITY.md
       - po-SOUL.md=openclaw-config/po/SOUL.md
       - po-USER.md=openclaw-config/po/USER.md
+      - po-TOOLS.md=openclaw-config/po/TOOLS.md
       - po-skill-SKILL.md=openclaw-config/po/SKILL.md
       - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
+      - arquiteto-BOOT.md=openclaw-config/arquiteto/BOOT.md
+      - arquiteto-BOOTSTRAP.md=openclaw-config/arquiteto/BOOTSTRAP.md
+      - arquiteto-HEARTBEAT.md=openclaw-config/arquiteto/HEARTBEAT.md
       - arquiteto-IDENTITY.md=openclaw-config/arquiteto/IDENTITY.md
       - arquiteto-SOUL.md=openclaw-config/arquiteto/SOUL.md
       - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
+      - arquiteto-TOOLS.md=openclaw-config/arquiteto/TOOLS.md
       - arquiteto-skill-SKILL.md=openclaw-config/arquiteto/SKILL.md
 
 generatorOptions:

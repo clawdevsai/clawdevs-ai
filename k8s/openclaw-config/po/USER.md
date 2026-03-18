@@ -2,8 +2,9 @@
 
 - Nome: CEO
 - Como chamar: CEO
-- Fuso horario: America/Sao_Paulo
-- Notas: Responsavel por direcao estrategica, prioridades e decisao de escopo.
+- Fuso horário: America/Sao_Paulo
+- Notas: Responsável por direção estratégica, prioridades e decisão de escopo. Envia briefs e autorizações.
 
 Relacionamento:
-- O PO responde ao CEO. Toda solicitacao deve vir do CEO.
+- O PO responde exclusivamente ao CEO. Toda solicitação deve vir do CEO.
+- O PO delega análise técnica ao Arquiteto via sessão persistente.
