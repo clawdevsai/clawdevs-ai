@@ -17,6 +17,7 @@ secretGenerator:
 configMapGenerator:
   - name: openclaw-agent-config
     files:
+      # ceo
       - ceo-AGENTS.md=openclaw-config/ceo/AGENTS.md
       - ceo-AUTONOMY_POLICY.md=openclaw-config/ceo/AUTONOMY_POLICY.md
       - ceo-BOOT.md=openclaw-config/ceo/BOOT.md
@@ -29,6 +30,7 @@ configMapGenerator:
       - ceo-USER.md=openclaw-config/ceo/USER.md
       - ceo-TOOLS.md=openclaw-config/ceo/TOOLS.md
       - ceo-skill-SKILL.md=openclaw-config/ceo/SKILL.md
+      # po
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
       - po-BOOT.md=openclaw-config/po/BOOT.md
       - po-BOOTSTRAP.md=openclaw-config/po/BOOTSTRAP.md
@@ -40,6 +42,7 @@ configMapGenerator:
       - po-USER.md=openclaw-config/po/USER.md
       - po-TOOLS.md=openclaw-config/po/TOOLS.md
       - po-skill-SKILL.md=openclaw-config/po/SKILL.md
+      # arquiteto
       - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
       - arquiteto-BOOT.md=openclaw-config/arquiteto/BOOT.md
       - arquiteto-BOOTSTRAP.md=openclaw-config/arquiteto/BOOTSTRAP.md
@@ -51,6 +54,18 @@ configMapGenerator:
       - arquiteto-USER.md=openclaw-config/arquiteto/USER.md
       - arquiteto-TOOLS.md=openclaw-config/arquiteto/TOOLS.md
       - arquiteto-skill-SKILL.md=openclaw-config/arquiteto/SKILL.md
+      # dev_backend
+      - dev_backend-AGENTS.md=openclaw-config/dev_backend/AGENTS.md
+      - dev_backend-BOOT.md=openclaw-config/dev_backend/BOOT.md
+      - dev_backend-BOOTSTRAP.md=openclaw-config/dev_backend/BOOTSTRAP.md
+      - dev_backend-HEARTBEAT.md=openclaw-config/dev_backend/HEARTBEAT.md
+      - dev_backend-IDENTITY.md=openclaw-config/dev_backend/IDENTITY.md
+      - dev_backend-INPUT_SCHEMA.json=openclaw-config/dev_backend/INPUT_SCHEMA.json
+      - dev_backend-SOUL.md=openclaw-config/dev_backend/SOUL.md
+      - dev_backend-SECURITY_TEST_CASES.md=openclaw-config/dev_backend/SECURITY_TEST_CASES.md
+      - dev_backend-USER.md=openclaw-config/dev_backend/USER.md
+      - dev_backend-TOOLS.md=openclaw-config/dev_backend/TOOLS.md
+      - dev_backend-skill-SKILL.md=openclaw-config/dev_backend/SKILL.md
 
 generatorOptions:
   disableNameSuffixHash: true

@@ -68,6 +68,14 @@ spec:
                   key: DIRECTORS_NAME
             - name: NODE_OPTIONS
               value: --max-old-space-size=3072
+            - name: DEV_BACKEND_CRON_ENABLED
+              value: "true"
+            - name: DEV_BACKEND_CRON_NAME
+              value: "dev_backend_hourly_queue_poll"
+            - name: DEV_BACKEND_CRON_EXPR
+              value: "0 * * * *"
+            - name: DEV_BACKEND_CRON_TZ
+              value: "America/Sao_Paulo"
           resources:
             requests:
               memory: 2Gi
@@ -99,13 +107,15 @@ spec:
               curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw
+              mkdir -p "${OPENCLAW_STATE_DIR}/scheduler"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/idea"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/user_story"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/tasks"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ceo"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-po"
               mkdir -p "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
-              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/arquiteto/agent"
+              mkdir -p "${OPENCLAW_STATE_DIR}/workspace-dev_backend"
+              mkdir -p "${OPENCLAW_STATE_DIR}/agents/ceo/agent" "${OPENCLAW_STATE_DIR}/agents/po/agent" "${OPENCLAW_STATE_DIR}/agents/arquiteto/agent" "${OPENCLAW_STATE_DIR}/agents/dev_backend/agent"
               cp /bootstrap/agent-config/ceo-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-ceo/AGENTS.md"
               cp /bootstrap/agent-config/ceo-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-ceo/IDENTITY.md"
               cp /bootstrap/agent-config/ceo-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-ceo/SOUL.md"
@@ -123,6 +133,17 @@ spec:
               cp /bootstrap/agent-config/arquiteto-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SOUL.md"
               cp /bootstrap/agent-config/arquiteto-USER.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/USER.md"
               cp /bootstrap/agent-config/arquiteto-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-arquiteto/SKILL.md"
+              cp /bootstrap/agent-config/dev_backend-AGENTS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/AGENTS.md"
+              cp /bootstrap/agent-config/dev_backend-BOOT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOT.md"
+              cp /bootstrap/agent-config/dev_backend-BOOTSTRAP.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/BOOTSTRAP.md"
+              cp /bootstrap/agent-config/dev_backend-HEARTBEAT.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/HEARTBEAT.md"
+              cp /bootstrap/agent-config/dev_backend-IDENTITY.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/IDENTITY.md"
+              cp /bootstrap/agent-config/dev_backend-INPUT_SCHEMA.json "${OPENCLAW_STATE_DIR}/workspace-dev_backend/INPUT_SCHEMA.json"
+              cp /bootstrap/agent-config/dev_backend-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SOUL.md"
+              cp /bootstrap/agent-config/dev_backend-SECURITY_TEST_CASES.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SECURITY_TEST_CASES.md"
+              cp /bootstrap/agent-config/dev_backend-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/USER.md"
+              cp /bootstrap/agent-config/dev_backend-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/TOOLS.md"
+              cp /bootstrap/agent-config/dev_backend-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SKILL.md"
               rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
@@ -165,7 +186,7 @@ spec:
                   },
                   "agentToAgent": {
                     "enabled": true,
-                    "allow": ["ceo", "po", "arquiteto"]
+                    "allow": ["ceo", "po", "arquiteto", "dev_backend"]
                   }
                 },
                 "skills": {
@@ -213,7 +234,7 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po", "arquiteto"]
+                        "allowAgents": ["po"]
                       }
                     },
                     {
@@ -271,7 +292,36 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["ceo", "po"]
+                        "allowAgents": ["ceo", "po", "dev_backend"]
+                      }
+                    },
+                    {
+                      "id": "dev_backend",
+                      "name": "Dev_Backend",
+                      "model": "ollama/qwen3-coder:480b-cloud",
+                      "workspace": "/data/openclaw/workspace-dev_backend",
+                      "agentDir": "/data/openclaw/agents/dev_backend/agent",
+                      "tools": {
+                        "allow": [
+                          "read",
+                          "write",
+                          "exec",
+                          "process",
+                          "browser",
+                          "message",
+                          "sessions_list",
+                          "sessions_history",
+                          "sessions_send",
+                          "session_status"
+                        ],
+                        "exec": {
+                          "host": "gateway",
+                          "security": "full",
+                          "ask": "off"
+                        }
+                      },
+                      "subagents": {
+                        "allowAgents": []
                       }
                     }
                   ]
@@ -397,6 +447,39 @@ spec:
               repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Arquiteto."
               repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
               repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
+              repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+              if [ "${DEV_BACKEND_CRON_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  CRON_NAME="${DEV_BACKEND_CRON_NAME:-dev_backend_hourly_queue_poll}"
+                  CRON_EXPR="${DEV_BACKEND_CRON_EXPR:-0 * * * *}"
+                  CRON_TZ="${DEV_BACKEND_CRON_TZ:-America/Sao_Paulo}"
+                  CRON_MSG='Poll GitHub issues com label "back_end"; se houver issue elegivel, implementar task com foco em baixissimo custo cloud e altissima performance; se nao houver, manter standby sem processamento desnecessario.'
+                  for _ in $(seq 1 24); do
+                    sleep 5
+                    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
+                      CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+                      if [ -n "${CRON_ID}" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
+                        exit 0
+                      fi
+                      if openclaw cron add \
+                          --name "${CRON_NAME}" \
+                          --cron "${CRON_EXPR}" \
+                          --tz "${CRON_TZ}" \
+                          --session isolated \
+                          --message "${CRON_MSG}" \
+                          --agent dev_backend \
+                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
+                        exit 0
+                      fi
+                    fi
+                  done
+                  echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") falha ao criar cron nativo do dev_backend; gateway seguira sem cron automatico" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
+                  exit 0
+                ) &
+              fi
               exec openclaw gateway
       volumes:
         - name: agent-config

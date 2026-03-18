@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Dev Backend Input Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "intent": {
+      "type": "string",
+      "enum": [
+        "implement_task",
+        "run_tests",
+        "code_review_self",
+        "ci_cd_integration",
+        "github_integration",
+        "report_status",
+        "research_cost_performance",
+        "poll_github_queue"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "arquiteto",
+        "po"
+      ]
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "type": "string",
+          "pattern": "^TASK-\\d+(?:-[a-z0-9-]+)?$"
+        },
+        "us_id": {
+          "type": "string",
+          "pattern": "^US-\\d{3}-[a-z0-9-]+$"
+        },
+        "technology_stack": {
+          "type": "string",
+          "minLength": 2
+        },
+        "issue_label": {
+          "type": "string",
+          "enum": [
+            "back_end"
+          ]
+        }
+      }
+    }
+  },
+  "required": [
+    "intent",
+    "source"
+  ]
+}
