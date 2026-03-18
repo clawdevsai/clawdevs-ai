@@ -1,29 +1,28 @@
 # clawdevs-ai (Windows only)
 
-Fluxo para subir Kubernetes local no Docker Desktop (Windows), validar GPU e rodar o pod `openclaw`.
+Fluxo para subir Kubernetes local no Docker Desktop (Windows), validar GPU real e rodar o stack (`ollama` + `openclaw`).
 
 ## Requisitos
 
 - Windows 11
 - Docker Desktop com suporte a GPU
 - Driver NVIDIA atualizado
-- `minikube`, `kubectl`, `kind` e `make` no PATH
+- `minikube`, `kubectl` e `make` no PATH
+- Docker Desktop Kubernetes habilitado em `Settings > Kubernetes`
 
 ## Comandos principais
 
 ```bash
 make gpu-doctor
-make minikube-up
-make gpu-plugin
-make gpu-check
+make docker-k8s-check
+make gpu-plugin-apply
+make gpu-node-check
 ```
 
-## Alternativa com kind
+Quando o `gpu-node-check` mostrar `GPU_ALLOC` diferente de `<none>`, aplique o stack no contexto `docker-desktop`:
 
 ```bash
-make kind-up
-make kind-gpu-plugin
-make kind-gpu-check
+make gpu-migrate-apply
 ```
 
 ## Dashboard
@@ -52,12 +51,7 @@ Ver logs:
 make openclaw-logs
 ```
 
-Para testar GPU com pod simples:
-
-```bash
-make gpu-test-apply
-make gpu-test-logs
-```
+Observacao: o caminho Minikube com driver Docker pode nao expor NVML corretamente em alguns ambientes Windows/WSL2. O fluxo recomendado para GPU real neste repo e `docker-desktop`.
 
 ## GitHub (gh CLI)
 
@@ -69,7 +63,8 @@ make gpu-test-logs
 ## Manifestos
 
 - `k8s/openclaw-pod.yaml`
-- `k8s/gpu-test.yaml`
+- `k8s/nvidia-runtimeclass.yaml`
+- `k8s/nvidia-device-plugin.yaml`
 
 
 https://clawhub.ai/pskoett/self-improving-agent

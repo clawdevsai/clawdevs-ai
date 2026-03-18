@@ -1,20 +1,21 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: openclaw
+  name: clawdevs-ai
   labels:
-    app: openclaw
+    app: clawdevs-ai
 spec:
+  serviceName: clawdevs-ai
   replicas: 1
-  strategy:
-    type: Recreate
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
-      app: openclaw
+      app: clawdevs-ai
   template:
     metadata:
       labels:
-        app: openclaw
+        app: clawdevs-ai
     spec:
       containers:
         - name: openclaw
@@ -65,6 +66,13 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: DIRECTORS_NAME
+            - name: NODE_OPTIONS
+              value: --max-old-space-size=3072
+          resources:
+            requests:
+              memory: 2Gi
+            limits:
+              memory: 4Gi
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -389,11 +397,7 @@ spec:
               repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Arquiteto."
               repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
               repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
-              openclaw gateway &
-              sleep 3
-              echo "Gerando URL do dashboard..."
-              openclaw dashboard --no-open || true
-              wait
+              exec openclaw gateway
       volumes:
         - name: agent-config
           configMap:
@@ -405,13 +409,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: openclaw
+  name: clawdevs-ai
   labels:
-    app: openclaw
+    app: clawdevs-ai
 spec:
   type: NodePort
   selector:
-    app: openclaw
+    app: clawdevs-ai
   ports:
     - name: gateway
       port: 18789
@@ -423,10 +427,10 @@ kind: PersistentVolumeClaim
 metadata:
   name: openclaw-data
   labels:
-    app: openclaw
+    app: clawdevs-ai
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
+      storage: 6Gi

@@ -1,13 +1,13 @@
 PROFILE ?= clawdevs-ai
 KUBE_CONTEXT ?= clawdevs-ai
 CPUS ?= 4
-MEMORY ?= 8192
+MEMORY ?= 6144
 K8S_VERSION ?= v1.34.1
-PF_SERVICE ?= service/openclaw
+PF_SERVICE ?= service/clawdevs-ai
 PF_PORTS ?= 18789:18789
 
 
-.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all
+.PHONY: help minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -34,6 +34,13 @@ help:
 	@echo "  make stack-apply    - aplica ollama + openclaw"
 	@echo "  make stack-status   - status de pods e service do stack"
 	@echo "  make minikube-status|minikube-logs|minikube-delete"
+	@echo ""
+	@echo "Fluxo GPU real (Docker Desktop Kubernetes):"
+	@echo "  make gpu-doctor          - valida host NVIDIA + Docker Desktop + kube context"
+	@echo "  make docker-k8s-check    - valida acesso ao contexto docker-desktop"
+	@echo "  make gpu-plugin-apply    - aplica RuntimeClass + NVIDIA device plugin"
+	@echo "  make gpu-node-check      - valida nvidia.com/gpu no node"
+	@echo "  make gpu-migrate-apply   - aplica stack no contexto docker-desktop"
 
 minikube-up:
 	minikube start \
@@ -97,45 +104,32 @@ openclaw-apply: net-allow-egress
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s
 
 openclaw-restart:
-	kubectl --context=$(KUBE_CONTEXT) rollout restart deployment/openclaw
-	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/openclaw --timeout=240s
+	kubectl --context=$(KUBE_CONTEXT) rollout restart statefulset/clawdevs-ai
+	kubectl --context=$(KUBE_CONTEXT) rollout status statefulset/clawdevs-ai --timeout=240s
 
 openclaw-logs:
-	kubectl --context=$(KUBE_CONTEXT) logs -f deployment/openclaw
+	kubectl --context=$(KUBE_CONTEXT) logs -f statefulset/clawdevs-ai
 
 openclaw-dashboard:
-	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- openclaw dashboard --no-open
+	kubectl --context=$(KUBE_CONTEXT) exec pod/clawdevs-ai-0 -- openclaw dashboard --no-open
 
-reset-all: openclaw-apply
-	kubectl --context=$(KUBE_CONTEXT) rollout status deployment/openclaw --timeout=240s
-	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "set -euo pipefail; \
-		mkdir -p /data/openclaw/agents/ceo/sessions /data/openclaw/agents/po/sessions /data/openclaw/agents/arquiteto/sessions; \
-		rm -f /data/openclaw/agents/ceo/sessions/*.jsonl /data/openclaw/agents/ceo/sessions/*.lock || true; \
-		rm -f /data/openclaw/agents/po/sessions/*.jsonl /data/openclaw/agents/po/sessions/*.lock || true; \
-		rm -f /data/openclaw/agents/arquiteto/sessions/*.jsonl /data/openclaw/agents/arquiteto/sessions/*.lock || true; \
-		printf '{}' > /data/openclaw/agents/ceo/sessions/sessions.json; \
-		printf '{}' > /data/openclaw/agents/po/sessions/sessions.json; \
-		printf '{}' > /data/openclaw/agents/arquiteto/sessions/sessions.json; \
-		rm -f /data/openclaw/backlog/*.md || true; \
-		rm -f /data/openclaw/backlog/idea/* || true; \
-		rm -f /data/openclaw/backlog/user_story/* || true; \
-		rm -f /data/openclaw/backlog/tasks/* || true; \
-		echo 'reset-all concluido'; \
-		echo 'sessions:'; \
-		cat /data/openclaw/agents/ceo/sessions/sessions.json; echo; \
-		cat /data/openclaw/agents/po/sessions/sessions.json; echo; \
-		cat /data/openclaw/agents/arquiteto/sessions/sessions.json; echo; \
-		echo 'backlog:'; \
-		ls -la /data/openclaw/backlog/idea; \
-		ls -la /data/openclaw/backlog/user_story; \
-		ls -la /data/openclaw/backlog/tasks"
+reset-all:
+	@echo "Reset completo: apaga pods/deployment e PVCs (perde o estado persistido)."
+	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) delete statefulset clawdevs-ai --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) delete pvc ollama-data openclaw-data --ignore-not-found --wait=true --timeout=120s
+	kubectl --context=$(KUBE_CONTEXT) delete configmap openclaw-agent-config --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) delete secret openclaw-auth ollama-auth --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) delete service ollama clawdevs-ai --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) delete networkpolicy allow-all-egress --ignore-not-found
+	make stack-apply
 
 stack-apply: ollama-apply openclaw-apply
 
 stack-status:
 	kubectl --context=$(KUBE_CONTEXT) get pods -l app=ollama
-	kubectl --context=$(KUBE_CONTEXT) get pods -l app=openclaw
-	kubectl --context=$(KUBE_CONTEXT) get svc ollama openclaw
+	kubectl --context=$(KUBE_CONTEXT) get pods -l app=clawdevs-ai
+	kubectl --context=$(KUBE_CONTEXT) get svc ollama clawdevs-ai
 
 port-forward-start:
 	kubectl --context=$(KUBE_CONTEXT) port-forward $(PF_SERVICE) $(PF_PORTS)
@@ -145,3 +139,33 @@ port-forward-stop:
 
 port-forward-status:
 	@echo "Sem PID/daemon. Rode o port-forward na sessao atual para acompanhar o status."
+
+gpu-doctor:
+	@echo "[1/4] NVIDIA host..."
+	powershell -NoProfile -Command "Get-CimInstance Win32_VideoController | Select-Object Name, DriverVersion | Format-Table -AutoSize"
+	@echo "[2/4] Docker runtime..."
+	docker info --format "{{json .Runtimes}}"
+	@echo "[3/4] Docker Desktop Kubernetes (settings-store)..."
+	powershell -NoProfile -Command "$$p=Join-Path $$env:APPDATA 'Docker\\settings-store.json'; if (!(Test-Path $$p)) { throw \"settings-store.json nao encontrado em $$p\" }; $$json=Get-Content $$p -Raw | ConvertFrom-Json; if (-not $$json.KubernetesEnabled) { throw 'KubernetesEnabled=false no Docker Desktop. Habilite Kubernetes em Settings > Kubernetes e aguarde ficar Running.' } else { Write-Host 'KubernetesEnabled=true' }"
+	@echo "[4/4] kube contexts..."
+	kubectl config get-contexts
+
+docker-k8s-check:
+	kubectl --context=docker-desktop cluster-info
+	kubectl --context=docker-desktop get nodes -o wide
+
+docker-k8s-context:
+	kubectl config use-context docker-desktop
+
+gpu-plugin-apply:
+	kubectl --context=docker-desktop apply -f k8s/nvidia-runtimeclass.yaml
+	kubectl --context=docker-desktop apply -f k8s/nvidia-device-plugin.yaml
+	kubectl --context=docker-desktop -n kube-system rollout status daemonset/nvidia-device-plugin-daemonset --timeout=240s
+
+gpu-node-check:
+	kubectl --context=docker-desktop get node -o custom-columns=NAME:.metadata.name,GPU_CAP:.status.capacity.\"nvidia.com/gpu\",GPU_ALLOC:.status.allocatable.\"nvidia.com/gpu\"
+	powershell -NoProfile -Command "kubectl --context=docker-desktop get events -A --sort-by=.lastTimestamp | Select-Object -Last 40"
+
+gpu-migrate-apply:
+	$(MAKE) KUBE_CONTEXT=docker-desktop stack-apply
+	$(MAKE) KUBE_CONTEXT=docker-desktop stack-status

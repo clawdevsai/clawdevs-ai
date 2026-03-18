@@ -73,3 +73,4 @@ flowchart TD
     U --> V[Feedback de usuários]
     V --> W[Iteração do produto (ajustar custo/performance)]
     W --> J
+```
