@@ -253,12 +253,17 @@ spec:
                 echo "Browser suportado nao encontrado apos a instalacao do Chromium" >&2
                 exit 1
               fi
-              ln -sf "${browser_bin}" /usr/local/bin/chromium-browser
-              ln -sf "${browser_bin}" /usr/local/bin/google-chrome
-              ln -sf "${browser_bin}" /usr/local/bin/google-chrome-stable
-              ln -sf "${browser_bin}" /usr/local/bin/chrome
-              export CHROME_BIN="${browser_bin}"
-              echo "Browser disponivel: ${browser_bin}"
+              cat > /usr/local/bin/openclaw-chrome <<EOF
+              #!/usr/bin/env bash
+              exec "${browser_bin}" --no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage "\$@"
+              EOF
+              chmod +x /usr/local/bin/openclaw-chrome
+              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/chromium-browser
+              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/google-chrome
+              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/google-chrome-stable
+              ln -sf /usr/local/bin/openclaw-chrome /usr/local/bin/chrome
+              export CHROME_BIN=/usr/local/bin/openclaw-chrome
+              echo "Browser disponivel: ${browser_bin} (wrapper: ${CHROME_BIN})"
               # Autenticar GitHub CLI de forma nao interativa para os agentes
               if [ -n "${GH_TOKEN:-}" ]; then
                 printf '%s' "${GH_TOKEN}" | gh auth login --hostname github.com --with-token >/tmp/gh-auth.log 2>&1 || true
@@ -687,7 +692,7 @@ spec:
                       "id": "ceo",
                       "default": true,
                       "name": "CEO",
-                      "model": "ollama/minimax-m2.7:cloud",
+                      "model": "ollama/nemotron-3-super:cloud",
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
@@ -712,7 +717,7 @@ spec:
                     {
                       "id": "po",
                       "name": "PO",
-                      "model": "ollama/minimax-m2.7:cloud",
+                      "model": "ollama/nemotron-3-super:cloud",
                       "workspace": "/data/openclaw/workspace-po",
                       "agentDir": "/data/openclaw/agents/po/agent",
                       "tools": {
@@ -744,7 +749,7 @@ spec:
                     {
                       "id": "arquiteto",
                       "name": "Arquiteto",
-                      "model": "ollama/minimax-m2.7:cloud",
+                      "model": "ollama/qwen3.5:397b-cloud",
                       "workspace": "/data/openclaw/workspace-arquiteto",
                       "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
@@ -775,7 +780,7 @@ spec:
                     {
                       "id": "dev_backend",
                       "name": "Dev_Backend",
-                      "model": "ollama/minimax-m2.7:cloud",
+                      "model": "ollama/qwen3-coder:480b-cloud",
                       "workspace": "/data/openclaw/workspace-dev_backend",
                       "agentDir": "/data/openclaw/agents/dev_backend/agent",
                       "tools": {
