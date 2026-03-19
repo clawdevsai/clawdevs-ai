@@ -152,6 +152,35 @@ spec:
               cp /bootstrap/agent-config/dev_backend-USER.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/USER.md"
               cp /bootstrap/agent-config/dev_backend-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/TOOLS.md"
               cp /bootstrap/agent-config/dev_backend-skill-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-dev_backend/SKILL.md"
+              mkdir -p "${OPENCLAW_STATE_DIR}/git-hooks"
+              cat > "${OPENCLAW_STATE_DIR}/git-hooks/pre-commit" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+              case "${branch}" in
+                main|master)
+                  echo "Commit bloqueado: branch '${branch}' protegida. Crie uma branch de trabalho e abra PR."
+                  exit 1
+                  ;;
+              esac
+              exit 0
+              EOF
+              cat > "${OPENCLAW_STATE_DIR}/git-hooks/pre-push" <<'EOF'
+              #!/usr/bin/env bash
+              set -euo pipefail
+              while read -r local_ref local_sha remote_ref remote_sha; do
+                remote_branch="${remote_ref#refs/heads/}"
+                case "${remote_branch}" in
+                  main|master)
+                    echo "Push bloqueado: envio direto para '${remote_branch}' e proibido. Use Pull Request."
+                    exit 1
+                    ;;
+                esac
+              done
+              exit 0
+              EOF
+              chmod +x "${OPENCLAW_STATE_DIR}/git-hooks/pre-commit" "${OPENCLAW_STATE_DIR}/git-hooks/pre-push"
+              git config --global core.hooksPath "${OPENCLAW_STATE_DIR}/git-hooks"
               rm -f "${OPENCLAW_STATE_DIR}/workspace-ceo/BOOTSTRAP.md"
               cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
               {
@@ -202,7 +231,7 @@ spec:
                 },
                 "tools": {
                   "sessions": {
-                    "visibility": "tree"
+                    "visibility": "all"
                   },
                   "agentToAgent": {
                     "enabled": true,
