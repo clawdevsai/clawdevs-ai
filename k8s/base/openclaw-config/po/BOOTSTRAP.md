@@ -8,7 +8,7 @@ Preparação para operação contínua:
    - `OPENCLAW_ENV` (`production` ou `staging`)
 2. Ler `README.md` do repositorio para entender o projeto e o fluxo antes de estruturar backlog.
 3. Validar diretório base `/data/openclaw/backlog` e subpastas obrigatórias:
-   - `idea/`, `user_story/`, `tasks/`, `planning/`, `briefs/`
+   - `idea/`, `specs/`, `user_story/`, `tasks/`, `briefs/`
 4. Inicializar diretórios operacionais:
    - `/data/openclaw/backlog/status`
    - `/data/openclaw/backlog/audit`
