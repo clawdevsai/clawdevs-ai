@@ -68,6 +68,8 @@ spec:
                   key: DIRECTORS_NAME
             - name: NODE_OPTIONS
               value: --max-old-space-size=3072
+            - name: GH_CONFIG_DIR
+              value: /data/openclaw/.config/gh
             - name: AGENT_ERROR_ROUTER_ENABLED
               value: "true"
             - name: AGENT_ERROR_ROUTER_INTERVAL_SECONDS
@@ -128,11 +130,13 @@ spec:
               export OPENCLAW_NO_ONBOARD=1
               export OPENCLAW_NO_PROMPT=1
               export OPENCLAW_STATE_DIR=/data/openclaw
+              export GH_CONFIG_DIR="${GH_CONFIG_DIR:-${OPENCLAW_STATE_DIR}/.config/gh}"
               export OPENCLAW_LOG_LEVEL="${OPENCLAW_LOG_LEVEL:-info}"
               BOOTSTRAP_LOG_DIR="${OPENCLAW_STATE_DIR}/backlog/status"
               BOOTSTRAP_LOG_FILE="${BOOTSTRAP_LOG_DIR}/openclaw-bootstrap.log"
               mkdir -p "${BOOTSTRAP_LOG_DIR}"
               touch "${BOOTSTRAP_LOG_FILE}"
+              mkdir -p "${GH_CONFIG_DIR}"
               DEBUG_LOG_ENABLED="${DEBUG_LOG_ENABLED:-false}"
               if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
                 export LOG_LEVEL=debug
@@ -163,9 +167,18 @@ spec:
               export DIRECTORS_NAME="${DIRECTORS_NAME:-Director}"
               # Alinhar GH CLI caso GH_TOKEN venha em outro nome
               export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+              echo "[bootstrap] GH_CONFIG_DIR=${GH_CONFIG_DIR}"
               apt-get update
               apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh chromium
+              apt-get upgrade -y
+              apt-get autoremove -y
+              apt-get clean
               rm -rf /var/lib/apt/lists/*
+              if ! command -v gh >/dev/null 2>&1; then
+                echo "GitHub CLI nao foi instalado corretamente" >&2
+                exit 1
+              fi
+              gh --version | head -n 1
               browser_bin="$(command -v chromium || command -v chromium-browser || command -v google-chrome || command -v google-chrome-stable || command -v brave-browser || command -v msedge || command -v microsoft-edge || true)"
               if [ -z "${browser_bin}" ]; then
                 echo "Browser suportado nao encontrado apos a instalacao do Chromium" >&2
