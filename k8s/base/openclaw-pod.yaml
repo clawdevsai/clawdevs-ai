@@ -688,7 +688,7 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po"]
+                        "allowAgents": ["po", "arquiteto", "dev_backend"]
                       }
                     },
                     {
@@ -720,7 +720,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["arquiteto"]
+                        "allowAgents": ["arquiteto", "dev_backend"]
                       }
                     },
                     {
