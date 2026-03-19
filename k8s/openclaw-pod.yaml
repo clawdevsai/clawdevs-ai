@@ -68,6 +68,10 @@ spec:
                   key: DIRECTORS_NAME
             - name: NODE_OPTIONS
               value: --max-old-space-size=3072
+            - name: AGENT_ERROR_ROUTER_ENABLED
+              value: "true"
+            - name: AGENT_ERROR_ROUTER_INTERVAL_SECONDS
+              value: "30"
             - name: DEV_BACKEND_CRON_ENABLED
               value: "true"
             - name: DEV_BACKEND_CRON_NAME
@@ -108,6 +112,7 @@ spec:
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw
               mkdir -p "${OPENCLAW_STATE_DIR}/scheduler"
+              mkdir -p "${OPENCLAW_STATE_DIR}/backlog/status"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/idea"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/user_story"
               mkdir -p "${OPENCLAW_STATE_DIR}/backlog/tasks"
@@ -175,6 +180,14 @@ spec:
                         {
                           "id": "qwen3-coder:480b-cloud",
                           "name": "qwen3-coder:480b-cloud"
+                        },
+                        {
+                          "id": "gemma3:27b-cloud",
+                          "name": "gemma3:27b-cloud"
+                        },
+                        {
+                          "id": "qwen3-vl:235b-cloud",
+                          "name": "qwen3-vl:235b-cloud"
                         }
                       ]
                     }
@@ -199,7 +212,8 @@ spec:
                   "defaults": {
                     "model": "ollama/qwen3-next:80b-cloud",
                     "thinkingDefault": "low",
-                    "typingMode": "thinking",
+                    "typingMode": "instant",
+                    "typingIntervalSeconds": 4,
                     "sandbox": {
                       "mode": "off"
                     },
@@ -216,7 +230,7 @@ spec:
                       "id": "ceo",
                       "default": true,
                       "name": "CEO",
-                      "model": "ollama/nemotron-3-super:cloud",
+                      "model": "ollama/qwen3-vl:235b-cloud",
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
@@ -234,7 +248,7 @@ spec:
                         ]
                       },
                       "subagents": {
-                        "allowAgents": ["po"]
+                        "allowAgents": ["po", "arquiteto", "dev_backend"]
                       }
                     },
                     {
@@ -264,7 +278,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["ceo", "arquiteto"]
+                        "allowAgents": ["", "arquiteto", "dev_backend"]
                       }
                     },
                     {
@@ -292,7 +306,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["ceo", "po", "dev_backend"]
+                        "allowAgents": ["dev_backend"]
                       }
                     },
                     {
@@ -448,6 +462,36 @@ spec:
               repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
               repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
               repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+              if [ "${AGENT_ERROR_ROUTER_ENABLED:-false}" = "true" ]; then
+                (
+                  set +e
+                  ERROR_CENTER="${OPENCLAW_STATE_DIR}/scheduler/agent_error_center.jsonl"
+                  ERROR_SEEN="${OPENCLAW_STATE_DIR}/scheduler/agent_error_seen.txt"
+                  touch "${ERROR_CENTER}" "${ERROR_SEEN}"
+                  while true; do
+                    for f in "${OPENCLAW_STATE_DIR}"/agents/*/sessions/*.jsonl; do
+                      [ -f "${f}" ] || continue
+                      agent="$(echo "${f}" | sed -E 's#^.*/agents/([^/]+)/sessions/.*$#\1#')"
+                      [ "${agent}" = "ceo" ] && continue
+                      tail_snippet="$(tail -n 80 "${f}" 2>/dev/null || true)"
+                      echo "${tail_snippet}" | grep -Eiq 'error|falha|exception|unauthorized|forbidden|timeout|critical|critico|traceback|panic' || continue
+                      event_hash="$(printf '%s' "${agent}:${tail_snippet}" | sha256sum | awk '{print $1}')"
+                      grep -q "${event_hash}" "${ERROR_SEEN}" 2>/dev/null && continue
+                      printf '%s\n' "${event_hash}" >> "${ERROR_SEEN}"
+                      now_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                      snippet_safe="$(printf '%s' "${tail_snippet}" | tail -n 20 | tr '\n' ' ' | sed 's/"/\\"/g')"
+                      echo "{\"ts\":\"${now_iso}\",\"agent\":\"${agent}\",\"session_file\":\"${f}\",\"hash\":\"${event_hash}\",\"severity\":\"error\",\"snippet\":\"${snippet_safe}\"}" >> "${ERROR_CENTER}"
+                      ceo_sessions="${OPENCLAW_STATE_DIR}/agents/ceo/sessions/sessions.json"
+                      ceo_file="$(jq -r '.\"agent:ceo:main\".sessionFile // empty' "${ceo_sessions}" 2>/dev/null || true)"
+                      if [ -n "${ceo_file}" ] && [ -f "${ceo_file}" ]; then
+                        alert_text="ALERTA-AUTOMATICO: erro detectado no agente ${agent}. Registro central: ${ERROR_CENTER}. Hash: ${event_hash}. Acao recomendada: verificar sessao e desbloquear."
+                        printf '%s\n' "{\"type\":\"message\",\"id\":\"err-${event_hash}\",\"parentId\":null,\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"${alert_text}\"}],\"timestamp\":$(($(date -u +%s)*1000))}}" >> "${ceo_file}"
+                      fi
+                    done
+                    sleep "${AGENT_ERROR_ROUTER_INTERVAL_SECONDS:-30}"
+                  done
+                ) &
+              fi
               if [ "${DEV_BACKEND_CRON_ENABLED:-false}" = "true" ]; then
                 (
                   set +e

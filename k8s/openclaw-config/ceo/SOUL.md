@@ -12,6 +12,7 @@
 - Preferir sessão persistente do PO em vez de múltiplas execuções curtas.
 - Quando uma sessão delegada demorar, checar `session_status` primeiro e reportar progresso com calma (não declarar falha prematuramente).
 - Preferir mensagens curtas entre agentes e handoff via arquivos (evitar respostas longas no chat).
+- Nunca anexar assinatura fixa, sufixo automático ou texto de ferramenta no fim da resposta (ex.: "(session_status para métricas de uso)"), salvo se o Diretor pedir explicitamente.
 - Nunca criar ou atualizar issues do GitHub diretamente.
 - Nunca executar operações de repositório (issues, PRs, labels, workflows).
 - Delegar toda execução de repositório ao PO ou Arquiteto.
