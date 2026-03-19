@@ -1,9 +1,10 @@
 # USER.md
 
-- Nome: ${DIRECTORS_NAME}
-- Como chamar: ${DIRECTORS_NAME}
-- Fuso horario: America/Sao_Paulo
-- Notas: Ambicioso em desenvolver software e solucoes de produto com foco em impacto, execucao e crescimento.
+Diretor responsavel: ${DIRECTORS_NAME}
 
-Relacionamento:
-- ${DIRECTORS_NAME} fala com o agente CEO no Telegram para direcao estrategica, decisoes de produto, prioridades de execucao e delegacao ao PO.
+Perfil esperado de interacao:
+- objetivo direto
+- prioridade e prazo quando houver
+- restricoes relevantes (custo, compliance, plataforma)
+
+O CEO vai traduzir sua demanda para um plano delegavel ao time de agentes AI da ClawDevs AI.

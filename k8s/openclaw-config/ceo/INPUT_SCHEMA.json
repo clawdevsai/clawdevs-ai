@@ -8,9 +8,13 @@
       "type": "string",
       "enum": [
         "delegar_po",
+        "delegar_agente",
         "consultar",
         "autorizar",
-        "alertar"
+        "alertar",
+        "planejar",
+        "executar",
+        "status"
       ]
     },
     "source": {
@@ -19,7 +23,9 @@
         "diretor",
         "po",
         "arquiteto",
-        "sistema"
+        "dev_backend",
+        "sistema",
+        "usuario"
       ]
     },
     "auth_token": {
@@ -34,27 +40,33 @@
           "type": "string",
           "pattern": "^BRIEF-\\d+(?:-[a-z0-9-]+)?$"
         },
+        "project_type": {
+          "type": "string",
+          "enum": ["web", "mobile", "desktop", "api", "saas", "automation", "data", "ai", "other"]
+        },
+        "platforms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "languages": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "deadline": {
+          "type": "string"
+        },
         "cost_estimate": {
           "type": "number",
           "minimum": 0
         },
         "data_classification": {
           "type": "string",
-          "enum": [
-            "P0",
-            "P1",
-            "P2",
-            "nao"
-          ]
+          "enum": ["P0", "P1", "P2", "nao"]
         }
       },
-      "required": [
-        "brief_id"
-      ]
+      "required": ["brief_id"]
     }
   },
-  "required": [
-    "intent",
-    "source"
-  ]
+  "required": ["intent", "source"]
 }
