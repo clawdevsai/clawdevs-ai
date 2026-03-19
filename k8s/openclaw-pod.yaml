@@ -253,7 +253,6 @@ spec:
                       "workspace": "/data/openclaw/workspace-ceo",
                       "agentDir": "/data/openclaw/agents/ceo/agent",
                       "tools": {
-                        "agentToAgent":["po", "arquiteto", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -281,7 +280,6 @@ spec:
                       "workspace": "/data/openclaw/workspace-po",
                       "agentDir": "/data/openclaw/agents/po/agent",
                       "tools": {
-                        "agentToAgent":["ceo", "arquiteto", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -316,7 +314,6 @@ spec:
                       "workspace": "/data/openclaw/workspace-arquiteto",
                       "agentDir": "/data/openclaw/agents/arquiteto/agent",
                       "tools": {
-                        "agentToAgent":["ceo", "po", "dev_backend"],
                         "allow": [
                           "read",
                           "write",
@@ -350,7 +347,6 @@ spec:
                       "workspace": "/data/openclaw/workspace-dev_backend",
                       "agentDir": "/data/openclaw/agents/dev_backend/agent",
                       "tools": {
-                        "agentToAgent":["ceo", "po", "arquiteto"],
                         "allow": [
                           "read",
                           "write",
