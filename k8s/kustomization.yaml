@@ -19,7 +19,6 @@ configMapGenerator:
     files:
       # ceo
       - ceo-AGENTS.md=openclaw-config/ceo/AGENTS.md
-      - ceo-AUTONOMY_POLICY.md=openclaw-config/ceo/AUTONOMY_POLICY.md
       - ceo-BOOT.md=openclaw-config/ceo/BOOT.md
       - ceo-BOOTSTRAP.md=openclaw-config/ceo/BOOTSTRAP.md
       - ceo-HEARTBEAT.md=openclaw-config/ceo/HEARTBEAT.md

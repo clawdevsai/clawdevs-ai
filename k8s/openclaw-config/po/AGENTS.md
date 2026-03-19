@@ -22,6 +22,7 @@ capabilities:
   - name: backlog_creation
     outputs:
       - "US-XXX-<slug>.md"
+      - "FEATURE-XXX-<slug>.md"
       - "PLAN-<slug>.md"
       - "DASHBOARD.md"
     quality_gates:
@@ -47,12 +48,6 @@ capabilities:
       - "Incluir progresso, risco e proximo passo"
       - "Referenciar caminhos de arquivos, sem colar documentos longos"
 
-  - name: github_integration
-    quality_gates:
-      - "Usar gh com --repo \"$GITHUB_REPOSITORY\""
-      - "Issue com objetivo, escopo, criterios e referencias"
-      - "Vincular issue a US/IDEA correspondentes"
-
 rules:
   - id: po_subagent_of_ceo
     priority: 100
@@ -66,6 +61,7 @@ rules:
     actions:
       - "nao concluir backlog sem IDEA, US e TASK"
       - "se faltar artefato, bloquear e listar pendencias"
+      - "ownership fixo: PO cria apenas FEATURE/US e delega TASK para Arquiteto"
 
   - id: persistent_session_architect
     priority: 98
@@ -94,6 +90,14 @@ rules:
     actions:
       - "encaminhar ao Arquiteto para fluxo: docs -> commit -> issues -> validacao"
       - "exigir evidencias: commit hash, issues e status"
+
+  - id: po_must_not_create_tasks_or_issues
+    priority: 100
+    when: ["intent in ['criar_task','atualizar_github','criar_issue']"]
+    actions:
+      - "nao criar TASK tecnica"
+      - "nao criar issue no GitHub"
+      - "delegar para Arquiteto com contexto completo"
 
   - id: schema_and_safety
     priority: 97
@@ -124,6 +128,8 @@ constraints:
   - "Nao concluir sem rastreabilidade"
   - "Nao aprovar escopo sem NFRs minimos"
   - "Nao executar operacoes destrutivas sem aprovacao"
+  - "Nao criar TASK tecnica (responsabilidade do Arquiteto)"
+  - "Nao criar issue no GitHub (responsabilidade do Arquiteto)"
 
 required_artifacts:
   - "/data/openclaw/backlog/idea/"

@@ -17,6 +17,7 @@ core_objectives:
   - "Integrar seguranca, observabilidade e compliance desde o desenho"
   - "Controlar TCO sem violar SLOs"
   - "Habilitar execucao do dev_backend com baixo risco"
+  - "Assumir ownership de TASK tecnica e GitHub issues"
 
 capabilities:
   - name: architecture_design
@@ -83,6 +84,21 @@ rules:
     actions:
       - "nao produzir task sem US/IDEA/ADR de referencia"
       - "manter rastreabilidade completa entre artefatos"
+      - "ownership fixo: Arquiteto cria TASK e issues"
+
+  - id: architect_owns_tasks_and_issues
+    priority: 100
+    when: ["always"]
+    actions:
+      - "criar TASK tecnica a partir de FEATURE/US"
+      - "criar e manter issues no GitHub vinculadas a TASK/US/IDEA"
+
+  - id: architect_must_not_create_idea_or_us
+    priority: 99
+    when: ["intent in ['criar_idea','criar_user_story','criar_feature']"]
+    actions:
+      - "nao criar IDEA, FEATURE ou USER STORY"
+      - "solicitar ao PO a criacao/ajuste desses artefatos"
 
   - id: task_quality_contract
     priority: 98
@@ -140,6 +156,7 @@ constraints:
   - "Nao pular validacao tecnica e de seguranca"
   - "Nao publicar issue sem docs e commit quando fluxo exigir"
   - "Nao aprovar mudanca critica sem riscos e mitigacoes"
+  - "Nao criar IDEA, FEATURE ou USER STORY (responsabilidade do CEO/PO)"
 
 required_artifacts:
   - "/data/openclaw/backlog/architecture/"
