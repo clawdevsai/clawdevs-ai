@@ -130,6 +130,7 @@ configMapGenerator:
       - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
       - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
       - ux_designer-SKILL.md=openclaw-config/ux_designer/SKILL.md
+      - ux_designer-skill-SKILL.md=openclaw-config/ux_designer/SKILL.md
       # dba_data_engineer
       - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
       - dba_data_engineer-AGENTS.md=openclaw-config/dba_data_engineer/AGENTS.md
@@ -142,6 +143,7 @@ configMapGenerator:
       - dba_data_engineer-USER.md=openclaw-config/dba_data_engineer/USER.md
       - dba_data_engineer-TOOLS.md=openclaw-config/dba_data_engineer/TOOLS.md
       - dba_data_engineer-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
+      - dba_data_engineer-skill-SKILL.md=openclaw-config/dba_data_engineer/SKILL.md
       # shared
       - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
       - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md

@@ -6,9 +6,10 @@ K8S_VERSION ?= v1.34.1
 GPU ?= 1
 PF_SERVICE ?= service/clawdevs-ai
 PF_PORTS ?= 18789:18789
+KUSTOMIZE_DIR ?= k8s
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up dashboard dashboard-url openclaw-apply openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -71,7 +72,7 @@ preflight:
 	done
 
 manifests-validate:
-	kubectl kustomize k8s >NUL 2>NUL
+	kubectl kustomize $(KUSTOMIZE_DIR) >NUL 2>NUL
 
 minikube-up:
 	minikube start \
@@ -140,7 +141,11 @@ net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
 
 openclaw-apply: preflight manifests-validate net-allow-egress
-	kubectl --context=$(KUBE_CONTEXT) apply -k k8s --server-side --force-conflicts
+	kubectl --context=$(KUBE_CONTEXT) apply -k $(KUSTOMIZE_DIR) --server-side --force-conflicts
+
+openclaw-apply-gpu: preflight net-allow-egress
+	$(MAKE) KUBE_CONTEXT=$(KUBE_CONTEXT) KUSTOMIZE_DIR=k8s/overlays/gpu manifests-validate
+	kubectl --context=$(KUBE_CONTEXT) apply -k k8s/overlays/gpu --server-side --force-conflicts
 
 openclaw-restart:
 	kubectl --context=$(KUBE_CONTEXT) rollout restart statefulset/clawdevs-ai
@@ -210,7 +215,7 @@ gpu-node-check:
 	powershell -NoProfile -Command "kubectl --context=docker-desktop get events -A --sort-by=.lastTimestamp | Select-Object -Last 40"
 
 gpu-migrate-apply:
-	$(MAKE) KUBE_CONTEXT=docker-desktop stack-apply
+	$(MAKE) KUBE_CONTEXT=docker-desktop KUSTOMIZE_DIR=k8s/overlays/gpu stack-apply
 	$(MAKE) KUBE_CONTEXT=docker-desktop stack-status
 
 spec-template:
