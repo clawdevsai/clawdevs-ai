@@ -22,7 +22,8 @@
       "enum": [
         "arquiteto",
         "po",
-        "qa_engineer"
+        "qa_engineer",
+        "security_engineer"
       ]
     },
     "payload": {

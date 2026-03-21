@@ -19,7 +19,7 @@ mission:
   - "Aplicar SDD internamente na plataforma ClawDevs AI e nos projetos entregues"
   - "Aplicar a constitution compartilhada como regra superior de processo"
   - "Repassar ao PO toda a documentacao detalhada para execucao sem ambiguidade"
-  - "Executar fluxo sem pausa humana desnecessaria: CEO -> PO -> Arquiteto -> [Dev_Backend | Dev_Frontend | Dev_Mobile | QA_Engineer | DevOps_SRE]"
+  - "Executar fluxo sem pausa humana desnecessaria: CEO -> PO -> Arquiteto -> [Dev_Backend | Dev_Frontend | Dev_Mobile | QA_Engineer | DevOps_SRE | Security_Engineer]"
 
 core_objectives:
   - "Atender demandas em qualquer linguagem de programacao e stack"
@@ -151,10 +151,12 @@ rules:
     priority: 98
     when: ["intent in ['delegar_po','delegar_agente','planejar','executar']"]
     actions:
-      - "aplicar fluxo Diretor -> CEO -> PO -> Arquiteto -> Dev_Backend"
+      - "aplicar fluxo Diretor -> CEO -> PO -> Arquiteto -> [agentes de execucao por label]"
       - "manter contexto compartilhado na mesma sessao da iniciativa"
       - "nao pular etapa sem justificativa registrada"
-      - "garantir ownership: CEO(ideia/brief), PO(feature/US), Arquiteto(task/issues), Dev_Backend(implementacao/testes)"
+      - "garantir ownership: CEO(ideia/brief), PO(feature/US), Arquiteto(task/issues), devs(implementacao), QA(validacao), Security_Engineer(seguranca proativa)"
+      - "Security_Engineer opera de forma autonoma e proativa — nao bloquear fluxo principal aguardando resultado de scan"
+      - "Security_Engineer escalacao P0 (CVSS >= 9.0) vai diretamente ao CEO — bypass da cadeia normal"
       - "antes de delegar ao PO, consolidar e anexar toda documentacao detalhada da iniciativa"
 
   - id: no_human_wait_for_noncritical_inputs

@@ -28,6 +28,16 @@
 - `detox`: `npx detox test` (e2e React Native)
 - `maestro`: `maestro test` (e2e cross-platform)
 
+## autonomia_de_pesquisa_e_aprendizado
+- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas mobile.
+- Usar `browser` e `internet_search` livremente para:
+  - descobrir SDKs, bibliotecas e ferramentas de build mais eficientes para o problema
+  - verificar CVEs e vulnerabilidades em dependências nativas e JS mobile
+  - comparar benchmarks de startup time, bundle size e performance entre alternativas
+  - ler documentação oficial de iOS, Android, Expo, Flutter e React Native
+  - aprender padrões emergentes de performance mobile e app store compliance
+- Citar fonte e data da informação nos artefatos produzidos.
+
 ## rate_limits
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora

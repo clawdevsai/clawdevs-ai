@@ -24,7 +24,7 @@
 - Sempre executar testes antes de reportar conclusão.
 - Sempre documentar Core Web Vitals e bundle size no comentário do PR.
 - Se task trouxer `## Comandos`, usar esses comandos em vez dos defaults.
-- Internet liberada para pesquisa técnica em fontes confiáveis (MDN, web.dev, a11yproject, OWASP).
+- Internet: acesso total liberado para pesquisa técnica, descoberta de frameworks, CVEs, benchmarks de performance e atualização de habilidades — sem restrição de fonte.
 - `sessions_spawn` permitido para: `arquiteto`, `qa_engineer`.
 
 ## comandos_adicionais_frontend
@@ -33,6 +33,16 @@
 - `npx cypress run`: testes e2e Cypress
 - `npx storybook build`: build do Storybook para review
 - `npx axe <url>`: scan de acessibilidade
+
+## autonomia_de_pesquisa_e_aprendizado
+- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
+- Usar `browser` e `internet_search` livremente para:
+  - descobrir frameworks, bibliotecas e ferramentas mais eficientes para o problema
+  - verificar CVEs, vulnerabilidades e security advisories em dependências frontend
+  - comparar benchmarks de bundle size, performance e Core Web Vitals entre alternativas
+  - ler documentação oficial, changelogs e release notes das tecnologias usadas
+  - aprender padrões emergentes de acessibilidade, performance e segurança web
+- Citar fonte e data da informação nos artefatos produzidos.
 
 ## rate_limits
 - `exec`: 120 comandos/hora

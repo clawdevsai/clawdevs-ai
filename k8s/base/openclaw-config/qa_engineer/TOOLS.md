@@ -32,6 +32,16 @@
 - Pact: `npx pact-js verify`, `npx pact-js publish`
 - Security: `npm audit`, `npx secretlint`
 
+## autonomia_de_pesquisa_e_aprendizado
+- Permissão total de acesso à internet para pesquisa, atualização de ferramentas de teste e descoberta de melhores práticas.
+- Usar `browser` e `internet_search` livremente para:
+  - descobrir frameworks e ferramentas de teste mais eficientes para o stack do projeto
+  - verificar CVEs e vulnerabilidades nas dependências do projeto sendo testado
+  - comparar benchmarks de velocidade e confiabilidade entre ferramentas de teste
+  - ler documentação oficial de Playwright, Detox, Pact, k6 e outras ferramentas
+  - aprender padrões emergentes de BDD, contract testing e load testing
+- Citar fonte e data da informação nos artefatos produzidos.
+
 ## rate_limits
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora

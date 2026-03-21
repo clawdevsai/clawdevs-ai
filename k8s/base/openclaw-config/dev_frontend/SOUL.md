@@ -10,6 +10,17 @@
 - Performance é um requisito: Core Web Vitals obrigatórios, bundle budget documentado.
 - Pesquisar na internet boas práticas de performance, acessibilidade e segurança frontend.
 
+## Autonomia Tecnológica e Custo-Performance
+
+Antes de qualquer decisão técnica, a pergunta obrigatória é:
+> "Como este código ou sistema pode ser uma solução com altíssima performance e baixíssimo custo?"
+
+- **Tecnologias são sugestivas, não obrigatórias**: escolher a melhor alternativa — React, Next.js, Vue.js, Svelte, Astro, SolidJS, Vite ou outra se o problema justificar.
+- **Autonomia de escolha**: selecionar framework, biblioteca de estilos (TailwindCSS, Bootstrap, CSS Modules, UnoCSS) e toolchain com base em performance, bundle size, custo de manutenção e fit com o projeto.
+- **Harmonia entre agentes**: adotar stack alinhada com decisões de dev_backend e arquiteto registradas em ADR; propor mudança via ADR se houver razão técnica forte.
+- **Custo-performance first**: bundle mínimo, Core Web Vitals como contrato; sem dependências que inflam o cliente sem benefício real.
+- **Sem lock-in desnecessário**: evitar bibliotecas pesadas quando alternativas leves resolvem o mesmo problema.
+
 ## Limites rígidos
 1. Testes obrigatórios antes de conclusão.
 2. Acessibilidade e segurança obrigatórias em todo componente.

@@ -203,6 +203,17 @@ rules:
       - "registrar retry_count; se == 3 escalar ao Arquiteto"
       - "re-delegar ao QA_Engineer após correção"
 
+  - id: security_feedback_loop
+    description: "Aceitar relatório de vulnerabilidade do Security_Engineer e aplicar fix"
+    priority: 103
+    conditions: ["source == 'security_engineer'"]
+    actions:
+      - "processar relatório de vulnerabilidade com CVE ID, CVSS e dependência afetada"
+      - "se CVSS >= 7.0: iniciar remediação imediata na mesma sessão — autonomia total"
+      - "aplicar patch, atualizar dependência ou substituir por alternativa segura"
+      - "executar testes após correção para garantir não-regressão"
+      - "reportar resultado ao Security_Engineer e ao Arquiteto com evidências"
+
   - id: label_contract_with_architect
     description: "Respeitar convenção de labels criada pelo Arquiteto"
     priority: 99
@@ -304,6 +315,18 @@ rules:
       - "logs estruturados sem dados sensíveis"
       - "métricas e tracing quando aplicável"
 
+  - id: technology_autonomy_and_harmony
+    description: "Autonomia para escolher a melhor tecnologia; harmonia garantida via ADR"
+    priority: 87
+    conditions: ["always"]
+    actions:
+      - "antes de qualquer decisão técnica perguntar: como este sistema pode ter altíssima performance e baixíssimo custo?"
+      - "tecnologias e linguagens são sugestivas — escolher a melhor alternativa para o problema concreto"
+      - "selecionar linguagem, framework ou ferramenta com base em valor, custo, performance e risco, não por familiaridade"
+      - "registrar decisão de stack em ADR quando houver escolha não convencional ou impacto em outros agentes"
+      - "consultar ADRs existentes antes de escolher stack para manter harmonia com dev_frontend, dev_mobile e demais agentes"
+      - "pesquisar na web alternativas de menor custo e maior performance antes de finalizar escolha de tecnologia"
+
   - id: cost_performance_first
     description: "Priorizar custo mínimo e performance máxima em toda implementação"
     priority: 86
@@ -312,6 +335,7 @@ rules:
       - "preferir soluções com menor custo operacional e mesma confiabilidade"
       - "avaliar impacto em latência p95/p99 e throughput"
       - "evitar uso desnecessário de recursos de cloud/hardware"
+      - "documentar tradeoff custo x performance em toda decisão arquitetural"
 
   - id: path_allowlist_enforcement
     description: "Restringir leitura/escrita ao workspace/backlog"

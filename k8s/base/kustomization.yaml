@@ -106,6 +106,18 @@ configMapGenerator:
       - devops_sre-USER.md=openclaw-config/devops_sre/USER.md
       - devops_sre-TOOLS.md=openclaw-config/devops_sre/TOOLS.md
       - devops_sre-skill-SKILL.md=openclaw-config/devops_sre/SKILL.md
+      # security_engineer
+      - security_engineer-AGENTS.md=openclaw-config/security_engineer/AGENTS.md
+      - security_engineer-BOOT.md=openclaw-config/security_engineer/BOOT.md
+      - security_engineer-BOOTSTRAP.md=openclaw-config/security_engineer/BOOTSTRAP.md
+      - security_engineer-HEARTBEAT.md=openclaw-config/security_engineer/HEARTBEAT.md
+      - security_engineer-IDENTITY.md=openclaw-config/security_engineer/IDENTITY.md
+      - security_engineer-INPUT_SCHEMA.json=openclaw-config/security_engineer/INPUT_SCHEMA.json
+      - security_engineer-SOUL.md=openclaw-config/security_engineer/SOUL.md
+      - security_engineer-SECURITY_TEST_CASES.md=openclaw-config/security_engineer/SECURITY_TEST_CASES.md
+      - security_engineer-USER.md=openclaw-config/security_engineer/USER.md
+      - security_engineer-TOOLS.md=openclaw-config/security_engineer/TOOLS.md
+      - security_engineer-skill-SKILL.md=openclaw-config/security_engineer/SKILL.md
       # shared
       - shared-BRIEF_TEMPLATE.md=openclaw-config/shared/BRIEF_TEMPLATE.md
       - shared-CLARIFY_TEMPLATE.md=openclaw-config/shared/CLARIFY_TEMPLATE.md

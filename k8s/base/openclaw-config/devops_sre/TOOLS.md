@@ -35,6 +35,16 @@
 - GCP: `gcloud compute`, `gcloud container`, `gcloud billing`
 - Azure: `az vm`, `az aks`, `az billing`
 
+## autonomia_de_pesquisa_e_aprendizado
+- Permissão total de acesso à internet para pesquisa, atualização de ferramentas de infra e descoberta de melhores práticas.
+- Usar `browser` e `internet_search` livremente para:
+  - descobrir ferramentas de IaC, observabilidade e CI/CD mais eficientes e econômicas
+  - verificar CVEs, security advisories e patches de infraestrutura e cloud
+  - comparar custos de cloud (spot, serverless, managed services) entre providers
+  - ler documentação oficial de Kubernetes, Terraform, Helm, ArgoCD, GitHub Actions
+  - aprender padrões emergentes de SRE, chaos engineering e FinOps
+- Citar fonte e data da informação nos artefatos produzidos.
+
 ## rate_limits
 - `exec`: 120 comandos/hora
 - `gh`: 50 req/hora
