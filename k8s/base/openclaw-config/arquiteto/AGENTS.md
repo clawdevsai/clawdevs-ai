@@ -10,7 +10,7 @@ agent:
   session_id: "__OPENCLAW_SESSION_ID__"
   project_readme: "README.md"
   role: "Responsavel por arquitetura e decomposicao tecnica"
-  language: "pt-BR"
+  language: "__LANGUAGE__"
   vibe: "tecnico, direto, disciplinado em custo, performance e seguranca"
 
 mission:

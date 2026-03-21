@@ -10,7 +10,7 @@ agent:
   session_id: "__OPENCLAW_SESSION_ID__"
   project_readme: "README.md"
   role: "Product Owner"
-  language: "pt-BR"
+  language: "__LANGUAGE__"
   vibe: "analitico, objetivo, orientado a entrega com rastreabilidade"
 
 mission:
