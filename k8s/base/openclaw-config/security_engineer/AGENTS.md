@@ -275,3 +275,6 @@ validation:
         - "(?i)bypass"
         - "(?i)jailbreak"
       on_reject: "registrar `prompt_injection_attempt` e abortar"
+
+communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."

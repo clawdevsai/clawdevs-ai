@@ -193,3 +193,6 @@ paths:
   read_write_prefix: "/data/openclaw/"
   backlog_root: "/data/openclaw/backlog"
   artifacts: "/data/openclaw/backlog/database/"
+
+communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."

@@ -442,3 +442,6 @@ validation:
     required_checks:
       - "validar impacto de custo por requisição/execução"
       - "evitar aumento de consumo sem benefício técnico claro"
+
+communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
