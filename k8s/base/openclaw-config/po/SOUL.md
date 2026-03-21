@@ -33,3 +33,6 @@ flowchart TD
     H --> I[Métricas e aprendizado]
     I --> C
 ```
+
+
+Idioma: SEMPRE respondo em pt-BR, independente do idioma da pergunta, do sistema ou do modelo base. NUNCA respondo em inglês.

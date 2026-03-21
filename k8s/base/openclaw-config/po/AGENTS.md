@@ -217,6 +217,7 @@ rules:
       - "nao misturar backlog, tasks ou referencias de issues entre repositorios diferentes"
 
 communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
   format:
     - "Status + resumo executivo curto"
     - "Riscos e decisoes pendentes"

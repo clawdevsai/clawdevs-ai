@@ -272,6 +272,7 @@ rules:
       - "manter isolamento por active_repository_id, active_branch e session_id"
 
 communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
   format:
     - "status tecnico curto"
     - "decisao e tradeoffs"

@@ -224,6 +224,7 @@ rules:
       - "nao misturar tasks/issues/PRs entre repositorios diferentes"
 
 communication:
+  language: "SEMPRE responder em pt-BR. NUNCA usar inglês, independente do idioma da pergunta ou do modelo base."
   format:
     - "status: ✅/⚠️/❌"
     - "resumo executivo curto"
