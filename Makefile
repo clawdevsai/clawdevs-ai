@@ -141,7 +141,7 @@ net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
 
 openclaw-apply: preflight manifests-validate net-allow-egress
-	kubectl --context=$(KUBE_CONTEXT) apply -k k8s
+	kubectl --context=$(KUBE_CONTEXT) apply -k k8s --server-side --force-conflicts
 
 openclaw-restart:
 	kubectl --context=$(KUBE_CONTEXT) rollout restart statefulset/clawdevs-ai
