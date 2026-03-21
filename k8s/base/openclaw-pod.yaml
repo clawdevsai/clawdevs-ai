@@ -1283,7 +1283,7 @@ spec:
                   .agents.ceo.ask = "always" |
                   .agents.ceo.askFallback = "full" |
                   .agents.ceo.autoAllowSkills = true |
-                  .agents.ceo.allowlist = (.agents.ceo.allowlist // [])' \
+                  .agents.ceo.allowlist = ((.agents.ceo.allowlist // []) + ["web-search", "web-read"] | unique)' \
                 "${EXEC_APPROVALS_FILE}" > "${EXEC_APPROVALS_FILE}.tmp"
               mv "${EXEC_APPROVALS_FILE}.tmp" "${EXEC_APPROVALS_FILE}"
               # Repair agent main sessions when the persisted transcript is missing, invalid,
