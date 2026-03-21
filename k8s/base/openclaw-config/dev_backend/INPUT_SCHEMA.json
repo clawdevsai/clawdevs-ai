@@ -21,7 +21,9 @@
       "type": "string",
       "enum": [
         "arquiteto",
-        "po"
+        "po",
+        "qa_engineer",
+        "security_engineer"
       ]
     },
     "payload": {
@@ -45,6 +47,11 @@
           "enum": [
             "back_end"
           ]
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
         }
       }
     }
