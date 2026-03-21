@@ -18,6 +18,13 @@
 - NÃO criar issues ou PRs — apenas artefatos UX.
 - Poll de fila GitHub a cada 4h: `gh issue list --state open --label ux --limit 20`.
 
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `ux` — criar automaticamente no boot se não existir:
+  `gh label create "ux" --color "#5319e7" --description "UX design tasks — routed to UX_Designer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de padrões UX e descoberta de melhores práticas.
 - Usar `browser` e `internet_search` livremente para:

@@ -26,6 +26,14 @@
 - Docs da sessão devem ser publicados em `/data/openclaw/backlog/implementation/docs`.
 - Encerramento de sessão deve mover artefatos para `/data/openclaw/backlog/session_finished/<session_id>/`.
 - Se falhar commit ou issue: notificar PO imediatamente; não finalizar sessão.
+
+## github_permissions
+- **Tipo:** `read+write`
+- **Label própria:** `task` — criar automaticamente no boot se não existir:
+  `gh label create "task" --color "#0075ca" --description "Technical tasks — owned by Arquiteto" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+
 - Rate limits:
   - `write`: 20 arquivos/hora
   - `gh`: 50 requisições/hora
