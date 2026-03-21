@@ -1,0 +1,109 @@
+# k8s/base/searxng-deployment.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: searxng-config
+data:
+  settings.yml: |
+    general:
+      debug: false
+      instance_name: "clawdevs-searxng"
+    search:
+      safe_search: 0
+      autocomplete: ""
+      default_lang: "pt-BR"
+      formats:
+        - html
+        - json
+    server:
+      port: 8080
+      bind_address: "0.0.0.0"
+      secret_key: "clawdevs-searxng-secret-key-change-in-prod"
+      limiter: false
+      public_instance: false
+    engines:
+      - name: google
+        engine: google
+        shortcut: g
+        disabled: false
+      - name: bing
+        engine: bing
+        shortcut: b
+        disabled: false
+      - name: duckduckgo
+        engine: duckduckgo
+        shortcut: d
+        disabled: false
+      - name: github
+        engine: github
+        shortcut: gh
+        disabled: false
+    outgoing:
+      request_timeout: 10.0
+      useragent_suffix: "ClawDevs AI Research Agent"
+    ui:
+      default_theme: simple
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: searxng
+  labels:
+    app: searxng
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: searxng
+  template:
+    metadata:
+      labels:
+        app: searxng
+    spec:
+      containers:
+        - name: searxng
+          image: searxng/searxng:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SEARXNG_SETTINGS_PATH
+              value: /etc/searxng/settings.yml
+          volumeMounts:
+            - name: searxng-config
+              mountPath: /etc/searxng
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: searxng-config
+          configMap:
+            name: searxng-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: searxng
+spec:
+  selector:
+    app: searxng
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP
