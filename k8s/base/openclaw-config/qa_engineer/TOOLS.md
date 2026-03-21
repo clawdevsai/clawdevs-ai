@@ -9,8 +9,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto para escalação.
 - `sessions_send(session_id, message)`: reportar PASS/FAIL ao dev agent delegante ou ao Arquiteto.
 - `sessions_list()`: listar sessões ativas.
-- `browser`: acessar relatórios de CI/CD ou documentação de ferramentas de teste.
-- `internet_search(query)`: boas práticas de testes, padrões BDD, ferramentas.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "playwright vs cypress 2025 benchmark"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://playwright.dev/docs/test-assertions"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**` e workspace de testes do projeto.
@@ -41,7 +41,7 @@
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de ferramentas de teste e descoberta de melhores práticas.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
   - descobrir frameworks e ferramentas de teste mais eficientes para o stack do projeto
   - verificar CVEs e vulnerabilidades nas dependências do projeto sendo testado
   - comparar benchmarks de velocidade e confiabilidade entre ferramentas de teste

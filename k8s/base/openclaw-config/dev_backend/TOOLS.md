@@ -9,8 +9,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto.
 - `sessions_send(session_id, message)`: enviar update.
 - `sessions_list()`: listar sessões.
-- `browser`: navegar paginas web quando houver necessidade de referencia externa durante implementacao ou debug.
-- `internet_search(query)`: pesquisar arquiteturas, protocolos e boas práticas para custo/performance.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "python asyncio best practices 2025"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://docs.python.org/3/library/asyncio.html"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
@@ -36,7 +36,7 @@
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
   - descobrir frameworks, bibliotecas e ferramentas mais eficientes para o problema
   - verificar CVEs, vulnerabilidades e security advisories atualizados em dependências
   - comparar benchmarks de performance e custo entre alternativas tecnológicas

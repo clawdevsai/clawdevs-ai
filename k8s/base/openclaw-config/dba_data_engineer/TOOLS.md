@@ -9,8 +9,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, Dev_Backend ou DevOps_SRE.
 - `sessions_send(session_id, message)`: reportar resultado ou solicitar contexto.
 - `sessions_list()`: listar sessões ativas.
-- `browser`: acesso total à internet — docs de engines, LGPD, benchmarks de performance, comparação de custos cloud.
-- `internet_search(query)`: pesquisa irrestrita — engines de banco, ORM docs, LGPD, query optimization, managed service costs.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "postgresql index optimization 2025"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://www.postgresql.org/docs/current/indexes.html"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
@@ -29,7 +29,7 @@
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
   - comparar engines e custos de managed services (RDS, PlanetScale, Neon, Supabase, etc.)
   - verificar CVEs e security advisories em engines de banco em uso
   - pesquisar técnicas de otimização de queries e índices

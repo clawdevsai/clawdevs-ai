@@ -7,8 +7,8 @@
 - `sessions_send(session_id, message)`: Enviar para sessão existente do Arquiteto ou UX_Designer.
 - `sessions_list()`: Listar sessões ativas.
 - `gh(args...)`: Consultar GitHub autenticado para issues, labels, milestones, PRs e workflows; sem commit, push ou abertura de PR.
-- `browser`: acesso total à internet — pesquisa de mercado, referências de produto, UX patterns, regulação, concorrência, benchmarks.
-- `internet_search(query)`: pesquisa irrestrita — mercado, regulação, padrões UX, tecnologias de produto e custo.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "UX patterns fintech 2025"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://www.nngroup.com/articles/ux-best-practices"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`; bloquear qualquer path fora da allowlist.

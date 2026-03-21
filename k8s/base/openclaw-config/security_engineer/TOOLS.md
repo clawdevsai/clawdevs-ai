@@ -9,8 +9,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto (P1/P2) ou CEO (P0).
 - `sessions_send(session_id, message)`: reportar vulnerabilidades críticas, status de patches e escalações.
 - `sessions_list()`: listar sessões ativas.
-- `browser`: acessar NVD, OSV, GHSA, Snyk Advisor, CVE Details e dashboards de segurança.
-- `internet_search(query)`: consultar bases de CVEs, security advisories, patches disponíveis e alternativas de bibliotecas.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "CVE-2024-1234 patch nodejs"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://nvd.nist.gov/vuln/detail/CVE-2024-1234"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**` e workspace do projeto.
@@ -113,7 +113,7 @@ gh pr create --repo "$ACTIVE_GITHUB_REPOSITORY" \
 
 Permissão total de acesso à internet para pesquisa de segurança, consulta a CVE databases e descoberta de patches.
 
-Usar `browser` e `internet_search` livremente para:
+Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
 - consultar NVD (https://nvd.nist.gov/vuln/search), OSV (https://osv.dev), GHSA e Snyk Advisor
 - verificar se há patch disponível para CVE específico em qualquer linguagem
 - pesquisar bibliotecas alternativas mais seguras quando não há patch disponível

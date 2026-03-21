@@ -7,8 +7,8 @@ Ferramentas principais:
 - sessions_spawn / sessions_send / session_status: orquestrar subagentes
 - gh: consultar GitHub autenticado para issues, PRs, workflows e metadados, sem alterar o repositorio
 - message: comunicacao executiva quando necessario
-- browser: acesso total à internet — pesquisa técnica, benchmarks, CVEs, comparação de stacks, documentação, mercado e referências executivas
-- internet_search(query): pesquisa irrestrita para suporte a decisões estratégicas, comparação de tecnologias e custo cloud
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "cloud cost benchmark 2025"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://cloud.google.com/pricing"`
 
 Diretrizes:
 - usar sessao persistente para PO
@@ -44,7 +44,7 @@ Qualidade de uso:
   1) backlog/status local
   2) README e artefatos locais
   3) gh read-only
-  4) browser/internet_search
+  4) web-search / web-read (exec)
 - Nao repetir sondagem de capacidade (`gh --version`, status do browser, etc.) no mesmo ciclo.
 - Se o acesso externo estiver indisponivel, emitir `STATUS_SNAPSHOT` com:
   - `contexto_confirmado`

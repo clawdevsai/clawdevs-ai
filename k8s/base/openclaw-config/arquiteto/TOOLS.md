@@ -7,8 +7,8 @@
 - `sessions_spawn(agentId, mode, label)`: Criar sessão. Validar `agentId in {'po', 'dev_backend', 'dev_frontend', 'dev_mobile', 'qa_engineer', 'devops_sre', 'security_engineer', 'dba_data_engineer'}`, `mode='session'`, `label` ASCII <= 50 chars.
 - `sessions_send(session_id, message)`: Enviar mensagem para sessão válida (PO ou agentes de execução).
 - `sessions_list()`: Listar sessões ativas.
-- `browser`: navegar páginas web com acesso total — pesquisa técnica, benchmarks, CVEs, documentação, descoberta de alternativas de stack.
-- `internet_search(query)`: pesquisa irrestrita — comparar tecnologias, verificar vulnerabilidades, buscar referências de custo e performance.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "postgres vs cockroachdb benchmark 2025"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://www.postgresql.org/docs/current/"`
 - `gh(args...)`: Operações GitHub com guardrails.
 
 ## regras_de_uso

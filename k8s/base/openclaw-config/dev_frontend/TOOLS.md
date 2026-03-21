@@ -9,8 +9,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto ou QA_Engineer.
 - `sessions_send(session_id, message)`: enviar update ou delegar ao QA_Engineer.
 - `sessions_list()`: listar sessões ativas.
-- `browser`: navegar páginas web para referência de implementação, UX research ou debug.
-- `internet_search(query)`: pesquisar boas práticas de performance, acessibilidade e segurança frontend.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "next.js 15 performance optimization"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://nextjs.org/docs/app/building-your-application/optimizing"`
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/**`.
@@ -43,7 +43,7 @@
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
   - descobrir frameworks, bibliotecas e ferramentas mais eficientes para o problema
   - verificar CVEs, vulnerabilidades e security advisories em dependências frontend
   - comparar benchmarks de bundle size, performance e Core Web Vitals entre alternativas

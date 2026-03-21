@@ -6,8 +6,8 @@
 - `sessions_spawn(agentId, mode, label)`: criar sessão. Validar `agentId in {'po', 'arquiteto', 'dev_frontend', 'dev_mobile'}`.
 - `sessions_send(session_id, message)`: enviar artefato UX ao PO ou Arquiteto.
 - `sessions_list()`: listar sessões ativas.
-- `browser`: acesso total à internet — Figma community, Dribbble, Material Design, Apple HIG, WCAG, design systems, UX patterns, pesquisa de mercado.
-- `internet_search(query)`: pesquisa irrestrita — UX patterns, acessibilidade, design systems, benchmarks de conversão.
+- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "WCAG 2.2 contrast ratio guidelines"`
+- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://m3.material.io/components/buttons/guidelines"`
 - `gh(args...)`: consultar issues e PRs para contexto de produto; sem commit ou push.
 
 ## regras_de_uso
@@ -27,7 +27,7 @@
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de padrões UX e descoberta de melhores práticas.
-- Usar `browser` e `internet_search` livremente para:
+- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
   - descobrir padrões de UX para o domínio do produto (e-commerce, SaaS, fintech, etc.)
   - verificar guidelines de acessibilidade WCAG atualizadas
   - comparar design systems (Material, Ant Design, Chakra, Radix) para fit com o projeto
