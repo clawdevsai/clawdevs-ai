@@ -29,6 +29,7 @@ dev = [
     "httpx==0.28.1",
     "pytest-cov==6.1.0",
     "anyio==4.9.0",
+    "aiosqlite==0.20.0",
 ]
 
 [tool.pytest.ini_options]
