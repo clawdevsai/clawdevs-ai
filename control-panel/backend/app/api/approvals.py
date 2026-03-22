@@ -148,11 +148,14 @@ async def decide_approval(
     if approval.status != "pending":
         raise HTTPException(status_code=409, detail="Approval already decided")
 
-    # Try to notify gateway (best-effort)
+    # Try to notify gateway (best-effort — never fails the endpoint)
     if approval.openclaw_approval_id:
-        await openclaw_client.decide_approval(
-            approval.openclaw_approval_id, body.decision, body.justification
-        )
+        try:
+            await openclaw_client.decide_approval(
+                approval.openclaw_approval_id, body.decision, body.justification
+            )
+        except Exception:
+            pass  # Gateway unavailable is not a blocker for local persistence
 
     approval.status = body.decision
     approval.decided_by_id = current_user.id
