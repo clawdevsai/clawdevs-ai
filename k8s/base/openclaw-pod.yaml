@@ -78,8 +78,10 @@ spec:
                   name: openclaw-auth
                   key: LANGUAGE
                   optional: true
+            - name: OPENCLAW_VERSION
+              value: "2026.3.13"
             - name: NODE_OPTIONS
-              value: --max-old-space-size=3072
+              value: --max-old-space-size=2048
             - name: GH_CONFIG_DIR
               value: /data/openclaw/.config/gh
             - name: AGENT_ERROR_ROUTER_ENABLED
@@ -174,11 +176,11 @@ spec:
                   optional: true
           resources:
             requests:
-              cpu: 1000m
-              memory: 4Gi
+              cpu: 500m
+              memory: 2Gi
             limits:
-              cpu: "4"
-              memory: 5Gi
+              cpu: "2"
+              memory: 4Gi
           startupProbe:
             httpGet:
               path: /healthz
@@ -197,9 +199,9 @@ spec:
             httpGet:
               path: /healthz
               port: gateway
-            periodSeconds: 20
-            timeoutSeconds: 3
-            failureThreshold: 3
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config

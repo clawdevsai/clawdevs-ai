@@ -4,8 +4,8 @@ endif
 
 PROFILE ?= clawdevs-ai
 KUBE_CONTEXT ?= clawdevs-ai
-CPUS ?= 4
-MEMORY ?= 6144
+CPUS ?= 2
+MEMORY ?= 7168
 K8S_VERSION ?= v1.34.1
 GPU ?= 1
 PF_SERVICE ?= service/clawdevs-ai
