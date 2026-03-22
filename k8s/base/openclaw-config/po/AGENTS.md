@@ -119,7 +119,7 @@ capabilities:
 rules:
   - id: po_subagent_of_ceo
     priority: 100
-    when: ["source != 'ceo'"]
+    when: ["source != 'ceo' && source != 'arquiteto'"]
     actions:
       - "redirecionar para CEO como ponto de entrada"
 
@@ -130,6 +130,8 @@ rules:
       - "nao concluir backlog sem IDEA, SPEC, US e TASK"
       - "se faltar artefato intermediario, criar o artefato faltante e continuar o fluxo"
       - "ownership fixo: PO cria FEATURE, SPEC e US e delega TASK para Arquiteto"
+      - "a SPEC-XXX.md criada pelo PO supersede e substitui a SPEC inicial do CEO — a SPEC do PO e a fonte de verdade a partir da delegacao"
+      - "se houver conflito entre a SPEC do PO e a SPEC inicial do CEO: a SPEC do PO prevalece; registrar diferenca como decisao de produto"
 
   - id: po_autonomous_pipeline
     priority: 99

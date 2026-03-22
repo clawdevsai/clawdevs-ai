@@ -136,7 +136,7 @@ capabilities:
 rules:
   - id: architect_subagent_chain
     priority: 100
-    when: ["source != 'po' && source != 'ceo'"]
+    when: ["source != 'po' && source != 'ceo' && source != 'qa_engineer' && source != 'security_engineer' && source != 'dev_backend' && source != 'dev_frontend' && source != 'dev_mobile' && source != 'dba_data_engineer' && source != 'ux_designer' && source != 'devops_sre'"]
     actions:
       - "redirecionar para PO/CEO conforme cadeia"
 
@@ -228,8 +228,9 @@ rules:
       - "apos dev agent reportar conclusao: delegar QA_Engineer via sessions_send com contexto da TASK e PR"
       - "QA_Engineer retorna PASS com evidencias -> marcar TASK done e notificar PO"
       - "QA_Engineer retorna FAIL -> reenviar ao dev agent com relatorio de falha (retry 1 e 2)"
+      - "contador de retries armazenado em /data/openclaw/backlog/status/retry-{issue_id}.txt — owner exclusivo: Arquiteto"
       - "3 FAILs consecutivos: escalar ao PO com historico completo de retries e evidencias"
-      - "monitorar issues com label `tests` sem pickup > 2h: notificar QA_Engineer diretamente"
+      - "monitorar issues com label `tests` sem pickup > 2h: adicionar label `in-progress` antes de notificar QA_Engineer diretamente para evitar processamento duplicado com cron"
 
   - id: security_scan_gate
     priority: 94
@@ -238,16 +239,38 @@ rules:
       - "para tasks com dados sensiveis, autenticacao, APIs externas ou dependencias novas: notificar Security_Engineer"
       - "Security_Engineer pode agir de forma proativa e autonoma — nao bloquear execucao aguardando resultado"
       - "se Security_Engineer reportar P0 (CVSS >= 9.0): pausar deploy e escalar ao CEO imediatamente"
-      - "se Security_Engineer reportar CVSS >= 7.0: PR de patch deve ser merged antes de deploy em producao"
+      - "se Security_Engineer reportar CVSS >= 7.0: Arquiteto e responsavel por revisar e mergear o PR de patch antes do proximo deploy em producao"
+
+  - id: security_pr_merge_ownership
+    priority: 94
+    when: ["source == 'security_engineer' && intent == 'security_patch_report'"]
+    actions:
+      - "revisar o PR de patch recebido do Security_Engineer"
+      - "se testes passarem e o diff for restrito ao patch: mergear PR via gh pr merge"
+      - "se testes falharem por causa nao relacionada ao patch: notificar dev agent do dominio para corrigir testes antes do merge"
+      - "registrar evidencia de merge no relatorio de segurança com hash do commit"
+      - "notificar PO e CEO (se CVSS >= 9.0) apos merge confirmado"
+
+  - id: spec_conflict_handler
+    priority: 103
+    when: ["source in ['dev_backend','dev_frontend','dev_mobile','dba_data_engineer'] && intent == 'spec_conflict'"]
+    actions:
+      - "receber sinal de conflito entre implementacao e SPEC do agente de execucao"
+      - "analisar o conflito com evidencias fornecidas pelo dev agent"
+      - "decidir em ate 30 minutos: corrigir SPEC (notificar PO) ou confirmar implementacao como correta"
+      - "se correcao de SPEC for necessaria: notificar PO e desbloquear o dev agent com instrucao clara"
+      - "se decisao for manter implementacao: comunicar ao dev agent e registrar excecao no ADR"
+      - "nao deixar dev agent bloqueado sem resposta — timeout de 30 minutos: assumir implementacao correta e registrar pendencia de revisao de SPEC"
 
   - id: parallel_multi_domain_delegation
     priority: 95
     when: ["intent in ['decompor_tasks','planejar_execucao']"]
     actions:
-      - "para tasks com multiplos dominios (ex: back_end + front_end + tests): sessions_spawn em paralelo"
+      - "para tasks com multiplos dominios (ex: back_end + front_end): sessions_spawn em paralelo somente para dominios sem dependencia de dados entre si"
+      - "dominio `tests` (QA_Engineer) DEVE ser spawned somente apos todos os dominios de implementacao (back_end, front_end, mobile, dba) reportarem conclusao — nunca em paralelo com devs"
       - "enviar contexto independente e completo para cada agente: TASK, US, BDD, NFRs, ADR relevante"
       - "consolidar resultados e reportar ao PO apos todos os agentes concluirem ou escalarem"
-      - "nao aguardar agente A para iniciar agente B quando nao houver dependencia de dados"
+      - "timeout de consolidacao: 4 horas — se agente nao reportar neste prazo: escalar status ao PO e aguardar instrucao"
 
   - id: schema_and_prompt_safety
     priority: 97

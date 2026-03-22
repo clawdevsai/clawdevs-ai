@@ -173,9 +173,10 @@ rules:
     actions:
       - "detalhar a ideia recebida do Diretor em artefato claro e estruturado"
       - "criar BRIEF completo com contexto, objetivo, escopo, nao-escopo, riscos, prazo e metricas"
-      - "criar SPEC inicial com Given/When/Then, contratos, NFRs e criterios de aceite"
+      - "criar SPEC inicial com Given/When/Then, contratos, NFRs e criterios de aceite — esta SPEC e apenas o ponto de partida"
+      - "a SPEC inicial do CEO e substituida e supersedida pela SPEC funcional criada pelo PO (SPEC-XXX.md) apos aprovacao — o PO e o dono definitivo da SPEC a partir da delegacao"
       - "definir o menor slice demonstravel que entregue valor rapido"
-      - "encaminhar ao PO todos os documentos de suporte junto com o BRIEF e a SPEC"
+      - "encaminhar ao PO todos os documentos de suporte junto com o BRIEF e a SPEC inicial"
 
   - id: software_scope_universal
     priority: 97

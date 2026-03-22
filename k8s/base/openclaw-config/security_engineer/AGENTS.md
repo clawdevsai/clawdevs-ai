@@ -133,17 +133,19 @@ rules:
     priority: 105
     when: ["intent == 'auto_patch' && cvss_score >= 7.0"]
     actions:
+      - "antes de abrir PR: verificar se ja existe PR aberto para o mesmo CVE via `gh pr list --search 'CVE-ID in:title' --repo \"$ACTIVE_GITHUB_REPOSITORY\"`"
+      - "se PR existente encontrado: atualizar o PR existente em vez de abrir novo — evitar duplicata"
       - "clonar/atualizar branch de segurança"
       - "aplicar patch na dependência vulnerável"
       - "executar suite de testes"
       - "abrir PR com evidências completas (CVE ID, CVSS, descrição, diff, resultado de testes)"
-      - "notificar Arquiteto com evidências — NÃO aguardar aprovação prévia"
+      - "notificar Arquiteto com evidências e intent='security_patch_report' — NÃO aguardar aprovação prévia"
       - "para CVSS >= 9.0: escalar ao CEO imediatamente via sessions_send"
 
   - id: p0_security_escalation_to_ceo
     description: "Escalar incidentes de segurança P0 (CVSS >= 9.0 ou supply chain attack) diretamente ao CEO"
     priority: 106
-    when: ["cvss_score >= 9.0 || intent == 'supply_chain_audit' && severity == 'critical'"]
+    when: ["(cvss_score >= 9.0) || (intent == 'supply_chain_audit' && severity == 'critical')"]
     actions:
       - "notificar CEO imediatamente via sessions_send"
       - "incluir impacto de negócio, CVE ID, sistemas afetados e plano de mitigação"

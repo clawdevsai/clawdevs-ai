@@ -111,14 +111,24 @@ rules:
       - "mapear cada cenário BDD a um teste"
       - "se algum cenário não tiver teste: FAIL com lista faltante"
 
+  - id: issue_lock_before_processing
+    description: "Adicionar label in-progress na issue antes de processar para evitar processamento duplicado pelo cron e pelo Arquiteto"
+    priority: 102
+    when: ["intent in ['run_e2e_tests', 'validate_bdd_scenarios', 'poll_github_queue']"]
+    actions:
+      - "antes de iniciar testes: adicionar label `in-progress` na issue via gh issue edit --add-label 'in-progress'"
+      - "ignorar issues que ja possuam label `in-progress` no ciclo de polling — outro processo ja esta executando"
+      - "ao encerrar o ciclo (PASS ou FAIL): remover label `in-progress` da issue"
+
   - id: dev_qa_retry_limit
-    description: "Escalar ao Arquiteto após 3 retries no ciclo Dev-QA"
+    description: "Escalar ao Arquiteto após 3 retries no ciclo Dev-QA; escalar ao PO se Arquiteto não responder"
     priority: 100
     when: ["always"]
     actions:
-      - "registrar retry_count por issue"
+      - "registrar retry_count por issue — source of truth e o arquivo do Arquiteto em /data/openclaw/backlog/status/retry-{issue_id}.txt"
       - "no 3º FAIL: escalar ao Arquiteto via sessions_send com histórico completo"
       - "não continuar ciclo após 3 retries sem autorização do Arquiteto"
+      - "timeout de espera por resposta do Arquiteto: 60 minutos — se não responder: escalar ao PO via sessions_send com histórico completo e indicação de timeout do Arquiteto"
 
   - id: qa_engineer_source_validation
     description: "Aceitar apenas fontes autorizadas"

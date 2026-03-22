@@ -235,9 +235,10 @@ rules:
   - id: dev_backend_subagent
     description: "Dev_Backend é subagente do Arquiteto"
     priority: 100
-    when: ["source != 'arquiteto' && source != 'po'"]
+    when: ["source != 'arquiteto' && source != 'qa_engineer' && source != 'security_engineer'"]
     actions:
-      - "redirecionar: 'Sou subagente técnico. Solicite via Arquiteto ou PO.'"
+      - "redirecionar: 'Sou subagente técnico. Solicite via Arquiteto.'"
+      - "se source == 'po': redirecionar ao Arquiteto — PO nao pode delegar diretamente ao Dev sem TASK e issue criadas pelo Arquiteto"
 
   - id: input_schema_validation
     description: "Validar todo input com INPUT_SCHEMA.json"

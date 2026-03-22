@@ -170,20 +170,25 @@ spec:
               cpu: "4"
               memory: 5Gi
           startupProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: gateway
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 120
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: gateway
             periodSeconds: 10
+            timeoutSeconds: 3
             failureThreshold: 3
           livenessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: gateway
             periodSeconds: 20
+            timeoutSeconds: 3
             failureThreshold: 3
           volumeMounts:
             - name: agent-config
@@ -304,12 +309,16 @@ spec:
               EOF
               }
               echo "[bootstrap] GH_CONFIG_DIR=${GH_CONFIG_DIR}"
-              apt-get update
-              apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh python3
-              apt-get upgrade -y
-              apt-get autoremove -y
-              apt-get clean
-              rm -rf /var/lib/apt/lists/*
+              APT_STAMP="${OPENCLAW_STATE_DIR}/backlog/status/.apt-installed"
+              if [ ! -f "${APT_STAMP}" ]; then
+                apt-get update
+                apt-get install -y --no-install-recommends ca-certificates curl bash git jq gh python3
+                apt-get upgrade -y
+                apt-get autoremove -y
+                apt-get clean
+                rm -rf /var/lib/apt/lists/*
+                touch "${APT_STAMP}"
+              fi
               if ! command -v gh >/dev/null 2>&1; then
                 echo "GitHub CLI nao foi instalado corretamente" >&2
                 exit 1
@@ -473,7 +482,7 @@ spec:
               branch="${2:-main}"
               gh api "repos/${target_ref}" --silent >/dev/null 2>&1
               write_repo_context_file "${target_ref}" "${branch}"
-              for workspace in "${OPENCLAW_STATE_DIR}/workspace-ceo" "${OPENCLAW_STATE_DIR}/workspace-po" "${OPENCLAW_STATE_DIR}/workspace-arquiteto" "${OPENCLAW_STATE_DIR}/workspace-dev_backend"; do
+              for workspace in "${OPENCLAW_STATE_DIR}/workspace-ceo" "${OPENCLAW_STATE_DIR}/workspace-po" "${OPENCLAW_STATE_DIR}/workspace-arquiteto" "${OPENCLAW_STATE_DIR}/workspace-dev_backend" "${OPENCLAW_STATE_DIR}/workspace-dev_frontend" "${OPENCLAW_STATE_DIR}/workspace-dev_mobile" "${OPENCLAW_STATE_DIR}/workspace-qa_engineer" "${OPENCLAW_STATE_DIR}/workspace-devops_sre" "${OPENCLAW_STATE_DIR}/workspace-security_engineer" "${OPENCLAW_STATE_DIR}/workspace-ux_designer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer"; do
                 [ -f "${workspace}/REPOSITORY_CONTEXT.md" ] || true
                 target_ref_escaped="$(printf '%s' "${target_ref}" | sed -e 's/[\\/&]/\\&/g')"
                 branch_escaped="$(printf '%s' "${branch}" | sed -e 's/[\\/&]/\\&/g')"
@@ -504,7 +513,12 @@ spec:
               ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" /usr/local/bin/claw-repo-discover
               ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" /usr/local/bin/claw-repo-ensure
               ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch" /usr/local/bin/claw-repo-switch
-              curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard --no-prompt
+              OPENCLAW_VERSION="${OPENCLAW_VERSION:-}"
+              if [ -n "${OPENCLAW_VERSION}" ]; then
+                curl -fsSL "https://openclaw.ai/install.sh" | bash -s -- --no-onboard --no-prompt --version "${OPENCLAW_VERSION}"
+              else
+                curl -fsSL "https://openclaw.ai/install.sh" | bash -s -- --no-onboard --no-prompt
+              fi
               mkdir -p "${OPENCLAW_STATE_DIR}"
               mkdir -p ~/.openclaw
               mkdir -p "${OPENCLAW_STATE_DIR}/scheduler"
@@ -1436,7 +1450,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent dev_backend \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-dev_backend.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
                         exit 0
                       fi
@@ -1468,7 +1482,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent dev_frontend \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-dev_frontend.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
                         exit 0
                       fi
@@ -1500,7 +1514,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent dev_mobile \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-dev_mobile.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
                         exit 0
                       fi
@@ -1532,7 +1546,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent qa_engineer \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-qa_engineer.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
                         exit 0
                       fi
@@ -1564,7 +1578,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent security_engineer \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-security_engineer.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
                         exit 0
                       fi
@@ -1596,7 +1610,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent devops_sre \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-devops_sre.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
                         exit 0
                       fi
@@ -1628,7 +1642,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent ux_designer \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-ux_designer.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
                         exit 0
                       fi
@@ -1660,7 +1674,7 @@ spec:
                           --session isolated \
                           --message "${CRON_MSG}" \
                           --agent dba_data_engineer \
-                          --no-deliver >/tmp/openclaw-cron-add.log 2>&1; then
+                          --no-deliver >/tmp/openclaw-cron-add-dba_data_engineer.log 2>&1; then
                         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' criado com sucesso" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
                         exit 0
                       fi
@@ -1670,6 +1684,23 @@ spec:
                   exit 0
                 ) &
               fi
+              (
+                set +e
+                WATCHDOG_INTERVAL=3600
+                while true; do
+                  sleep "${WATCHDOG_INTERVAL}"
+                  if openclaw cron list --json > /tmp/openclaw-cron-watchdog.json 2>/dev/null; then
+                    for agent_name in dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer; do
+                      count="$(jq -r --arg n "${agent_name}" '[.jobs[]? | select(.name | startswith($n))] | length' /tmp/openclaw-cron-watchdog.json 2>/dev/null || echo 0)"
+                      if [ "${count}" = "0" ]; then
+                        echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: cron do agente ${agent_name} nao encontrado na lista de jobs — possivel falha do scheduler" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                      fi
+                    done
+                  else
+                    echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") WATCHDOG: openclaw cron list falhou — gateway pode estar degradado" >> "${OPENCLAW_STATE_DIR}/scheduler/watchdog.log"
+                  fi
+                done
+              ) &
               echo "[bootstrap] starting openclaw gateway"
               set +e
               openclaw gateway

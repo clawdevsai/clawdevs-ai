@@ -1,3 +1,7 @@
+ifeq ($(OS),Windows_NT)
+SHELL := C:/Program Files/Git/bin/bash.exe
+endif
+
 PROFILE ?= clawdevs-ai
 KUBE_CONTEXT ?= clawdevs-ai
 CPUS ?= 4
@@ -71,8 +75,14 @@ preflight:
 		fi; \
 	done
 
+ifeq ($(OS),Windows_NT)
+NULL_DEV ?= NUL
+else
+NULL_DEV ?= /dev/null
+endif
+
 manifests-validate:
-	kubectl kustomize $(KUSTOMIZE_DIR) >NUL 2>NUL
+	kubectl kustomize $(KUSTOMIZE_DIR) >$(NULL_DEV) 2>&1
 
 minikube-up:
 	minikube start \
@@ -119,6 +129,12 @@ minikube-logs:
 minikube-dashboard:
 	minikube dashboard -p $(PROFILE) --url
 
+dashboard:
+	minikube dashboard -p $(PROFILE)
+
+dashboard-url:
+	minikube dashboard -p $(PROFILE) --url
+
 ollama-apply: preflight ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
 
@@ -157,7 +173,7 @@ openclaw-logs:
 openclaw-dashboard:
 	kubectl --context=$(KUBE_CONTEXT) exec pod/clawdevs-ai-0 -- openclaw dashboard --no-open
 
-reset-all: stack-apply stack-status
+reset-all:
 	@echo "Reset completo: apaga todos os pods e volumes do stack e recria tudo do zero."
 	kubectl --context=$(KUBE_CONTEXT) delete pod --all --ignore-not-found --wait=true --timeout=120s
 	kubectl --context=$(KUBE_CONTEXT) delete pvc --all --ignore-not-found --wait=true --timeout=120s
@@ -173,10 +189,10 @@ reset-all: stack-apply stack-status
 	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=240s
 	$(MAKE) stack-status
 
-DOCKER_VOLUMES_CLAWDEVS := $(shell docker volume ls -q --filter=name=clawdevs 2>NUL)
-DOCKER_VOLUMES_OPENCLAW := $(shell docker volume ls -q --filter=name=openclaw 2>NUL)
-DOCKER_VOLUMES_OLLAMA   := $(shell docker volume ls -q --filter=name=ollama 2>NUL)
-DOCKER_IMAGES_PROJECT   := $(shell docker images --filter=reference=*clawdevs* --filter=reference=*openclaw* --filter=reference=*ollama* -q 2>NUL)
+DOCKER_VOLUMES_CLAWDEVS := $(shell docker volume ls -q --filter=name=clawdevs 2>$(NULL_DEV))
+DOCKER_VOLUMES_OPENCLAW := $(shell docker volume ls -q --filter=name=openclaw 2>$(NULL_DEV))
+DOCKER_VOLUMES_OLLAMA   := $(shell docker volume ls -q --filter=name=ollama 2>$(NULL_DEV))
+DOCKER_IMAGES_PROJECT   := $(shell docker images --filter=reference=*clawdevs* --filter=reference=*openclaw* --filter=reference=*ollama* -q 2>$(NULL_DEV))
 
 destroy-all:
 	@echo "[destroy-all] Removendo todos os recursos k8s do projeto clawdevs-ai..."
@@ -191,8 +207,10 @@ destroy-all:
 	-kubectl --context=$(KUBE_CONTEXT) -n kube-system delete daemonset nvidia-device-plugin-daemonset --ignore-not-found
 	@echo "[destroy-all] Destruindo perfil Minikube $(PROFILE)..."
 	-minikube delete --profile=$(PROFILE)
+ifeq ($(OS),Windows_NT)
 	@echo "[destroy-all] Parando WSL para liberar memoria VmmemWSL..."
 	-cmd /c "start /b wsl --shutdown"
+endif
 	@echo "[destroy-all] Removendo volumes Docker do projeto..."
 	-docker volume rm clawdevs-ai-openclaw-data-clawdevs-ai-0 openclaw-data ollama-data
 	$(if $(DOCKER_VOLUMES_CLAWDEVS),-docker volume rm $(DOCKER_VOLUMES_CLAWDEVS))
