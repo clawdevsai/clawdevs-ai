@@ -225,14 +225,12 @@ endif
 storage-enable-expansion:
 	kubectl --context=$(KUBE_CONTEXT) patch storageclass standard -p "{\"allowVolumeExpansion\":true}"
 
-clawdevs-rebuild:
-	$(MAKE) destroy-all
+clawdevs-rebuild: 
 	$(MAKE) minikube-up
 	$(MAKE) minikube-context
 	$(MAKE) minikube-addons
 	$(MAKE) storage-enable-expansion
 	$(MAKE) stack-apply
-	$(MAKE) stack-status
 
 stack-apply: ollama-apply openclaw-apply
 

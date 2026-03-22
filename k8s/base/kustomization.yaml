@@ -191,5 +191,20 @@ configMapGenerator:
       # repo
       - project-README.md=openclaw-config/shared/PROJECT_README.md
 
+  - name: openclaw-bootstrap-scripts
+    files:
+      - bootstrap-scripts/00-env.sh
+      - bootstrap-scripts/01-deps.sh
+      - bootstrap-scripts/02-web-tools.sh
+      - bootstrap-scripts/03-gh-auth.sh
+      - bootstrap-scripts/04-repo-tools.sh
+      - bootstrap-scripts/05-install-openclaw.sh
+      - bootstrap-scripts/06-dirs.sh
+      - bootstrap-scripts/07-agent-workspaces.sh
+      - bootstrap-scripts/08-git-hooks.sh
+      - bootstrap-scripts/09-openclaw-config.sh
+      - bootstrap-scripts/10-background-services.sh
+      - bootstrap-scripts/11-start-gateway.sh
+
 generatorOptions:
   disableNameSuffixHash: true
