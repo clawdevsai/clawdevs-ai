@@ -12,8 +12,8 @@ A cada 30 minutos:
    - verificar taxa de erro e latência p95/p99
    - verificar uptime e health checks
 4. Classificar anomalias de produção:
-   - P0 (crítico): escalar ao CEO imediatamente, NÃO aguardar próximo ciclo
-   - P1 (alto): escalar ao Arquiteto e PO, criar issue `devops` alta prioridade
+   - P0 (crítico): `sessions_list()` filtrando `kind=main, agentId=ceo` → `sessions_send(key, msg)` com impacto, SLO violado e plano; NÃO aguardar próximo ciclo
+   - P1 (alto): `sessions_list()` filtrando `kind=main, agentId=arquiteto` → `sessions_send(key, msg)`; criar issue `devops` alta prioridade
    - P2 (médio): criar issue `devops` e processar no próximo ciclo
 5. Verificar pipelines CI/CD:
    - detectar workflows falhando repetidamente (> 3x)

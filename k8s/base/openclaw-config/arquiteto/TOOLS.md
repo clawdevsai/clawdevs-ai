@@ -17,7 +17,7 @@
 - Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`; sem override de repositório.
 - Antes de qualquer `gh`, validar `/data/openclaw/contexts/active_repository.env`.
 - Criação de repositório permitida apenas com autorização explícita do CEO: `gh repo create "$GITHUB_ORG/<repo>" ...`.
-- Labels permitidas: `task`, `P0`, `P1`, `P2`, `ADR`, `security`, `performance`, `spike`, `back_end`, `front_end`, `mobile`, `tests`, `devops`, `dba`, `documentacao`.
+- Labels permitidas: `task`, `P0`, `P1`, `P2`, `ADR`, `security`, `performance`, `spike`, `back_end`, `front_end`, `mobile`, `tests`, `devops`, `dba`, `documentacao`, `ux`.
 - Routing de label para agente: `back_end`→Dev_Backend, `front_end`→Dev_Frontend, `mobile`→Dev_Mobile, `tests`→QA_Engineer, `devops`→DevOps_SRE, `security`→Security_Engineer, `dba`→DBA_DataEngineer.
 - Body de issue não pode conter paths fora de `/data/openclaw/backlog`.
 - Em criação/edição de issue usar `--body-file <arquivo.md>`; não usar `--body` inline com `\n`.
@@ -41,3 +41,26 @@
   - `web-search`: 30 queries/hora
 - `research` deve iniciar timer e encerrar em 2h com fallback.
 - Internet: acesso total liberado para pesquisa técnica, comparação de stacks, CVEs, benchmarks e atualização de habilidades — sem restrição de fonte.
+
+## inter_agent_sessions
+
+Comunicacao entre agentes via sessao persistente:
+
+- **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
+- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
+- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
+- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
+
+Agentes disponiveis e suas keys:
+- CEO: `agent:ceo:main`
+- PO: `agent:po:main`
+- Arquiteto: `agent:arquiteto:main`
+- Dev_Backend: `agent:dev_backend:main`
+- Dev_Frontend: `agent:dev_frontend:main`
+- Dev_Mobile: `agent:dev_mobile:main`
+- QA_Engineer: `agent:qa_engineer:main`
+- DevOps_SRE: `agent:devops_sre:main`
+- Security_Engineer: `agent:security_engineer:main`
+- UX_Designer: `agent:ux_designer:main`
+- DBA_DataEngineer: `agent:dba_data_engineer:main`
+

@@ -12,14 +12,27 @@
         "criar_task",
         "definir_arquitetura",
         "atualizar_github",
-        "pesquisar"
+        "pesquisar",
+        "planejar_execucao",
+        "publicar_artefatos",
+        "encerrar_sessao",
+        "desenhar_arquitetura",
+        "report_status"
       ]
     },
     "source": {
       "type": "string",
       "enum": [
         "po",
-        "ceo"
+        "ceo",
+        "dev_backend",
+        "dev_frontend",
+        "dev_mobile",
+        "qa_engineer",
+        "devops_sre",
+        "security_engineer",
+        "ux_designer",
+        "dba_data_engineer"
       ]
     },
     "payload": {

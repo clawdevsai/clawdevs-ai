@@ -12,7 +12,9 @@
         "priorizar",
         "delegar_arquiteto",
         "atualizar_github",
-        "reportar_status"
+        "reportar_status",
+        "decompor_tasks",
+        "planejar_release"
       ]
     },
     "source": {

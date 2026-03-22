@@ -16,8 +16,8 @@ A cada 6 horas (cron: `0 */6 * * *`):
    - Listar issues abertas com label `security` e severidade `critical`
    - Para cada P0 não corrigido: re-escalar ao CEO e Arquiteto
 4. Classificar vulnerabilidades encontradas:
-   - **P0 — Crítico (CVSS >= 9.0)**: escalar ao CEO imediatamente via `sessions_send`; NÃO aguardar próximo ciclo; iniciar `auto_patch_library` imediatamente
-   - **P1 — Alto (CVSS 7.0–8.9)**: iniciar `auto_patch_library` no ciclo atual; notificar Arquiteto com evidências
+   - **P0 — Crítico (CVSS >= 9.0)**: `sessions_list()` filtrando `kind=main, agentId=ceo` → `sessions_send(key, msg)` com CVE ID, CVSS, sistemas afetados e plano; NÃO aguardar próximo ciclo; iniciar `auto_patch_library` imediatamente
+   - **P1 — Alto (CVSS 7.0–8.9)**: `sessions_list()` filtrando `kind=main, agentId=arquiteto` → `sessions_send(key, msg)`; iniciar `auto_patch_library` no ciclo atual
    - **P2 — Médio (CVSS 4.0–6.9)**: criar issue `security` com recomendação; processar no próximo ciclo disponível
    - **P3 — Baixo (CVSS < 4.0)**: registrar e incluir no relatório periódico
 5. Executar scan de secrets no histórico recente:

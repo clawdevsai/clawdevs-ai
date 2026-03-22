@@ -49,3 +49,26 @@
 - `gh`: 50 req/hora
 - `sessions_spawn`: 10/hora
 - `web-search`: 60 queries/hora
+
+## inter_agent_sessions
+
+Comunicacao entre agentes via sessao persistente:
+
+- **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
+- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
+- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
+- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
+
+Agentes disponiveis e suas keys:
+- CEO: `agent:ceo:main`
+- PO: `agent:po:main`
+- Arquiteto: `agent:arquiteto:main`
+- Dev_Backend: `agent:dev_backend:main`
+- Dev_Frontend: `agent:dev_frontend:main`
+- Dev_Mobile: `agent:dev_mobile:main`
+- QA_Engineer: `agent:qa_engineer:main`
+- DevOps_SRE: `agent:devops_sre:main`
+- Security_Engineer: `agent:security_engineer:main`
+- UX_Designer: `agent:ux_designer:main`
+- DBA_DataEngineer: `agent:dba_data_engineer:main`
+

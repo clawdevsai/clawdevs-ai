@@ -883,7 +883,10 @@ spec:
                     },
                     "subagents": {
                       "runTimeoutSeconds": 900,
-                      "maxConcurrent": 2
+                      "maxConcurrent": 6,
+                      "maxSpawnDepth": 3,
+                      "maxChildrenPerAgent": 8,
+                      "archiveAfterMinutes": 120
                     },
                     "heartbeat": {
                       "includeReasoning": true
@@ -1200,7 +1203,7 @@ spec:
                         }
                       },
                       "subagents": {
-                        "allowAgents": ["po", "arquiteto"]
+                        "allowAgents": []
                       }
                     },
                     {
@@ -1357,6 +1360,13 @@ spec:
               repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
               repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
               repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+              repair_main_session "dev_frontend" "/data/openclaw/workspace-dev_frontend" "Dev_Frontend pronto. Pode me acionar para implementacao de tasks frontend, testes e atualizacao de status."
+              repair_main_session "dev_mobile" "/data/openclaw/workspace-dev_mobile" "Dev_Mobile pronto. Pode me acionar para implementacao de tasks mobile, testes e atualizacao de status."
+              repair_main_session "qa_engineer" "/data/openclaw/workspace-qa_engineer" "QA_Engineer pronto. Pode me acionar para validacao, testes BDD e relatorios de qualidade."
+              repair_main_session "devops_sre" "/data/openclaw/workspace-devops_sre" "DevOps_SRE pronto. Pode me acionar para pipelines, infra, SLOs e escalacao de incidentes."
+              repair_main_session "security_engineer" "/data/openclaw/workspace-security_engineer" "Security_Engineer pronto. Pode me acionar para scans de seguranca, CVEs e escalacao de vulnerabilidades."
+              repair_main_session "ux_designer" "/data/openclaw/workspace-ux_designer" "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
+              repair_main_session "dba_data_engineer" "/data/openclaw/workspace-dba_data_engineer" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
               stream_agent_sessions() {
                 declare -A agent_offsets=()
                 while true; do
@@ -1397,12 +1407,8 @@ spec:
                       now_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
                       snippet_safe="$(printf '%s' "${tail_snippet}" | tail -n 20 | tr '\n' ' ' | sed 's/"/\\"/g')"
                       echo "{\"ts\":\"${now_iso}\",\"agent\":\"${agent}\",\"session_file\":\"${f}\",\"hash\":\"${event_hash}\",\"severity\":\"error\",\"snippet\":\"${snippet_safe}\"}" >> "${ERROR_CENTER}"
-                      ceo_sessions="${OPENCLAW_STATE_DIR}/agents/ceo/sessions/sessions.json"
-                      ceo_file="$(jq -r '.\"agent:ceo:main\".sessionFile // empty' "${ceo_sessions}" 2>/dev/null || true)"
-                      if [ -n "${ceo_file}" ] && [ -f "${ceo_file}" ]; then
-                        alert_text="ALERTA-AUTOMATICO: erro detectado no agente ${agent}. Registro central: ${ERROR_CENTER}. Hash: ${event_hash}. Acao recomendada: verificar sessao e desbloquear."
-                        printf '%s\n' "{\"type\":\"message\",\"id\":\"err-${event_hash}\",\"parentId\":null,\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)\",\"message\":{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"${alert_text}\"}],\"timestamp\":$(($(date -u +%s)*1000))}}" >> "${ceo_file}"
-                      fi
+                      alert_text="ALERTA-AUTOMATICO: erro detectado no agente ${agent}. Registro central: ${ERROR_CENTER}. Hash: ${event_hash}. Acao recomendada: verificar sessao e desbloquear."
+                      openclaw agent --agent ceo --message "${alert_text}" --no-deliver >/dev/null 2>&1 || true
                     done
                     sleep "${AGENT_ERROR_ROUTER_INTERVAL_SECONDS:-30}"
                   done
@@ -1709,6 +1715,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: standard
   resources:
     requests:
-      storage: 6Gi
+      storage: 5Gi

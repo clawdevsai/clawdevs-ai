@@ -24,6 +24,13 @@
         "po",
         "arquiteto",
         "dev_backend",
+        "dev_frontend",
+        "dev_mobile",
+        "qa_engineer",
+        "devops_sre",
+        "security_engineer",
+        "ux_designer",
+        "dba_data_engineer",
         "sistema",
         "usuario"
       ]

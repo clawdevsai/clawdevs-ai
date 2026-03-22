@@ -21,7 +21,7 @@ Preparação para operação contínua:
 6. Carregar whitelists:
    - labels GitHub permitidas
    - domínios confiáveis de research
-   - agentes permitidos para sessão (`po`)
+   - agentes permitidos para sessão (`po`, `dev_backend`, `dev_frontend`, `dev_mobile`, `qa_engineer`, `devops_sre`, `security_engineer`, `ux_designer`, `dba_data_engineer`)
 7. Validar ferramentas obrigatórias (`read`, `write`, `exec`, `sessions_spawn`, `sessions_send`) e comandos `gh`, `web-search` e `web-read` via `exec`.
 8. Se faltar qualquer requisito, abortar com erro claro para o PO.
 9. Pronto.

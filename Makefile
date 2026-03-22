@@ -9,7 +9,7 @@ PF_PORTS ?= 18789:18789
 KUSTOMIZE_DIR ?= k8s
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -191,6 +191,8 @@ destroy-all:
 	-kubectl --context=$(KUBE_CONTEXT) -n kube-system delete daemonset nvidia-device-plugin-daemonset --ignore-not-found
 	@echo "[destroy-all] Destruindo perfil Minikube $(PROFILE)..."
 	-minikube delete --profile=$(PROFILE)
+	@echo "[destroy-all] Parando WSL para liberar memoria VmmemWSL..."
+	-cmd /c "start /b wsl --shutdown"
 	@echo "[destroy-all] Removendo volumes Docker do projeto..."
 	-docker volume rm clawdevs-ai-openclaw-data-clawdevs-ai-0 openclaw-data ollama-data
 	$(if $(DOCKER_VOLUMES_CLAWDEVS),-docker volume rm $(DOCKER_VOLUMES_CLAWDEVS))
@@ -202,15 +204,16 @@ destroy-all:
 	-docker volume prune --force
 	@echo "[destroy-all] Concluido."
 
+storage-enable-expansion:
+	kubectl --context=$(KUBE_CONTEXT) patch storageclass standard -p "{\"allowVolumeExpansion\":true}"
+
 clawdevs-rebuild:
 	$(MAKE) destroy-all
 	$(MAKE) minikube-up
 	$(MAKE) minikube-context
-	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready node --all --timeout=120s
 	$(MAKE) minikube-addons
+	$(MAKE) storage-enable-expansion
 	$(MAKE) stack-apply
-	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/ollama --timeout=300s
-	kubectl --context=$(KUBE_CONTEXT) wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=300s
 	$(MAKE) stack-status
 
 stack-apply: ollama-apply openclaw-apply

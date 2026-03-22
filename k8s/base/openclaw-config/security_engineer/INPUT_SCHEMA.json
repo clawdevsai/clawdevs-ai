@@ -73,6 +73,21 @@
           "type": "string",
           "enum": ["dependencies", "sast", "dast", "secrets", "supply_chain", "full"],
           "description": "Tipo específico de scan quando intent é genérico"
+        },
+        "cvss_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "CVSS score da vulnerabilidade encontrada (para disparar regras autonomous_critical_fix e p0_security_escalation_to_ceo)"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low", "info"],
+          "description": "Severidade classificada do finding (usado em regras de escalação)"
+        },
+        "secret_found": {
+          "type": "boolean",
+          "description": "Indica se um secret foi detectado no scan (dispara regra secret_found_immediate_action)"
         }
       }
     }

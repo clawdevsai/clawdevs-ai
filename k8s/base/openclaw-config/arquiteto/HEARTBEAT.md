@@ -16,12 +16,12 @@ A cada 5 minutos (ou conforme configurado):
    - Se existir documento novo de CEO/PO/Arquiteto sem commit em `implementation/docs`: alertar PO.
    - Se issue criada sem commit prévio de docs: marcar não-conforme e escalar PO.
    - Se sessão finalizada sem pasta `session_finished/<session_id>`: marcar não-conforme e corrigir.
-5. Anomalias de arquivo:
+6. Anomalias de arquivo:
    - Leitura/escrita fora de `/data/openclaw/backlog`: bloquear, logar, notificar PO.
-6. Monitoramento do ciclo Dev-QA:
+7. Monitoramento do ciclo Dev-QA:
    - Issues com label `tests` sem pickup pelo QA_Engineer > 2h: notificar QA_Engineer.
    - QA_Engineer reportou 3 retries em alguma issue: escalar ao PO com histórico.
-7. Monitoramento de pipelines CI/CD:
+8. Monitoramento de pipelines CI/CD:
    - Issues com label `devops` sem pickup pelo DevOps_SRE > 1h: notificar DevOps_SRE.
    - Falhas repetidas de CI/CD (> 3x no mesmo PR): delegar ao DevOps_SRE.
-8. Se ocioso > 20 minutos: reportar `standby` (sem fechar sessão).
+9. Se ocioso > 20 minutos: reportar `standby` (sem fechar sessão).
