@@ -13,8 +13,8 @@ class MemoryEntry(SQLModel, table=True):
     agent_id: Optional[UUID] = Field(default=None, foreign_key="agents.id", index=True)  # null = shared
     entry_type: str = Field(default="active", index=True)  # active|candidate|global|archived
     content: str
-    tags: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
-    source_agents: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT)))
+    tags: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT), nullable=True))
+    source_agents: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(TEXT), nullable=True))
     promoted_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
