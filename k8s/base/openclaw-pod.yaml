@@ -79,7 +79,11 @@ spec:
                   key: LANGUAGE
                   optional: true
             - name: OPENCLAW_VERSION
-              value: "2026.3.13"
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OPENCLAW_VERSION
+                  optional: true
             - name: NODE_OPTIONS
               value: --max-old-space-size=2048
             - name: GH_CONFIG_DIR
@@ -185,6 +189,7 @@ spec:
             httpGet:
               path: /healthz
               port: gateway
+            initialDelaySeconds: 300
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3
