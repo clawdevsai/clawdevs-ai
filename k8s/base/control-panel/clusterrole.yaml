@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: clawdevs-panel-reader
+  labels:
+    app: clawdevs-panel
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "events", "persistentvolumeclaims", "services", "nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets", "replicasets"]
+    verbs: ["get", "list", "watch"]

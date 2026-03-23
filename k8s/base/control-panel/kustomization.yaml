@@ -7,6 +7,6 @@ resources:
   # frontend-deployment.yaml — added in Task 10
   # worker-deployment.yaml — added in Task 10
   - services.yaml
-  # serviceaccount.yaml — added in Task 2
-  # clusterrole.yaml — added in Task 2
-  # clusterrolebinding.yaml — added in Task 2
+  - serviceaccount.yaml
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
