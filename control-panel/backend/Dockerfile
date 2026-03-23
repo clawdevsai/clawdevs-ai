@@ -8,10 +8,12 @@ WORKDIR /app
 # Install dependencies
 COPY pyproject.toml uv.lock* ./
 # --frozen uses lockfile if present; falls back gracefully when building without pre-committed uv.lock
-RUN uv sync --no-dev
+RUN uv sync --no-dev --no-install-project
 
 # Copy source
 COPY . .
+
+ENV PATH="/app/.venv/bin:${PATH}"
 
 # Non-root user
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser

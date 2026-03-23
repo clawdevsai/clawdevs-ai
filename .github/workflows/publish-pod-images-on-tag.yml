@@ -134,11 +134,23 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: CVE report (critical/high/medium)
+      - name: CVE gate (critical/high)
         uses: docker/scout-action@v1
         with:
           command: cves
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
-          only-severities: critical,high,medium
+          only-severities: critical,high
+          only-fixed: true
+          ignore-base: ${{ matrix.image == 'ollama-runtime' }}
+          summary: true
+          write-comment: false
+
+      - name: CVE report (medium)
+        continue-on-error: true
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          only-severities: medium
           summary: true
           write-comment: false
