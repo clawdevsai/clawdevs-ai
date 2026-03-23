@@ -53,8 +53,8 @@ fi
   CEO_CRON_MSG='Executar briefing diario: (1) verificar /data/openclaw/backlog/briefs/ por BRIEFs nao processados — para cada BRIEF sem SPEC correspondente, delegar ao PO via sessions_send para refinamento; (2) verificar /data/openclaw/backlog/status/agent_error_center.jsonl por erros nao resolvidos e tomar acao; (3) se nada pendente: registrar status OK no /data/openclaw/backlog/status/ceo-daily.log.'
   for _ in $(seq 1 24); do
     sleep 5
-    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-      CRON_ID="$(jq -r --arg n "${CEO_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+    if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+      CRON_ID="$(jq -r --arg n "${CEO_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
       if [ -n "${CRON_ID}" ]; then
         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CEO_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ceo_daily.log"
         exit 0
@@ -83,8 +83,8 @@ fi
   ARQ_CRON_MSG='Executar revisao proativa de artefatos: (1) verificar /data/openclaw/backlog/specs/ por SPECs aprovadas sem PLAN correspondente em /data/openclaw/backlog/tasks/ — para cada SPEC sem PLAN, criar PLAN e TASKs e delegar ao agente correto (dev_backend/dev_frontend/dev_mobile/dba) via sessions_spawn; (2) verificar issues GitHub com label "ready-for-dev" que nao possuem TASK criada e criar as TASKs; (3) se nada pendente: registrar status OK em /data/openclaw/backlog/status/arquiteto-daily.log.'
   for _ in $(seq 1 24); do
     sleep 5
-    if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-      CRON_ID="$(jq -r --arg n "${ARQ_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+    if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+      CRON_ID="$(jq -r --arg n "${ARQ_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
       if [ -n "${CRON_ID}" ]; then
         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${ARQ_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/arquiteto_spec_review.log"
         exit 0
@@ -114,8 +114,8 @@ if [ "${DEV_BACKEND_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "back_end"; se houver issue elegivel, implementar task com foco em baixissimo custo cloud e altissima performance; se nao houver, manter standby sem processamento desnecessario.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
           exit 0
@@ -146,8 +146,8 @@ if [ "${DEV_FRONTEND_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "front_end"; se houver issue elegivel, implementar task frontend com React/Next.js/TypeScript respeitando Core Web Vitals e criterios de aceite da US; se nao houver, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
           exit 0
@@ -178,8 +178,8 @@ if [ "${DEV_MOBILE_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "mobile"; se houver issue elegivel, implementar task mobile com React Native/Expo respeitando criterios de aceite da US; se nao houver, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
           exit 0
@@ -210,8 +210,8 @@ if [ "${QA_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "tests"; se houver issue elegivel, executar validacao BDD, testes e2e e relatorios de qualidade; se nao houver, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
           exit 0
@@ -242,8 +242,8 @@ if [ "${SECURITY_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Executar scan proativo de segurança: auditoria de dependências (CVEs), SAST, detecção de secrets e supply chain; aplicar patches autônomos para CVSS >= 7.0; escalar P0 (CVSS >= 9.0) ao CEO imediatamente.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
           exit 0
@@ -274,8 +274,8 @@ if [ "${DEVOPS_SRE_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "devops"; verificar SLOs, pipelines e alertas de producao; gerar PROD_METRICS semanal; se nao houver acao, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
           exit 0
@@ -306,8 +306,8 @@ if [ "${UX_DESIGNER_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "ux"; produzir wireframes, fluxos de usuario e design tokens; gerar artefatos UX-XXX.md em /data/openclaw/backlog/ux/; se nao houver acao, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
           exit 0
@@ -338,8 +338,8 @@ if [ "${DBA_DATA_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Poll GitHub issues com label "dba"; otimizar schemas, migrations, queries e politicas de retencao LGPD; gerar artefatos em /data/openclaw/backlog/tasks/; se nao houver acao, manter standby.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
           exit 0
@@ -370,8 +370,8 @@ if [ "${MEMORY_CURATOR_CRON_ENABLED:-false}" = "true" ]; then
     CRON_MSG='Executar ciclo de curadoria de memoria: (1) ler todos os /data/openclaw/memory/<id>/MEMORY.md; (2) identificar padroes similares entre agentes; (3) promover padroes com >=3 agentes para SHARED_MEMORY.md; (4) arquivar padroes promovidos nos agentes de origem; (5) logar resultado em /data/openclaw/backlog/status/memory-curator.log.'
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > /tmp/openclaw-cron.json 2>/dev/null; then
-        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron.json | head -n1)"
+      if openclaw cron list --json > /tmp/openclaw-cron-$BASHPID.json 2>/dev/null; then
+        CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' /tmp/openclaw-cron-$BASHPID.json | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/memory_curator.log"
           exit 0
