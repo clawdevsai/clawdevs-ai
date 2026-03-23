@@ -17,7 +17,8 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:18-alpine
+          image: clawdevsai/postgres-runtime:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
           env:

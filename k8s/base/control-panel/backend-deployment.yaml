@@ -17,8 +17,8 @@ spec:
       serviceAccountName: clawdevs-panel
       containers:
         - name: backend
-          image: clawdevs-panel-backend:latest
-          imagePullPolicy: Never
+          image: clawdevsai/clawdevs-panel-backend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           env:

@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:8-alpine
+          image: clawdevsai/redis-runtime:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6379
           command: ["redis-server"]

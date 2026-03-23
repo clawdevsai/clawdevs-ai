@@ -14,6 +14,14 @@ KUSTOMIZE_DIR ?= k8s
 OPENCLAW_IMAGE_REPO ?= clawdevsai/openclaw-runtime
 OPENCLAW_IMAGE_TAG ?= latest
 OPENCLAW_VERSION ?= 2026.3.22
+OLLAMA_IMAGE_REPO ?= clawdevsai/ollama-runtime
+SEARXNG_IMAGE_REPO ?= clawdevsai/searxng-runtime
+SEARXNG_PROXY_IMAGE_REPO ?= clawdevsai/searxng-proxy
+PANEL_BACKEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-backend
+PANEL_FRONTEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-frontend
+POSTGRES_IMAGE_REPO ?= clawdevsai/postgres-runtime
+REDIS_IMAGE_REPO ?= clawdevsai/redis-runtime
+STACK_IMAGE_TAG ?= latest
 
 
 .PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release
@@ -366,6 +374,55 @@ sdd-real-initiative:
 # ─────────────────────────────────────────────────────────────
 
 .PHONY: panel-build panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url
+.PHONY: images-build images-push images-release ollama-image-build ollama-image-push searxng-image-build searxng-image-push searxng-proxy-image-build searxng-proxy-image-push panel-backend-image-build panel-backend-image-push panel-frontend-image-build panel-frontend-image-push postgres-image-build postgres-image-push redis-image-build redis-image-push
+
+images-build: openclaw-image-build ollama-image-build searxng-image-build searxng-proxy-image-build panel-backend-image-build panel-frontend-image-build postgres-image-build redis-image-build
+
+images-push: openclaw-image-push ollama-image-push searxng-image-push searxng-proxy-image-push panel-backend-image-push panel-frontend-image-push postgres-image-push redis-image-push
+
+images-release: images-build images-push
+
+ollama-image-build:
+	docker build -t $(OLLAMA_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/ollama-runtime/Dockerfile .
+
+ollama-image-push:
+	docker push $(OLLAMA_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+searxng-image-build:
+	docker build -t $(SEARXNG_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/searxng-runtime/Dockerfile .
+
+searxng-image-push:
+	docker push $(SEARXNG_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+searxng-proxy-image-build:
+	docker build -t $(SEARXNG_PROXY_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/searxng-proxy/Dockerfile .
+
+searxng-proxy-image-push:
+	docker push $(SEARXNG_PROXY_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+panel-backend-image-build:
+	docker build -t $(PANEL_BACKEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/backend/
+
+panel-backend-image-push:
+	docker push $(PANEL_BACKEND_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+panel-frontend-image-build:
+	docker build -t $(PANEL_FRONTEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/frontend/
+
+panel-frontend-image-push:
+	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+postgres-image-build:
+	docker build -t $(POSTGRES_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/postgres-runtime/Dockerfile .
+
+postgres-image-push:
+	docker push $(POSTGRES_IMAGE_REPO):$(STACK_IMAGE_TAG)
+
+redis-image-build:
+	docker build -t $(REDIS_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/redis-runtime/Dockerfile .
+
+redis-image-push:
+	docker push $(REDIS_IMAGE_REPO):$(STACK_IMAGE_TAG)
 
 panel-build: ## Build control panel Docker images in minikube context
 	eval $$(minikube docker-env) && \

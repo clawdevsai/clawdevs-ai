@@ -1,3 +1,9 @@
+if ! command -v gh >/dev/null 2>&1; then
+  echo "GitHub CLI (gh) ausente no bootstrap" >&2
+  exit 1
+fi
+gh --version | head -n 1
+
 # Autenticar GitHub CLI de forma nao interativa para os agentes
 if [ -n "${GH_TOKEN:-}" ]; then
   printf '%s' "${GH_TOKEN}" | gh auth login --hostname github.com --with-token >/tmp/gh-auth.log 2>&1 || true
