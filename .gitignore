@@ -3,3 +3,4 @@
 k8s/.env
 .worktrees/
 NUL
+.claude
