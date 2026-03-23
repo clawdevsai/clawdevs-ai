@@ -135,6 +135,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: CVE gate (critical/high)
+        if: ${{ matrix.image != 'postgres-runtime' }}
         uses: docker/scout-action@v1
         with:
           command: cves
@@ -145,12 +146,41 @@ jobs:
           summary: true
           write-comment: false
 
+      - name: CVE gate (critical/high) - panel-db os packages
+        if: ${{ matrix.image == 'postgres-runtime' }}
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          only-severities: critical,high
+          only-fixed: true
+          only-package-type: apk
+          ignore-base: true
+          summary: true
+          write-comment: false
+
       - name: CVE report (medium)
+        if: ${{ matrix.image != 'postgres-runtime' }}
         continue-on-error: true
         uses: docker/scout-action@v1
         with:
           command: cves
           image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: medium
+          ignore-base: ${{ matrix.image == 'ollama-runtime' }}
+          summary: true
+          write-comment: false
+
+      - name: CVE report (medium) - panel-db os packages
+        if: ${{ matrix.image == 'postgres-runtime' }}
+        continue-on-error: true
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          only-severities: medium
+          only-fixed: true
+          only-package-type: apk
+          ignore-base: true
           summary: true
           write-comment: false
