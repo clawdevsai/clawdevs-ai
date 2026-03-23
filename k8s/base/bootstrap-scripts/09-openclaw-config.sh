@@ -557,6 +557,16 @@ repair_main_session() {
   sess_key="agent:${agent_id}:main"
   mkdir -p "${sess_dir}"
   if [ ! -f "${sess_dir}/sessions.json" ]; then
+    ts="$(date -u +%Y%m%dT%H%M%SZ)"
+    new_id="$(cat /proc/sys/kernel/random/uuid)"
+    now_ms="$(($(date -u +%s)*1000))"
+    cat > "${sess_dir}/${new_id}.jsonl" <<SEEDEOF
+{"type":"session","version":3,"id":"${new_id}","timestamp":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","cwd":"${workspace_dir}"}
+{"type":"message","id":"seed-${agent_id}-main","parentId":null,"timestamp":"$(date -u +%Y-%m-%dT%H:%M:%S.000Z)","message":{"role":"assistant","content":[{"type":"text","text":"${seed_text}"}],"stopReason":"stop","provider":"system","model":"seed"}}
+SEEDEOF
+    printf '{"agent:%s:main":{"sessionId":"%s","updatedAt":%s,"chatType":"direct","deliveryContext":{"channel":"webchat"},"lastChannel":"webchat","origin":{"provider":"webchat","surface":"webchat","chatType":"direct"},"sessionFile":"%s","abortedLastRun":false,"compactionCount":0}}\n' \
+      "${agent_id}" "${new_id}" "${now_ms}" "${sess_dir}/${new_id}.jsonl" \
+      > "${sess_dir}/sessions.json"
     return 0
   fi
   main_file="$(jq -r --arg key "${sess_key}" '.[$key].sessionFile // empty' "${sess_dir}/sessions.json" 2>/dev/null || true)"

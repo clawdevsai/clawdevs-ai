@@ -89,7 +89,10 @@ if [ "$#" -lt 1 ]; then
 fi
 target_ref="$(normalize_repo_ref "$1")"
 branch="${2:-main}"
-gh api "repos/${target_ref}" --silent >/dev/null 2>&1
+if ! gh api "repos/${target_ref}" --silent >/dev/null 2>&1; then
+  echo "ERROR: repositorio '${target_ref}' nao encontrado ou sem acesso." >&2
+  exit 1
+fi
 write_repo_context_file "${target_ref}" "${branch}"
 for workspace in "${OPENCLAW_STATE_DIR}/workspace-ceo" "${OPENCLAW_STATE_DIR}/workspace-po" "${OPENCLAW_STATE_DIR}/workspace-arquiteto" "${OPENCLAW_STATE_DIR}/workspace-dev_backend" "${OPENCLAW_STATE_DIR}/workspace-dev_frontend" "${OPENCLAW_STATE_DIR}/workspace-dev_mobile" "${OPENCLAW_STATE_DIR}/workspace-qa_engineer" "${OPENCLAW_STATE_DIR}/workspace-devops_sre" "${OPENCLAW_STATE_DIR}/workspace-security_engineer" "${OPENCLAW_STATE_DIR}/workspace-ux_designer" "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer" "${OPENCLAW_STATE_DIR}/workspace-memory_curator"; do
   [ -f "${workspace}/REPOSITORY_CONTEXT.md" ] || true
