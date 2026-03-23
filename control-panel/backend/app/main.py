@@ -5,10 +5,19 @@ from fastapi_pagination import add_pagination
 
 from app.core.config import get_settings
 from app.api import auth as auth_router
+from app.api import agents as agents_router
+from app.core.database import AsyncSessionLocal
+from app.services.agent_sync import sync_agents
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: sync agents from OpenClaw config
+    try:
+        async with AsyncSessionLocal() as session:
+            await sync_agents(session)
+    except Exception:
+        pass  # Don't fail startup if sync fails (e.g. no DB connection yet)
     yield
 
 
@@ -33,6 +42,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+    app.include_router(agents_router.router, prefix="/agents", tags=["agents"])
 
     add_pagination(app)
 
