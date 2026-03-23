@@ -103,6 +103,26 @@ Esse único target executa, em sequência:
 | 4 | `stack-apply` | Aplica `ollama-apply` (PVC + Pod) e `openclaw-apply` (Kustomize + NetworkPolicy) |
 | 5 | `stack-status` | Exibe status dos pods e services do stack |
 
+### 3.1 Startup rápido (imagem pré-configurada + sem pull automático)
+
+O `openclaw` agora usa a imagem `clawdevsai/openclaw-runtime:latest`, com `gh` e `openclaw` já instalados.
+Isso remove o `apt-get`/`install.sh` do boot e reduz o tempo de subida do pod.
+
+No `ollama`, o pull automático de modelos está desativado por padrão para evitar boot demorado.
+Se quiser fazer warm-up no startup, ative no manifest:
+
+```yaml
+OLLAMA_AUTO_PULL_MODELS=true
+OLLAMA_BOOT_MODELS="nemotron-3-super:cloud qwen3-next:80b-cloud"
+```
+
+Para publicar a imagem no Docker Hub (`clawdevsAI`):
+
+```bash
+docker login -u clawdevsAI
+make openclaw-image-release OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22
+```
+
 ### 4. Control Panel (opcional)
 
 ```bash

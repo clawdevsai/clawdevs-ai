@@ -19,7 +19,8 @@ spec:
     spec:
       containers:
         - name: openclaw
-          image: debian:bookworm-slim
+          image: clawdevsai/openclaw-runtime:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - name: gateway
               containerPort: 18789
@@ -77,12 +78,6 @@ spec:
                 secretKeyRef:
                   name: openclaw-auth
                   key: LANGUAGE
-                  optional: true
-            - name: OPENCLAW_VERSION
-              valueFrom:
-                secretKeyRef:
-                  name: openclaw-auth
-                  key: OPENCLAW_VERSION
                   optional: true
             - name: NODE_OPTIONS
               value: --max-old-space-size=2048
@@ -189,7 +184,7 @@ spec:
             httpGet:
               path: /healthz
               port: gateway
-            initialDelaySeconds: 300
+            initialDelaySeconds: 45
             periodSeconds: 10
             timeoutSeconds: 3
             failureThreshold: 3

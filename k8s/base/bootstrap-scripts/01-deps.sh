@@ -1,5 +1,7 @@
 APT_STAMP="${OPENCLAW_STATE_DIR}/backlog/status/.apt-installed"
-if [ ! -f "${APT_STAMP}" ] || ! command -v gh >/dev/null 2>&1; then
+if command -v gh >/dev/null 2>&1; then
+  touch "${APT_STAMP}"
+elif [ ! -f "${APT_STAMP}" ] || ! command -v gh >/dev/null 2>&1; then
   apt-get update
   apt-get install -y --no-install-recommends ca-certificates curl bash git jq python3
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

@@ -1,5 +1,8 @@
 OPENCLAW_STAMP="${OPENCLAW_STATE_DIR}/backlog/status/.openclaw-installed"
-if [ ! -f "${OPENCLAW_STAMP}" ] || ! command -v openclaw >/dev/null 2>&1; then
+if command -v openclaw >/dev/null 2>&1; then
+  echo "[bootstrap] openclaw ja instalado na imagem, pulando instalacao"
+  touch "${OPENCLAW_STAMP}"
+elif [ ! -f "${OPENCLAW_STAMP}" ] || ! command -v openclaw >/dev/null 2>&1; then
   OPENCLAW_VERSION="${OPENCLAW_VERSION:-}"
   if [ -n "${OPENCLAW_VERSION}" ]; then
     curl -fsSL "https://openclaw.ai/install.sh" | bash -s -- --no-onboard --no-prompt --version "${OPENCLAW_VERSION}"

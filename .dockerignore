@@ -1,0 +1,16 @@
+.git
+.gitignore
+.worktrees
+.clone
+**/node_modules
+**/.next
+**/__pycache__
+**/.pytest_cache
+**/dist
+**/build
+**/.venv
+**/venv
+assets
+control-panel
+NUL
+*.log

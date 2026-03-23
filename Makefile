@@ -11,9 +11,12 @@ GPU ?= 1
 PF_SERVICE ?= service/clawdevs-ai
 PF_PORTS ?= 18789:18789
 KUSTOMIZE_DIR ?= k8s
+OPENCLAW_IMAGE_REPO ?= clawdevsai/openclaw-runtime
+OPENCLAW_IMAGE_TAG ?= latest
+OPENCLAW_VERSION ?= 2026.3.22
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release
 
 help:
 	@echo "Targets disponiveis (sem GPU):"
@@ -31,6 +34,9 @@ help:
 	@echo "  make openclaw-restart - reinicia o deployment openclaw preservando PVC e sessoes"
 	@echo "  make openclaw-kustomization - aplica k8s via kustomize"
 	@echo "  make openclaw-logs  - mostra logs do deployment openclaw"
+	@echo "  make openclaw-image-build OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
+	@echo "  make openclaw-image-push OPENCLAW_IMAGE_TAG=latest"
+	@echo "  make openclaw-image-release OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
 	@echo "  make port-forward-start PF_SERVICE=service/openclaw PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-stop  PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-status PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
@@ -300,6 +306,17 @@ gpu-node-check:
 gpu-migrate-apply:
 	$(MAKE) KUBE_CONTEXT=docker-desktop KUSTOMIZE_DIR=k8s/overlays/gpu stack-apply
 	$(MAKE) KUBE_CONTEXT=docker-desktop stack-status
+
+openclaw-image-build:
+	docker build \
+		--build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) \
+		-t $(OPENCLAW_IMAGE_REPO):$(OPENCLAW_IMAGE_TAG) \
+		-f docker/openclaw-runtime/Dockerfile .
+
+openclaw-image-push:
+	docker push $(OPENCLAW_IMAGE_REPO):$(OPENCLAW_IMAGE_TAG)
+
+openclaw-image-release: openclaw-image-build openclaw-image-push
 
 spec-template:
 	@echo "Template: k8s/base/openclaw-config/shared/SPEC_TEMPLATE.md"
