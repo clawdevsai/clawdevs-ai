@@ -22,8 +22,10 @@ interface Agent {
   display_name: string
   role: string
   status: "online" | "idle" | "offline" | string
-  model: string
+  model?: string | null
+  current_model?: string | null
   last_heartbeat?: string | null
+  last_heartbeat_at?: string | null
   cron_expression?: string | null
   cron_status?: string | null
 }
@@ -141,11 +143,11 @@ function OverviewTab({ agent }: { agent: Agent }) {
     { label: "ID", value: <span className="font-mono text-xs">{agent.id}</span> },
     { label: "Slug", value: <span className="font-mono text-xs">{agent.slug}</span> },
     { label: "Role", value: agent.role },
-    { label: "Model", value: <span className="font-mono text-xs">{agent.model}</span> },
+    { label: "Model", value: <span className="font-mono text-xs">{agent.model ?? agent.current_model ?? "—"}</span> },
     {
       label: "Last Heartbeat",
-      value: agent.last_heartbeat
-        ? formatDistanceToNow(new Date(agent.last_heartbeat), { addSuffix: true })
+      value: (agent.last_heartbeat ?? agent.last_heartbeat_at)
+        ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
         : "—",
     },
   ]
@@ -512,7 +514,7 @@ export default function AgentProfilePage({ params }: PageProps) {
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{agent.role}</Badge>
                 <Badge variant="secondary" className="font-mono text-[10px]">
-                  {agent.model}
+                  {agent.model ?? agent.current_model ?? "—"}
                 </Badge>
                 <Badge
                   variant={
@@ -526,10 +528,10 @@ export default function AgentProfilePage({ params }: PageProps) {
                   <span className="ml-1.5 capitalize">{agent.status}</span>
                 </Badge>
               </div>
-              {agent.last_heartbeat && (
+              {(agent.last_heartbeat ?? agent.last_heartbeat_at) && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">
                   Last seen{" "}
-                  {formatDistanceToNow(new Date(agent.last_heartbeat), {
+                  {formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
                     addSuffix: true,
                   })}
                 </p>

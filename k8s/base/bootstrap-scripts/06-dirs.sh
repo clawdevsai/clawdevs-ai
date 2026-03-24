@@ -33,3 +33,15 @@ for task_file in "${OPENCLAW_STATE_DIR}"/backlog/tasks/TASK-[0-9][0-9][0-9]-*.md
   task_num="$(basename "${task_file}" | sed -E 's/^(TASK-[0-9]{3}).*/\1/')"
   ln -sfn "tasks/$(basename "${task_file}")" "${OPENCLAW_STATE_DIR}/backlog/${task_num}.md"
 done
+
+# Compatibilidade de workspace por agente apontando para o workspace unico de projeto.
+for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+  ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
+  mkdir -p "${ws_dir}"
+  ln -sfn "${OPENCLAW_STATE_DIR}/backlog/implementation/src" "${ws_dir}/src"
+  ln -sfn "${OPENCLAW_STATE_DIR}/backlog/implementation/tests" "${ws_dir}/tests"
+  for task_file in "${OPENCLAW_STATE_DIR}"/backlog/tasks/TASK-[0-9][0-9][0-9]-*.md; do
+    [ -e "${task_file}" ] || continue
+    ln -sfn "${task_file}" "${ws_dir}/$(basename "${task_file}")"
+  done
+done

@@ -1,6 +1,8 @@
+import json
 import re
 from pathlib import Path
 from typing import Optional
+from datetime import datetime, timezone
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -93,3 +95,108 @@ async def sync_agents(session) -> None:
             agent.role = identity["role"]
 
     await session.commit()
+
+
+def _pick_latest_runtime_entry(payload: dict) -> tuple[dict | None, datetime | None]:
+    latest_item: dict | None = None
+    latest_ts: int | None = None
+
+    for item in payload.values():
+        if not isinstance(item, dict):
+            continue
+        ts = item.get("updatedAt")
+        if isinstance(ts, (int, float)):
+            ts_int = int(ts)
+            if latest_ts is None or ts_int > latest_ts:
+                latest_ts = ts_int
+                latest_item = item
+
+    if latest_ts is None:
+        return None, None
+
+    # Database columns are stored as naive UTC timestamps.
+    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc).replace(tzinfo=None)
+    return latest_item, dt_utc
+
+
+def _status_from_heartbeat(last_heartbeat_at: datetime | None) -> str:
+    if last_heartbeat_at is None:
+        return "offline"
+
+    if last_heartbeat_at.tzinfo is not None:
+        last_heartbeat_at = last_heartbeat_at.astimezone(timezone.utc).replace(tzinfo=None)
+
+    age_seconds = (datetime.utcnow() - last_heartbeat_at).total_seconds()
+    if age_seconds <= 5 * 60:
+        return "online"
+    if age_seconds <= 60 * 60:
+        return "idle"
+    return "offline"
+
+
+async def sync_agents_runtime(session) -> None:
+    """
+    Refresh runtime status/model/heartbeat from OpenClaw session artifacts.
+    This keeps panel status dynamic without relying on fixed task filenames.
+    """
+    from sqlmodel import select
+    from app.models import Agent
+
+    result = await session.exec(select(Agent))
+    agents = result.all()
+    changed = False
+
+    for agent in agents:
+        sessions_file = (
+            Path(settings.openclaw_data_path)
+            / "agents"
+            / agent.slug
+            / "sessions"
+            / "sessions.json"
+        )
+
+        latest_item: dict | None = None
+        latest_heartbeat: datetime | None = None
+        runtime_observed = False
+        try:
+            if sessions_file.exists():
+                runtime_observed = True
+                payload = json.loads(sessions_file.read_text(encoding="utf-8"))
+                if isinstance(payload, dict):
+                    latest_item, latest_heartbeat = _pick_latest_runtime_entry(payload)
+        except (OSError, PermissionError, json.JSONDecodeError):
+            # Some mounted files can be unreadable under restrictive ACLs.
+            pass
+
+        if not runtime_observed:
+            # Do not overwrite status with guessed values when runtime artifacts
+            # are inaccessible for this environment.
+            continue
+
+        next_session_id = (
+            latest_item.get("sessionId")
+            if isinstance(latest_item, dict) and isinstance(latest_item.get("sessionId"), str)
+            else None
+        )
+        next_model = (
+            latest_item.get("model")
+            if isinstance(latest_item, dict) and isinstance(latest_item.get("model"), str)
+            else None
+        )
+        next_status = _status_from_heartbeat(latest_heartbeat)
+
+        if (
+            agent.last_heartbeat_at != latest_heartbeat
+            or agent.openclaw_session_id != next_session_id
+            or agent.current_model != next_model
+            or agent.status != next_status
+        ):
+            agent.last_heartbeat_at = latest_heartbeat
+            agent.openclaw_session_id = next_session_id
+            agent.current_model = next_model
+            agent.status = next_status
+            agent.updated_at = datetime.utcnow()
+            changed = True
+
+    if changed:
+        await session.commit()

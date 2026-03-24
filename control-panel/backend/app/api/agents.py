@@ -9,6 +9,7 @@ from datetime import datetime
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.models import Agent
+from app.services.agent_sync import sync_agents_runtime
 
 router = APIRouter()
 
@@ -27,6 +28,9 @@ class AgentResponse(BaseModel):
     cron_next_run_at: datetime | None
     cron_status: str
     created_at: datetime
+    # Backward-compatible aliases still consumed by frontend screens.
+    model: str | None = None
+    last_heartbeat: datetime | None = None
 
     @classmethod
     def from_orm(cls, agent: Agent) -> "AgentResponse":
@@ -44,6 +48,8 @@ class AgentResponse(BaseModel):
             cron_next_run_at=agent.cron_next_run_at,
             cron_status=agent.cron_status,
             created_at=agent.created_at,
+            model=agent.current_model,
+            last_heartbeat=agent.last_heartbeat_at,
         )
 
 
@@ -57,6 +63,7 @@ async def list_agents(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    await sync_agents_runtime(session)
     result = await session.exec(select(Agent).order_by(Agent.slug))
     agents = result.all()
     items = [AgentResponse.from_orm(a) for a in agents]
@@ -69,6 +76,7 @@ async def get_agent(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    await sync_agents_runtime(session)
     result = await session.exec(select(Agent).where(Agent.slug == slug))
     agent = result.first()
     if agent is None:
@@ -91,8 +99,8 @@ async def update_agent_status(
         agent.status = body["status"]
     if "current_model" in body:
         agent.current_model = body["current_model"]
-    from datetime import datetime, timezone
-    agent.updated_at = datetime.now(timezone.utc)
+    from datetime import datetime
+    agent.updated_at = datetime.utcnow()
     await session.commit()
     await session.refresh(agent)
     return AgentResponse.from_orm(agent)

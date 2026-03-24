@@ -24,8 +24,10 @@ interface Agent {
   display_name: string
   role: string
   status: string
-  model: string
+  model?: string | null
+  current_model?: string | null
   last_heartbeat?: string | null
+  last_heartbeat_at?: string | null
 }
 
 interface ActivityEvent {

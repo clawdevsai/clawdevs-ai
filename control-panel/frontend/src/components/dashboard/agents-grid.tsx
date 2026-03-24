@@ -12,8 +12,10 @@ interface Agent {
   display_name: string
   role: string
   status: "online" | "idle" | "offline" | string
-  model: string
+  model?: string | null
+  current_model?: string | null
   last_heartbeat?: string | null
+  last_heartbeat_at?: string | null
 }
 
 interface AgentsGridProps {
@@ -109,12 +111,12 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-            <span className="font-mono truncate max-w-[120px]" title={agent.model}>
-              {agent.model}
+            <span className="font-mono truncate max-w-[120px]" title={agent.model ?? agent.current_model ?? ""}>
+              {agent.model ?? agent.current_model ?? "—"}
             </span>
             <span>
-              {agent.last_heartbeat
-                ? formatDistanceToNow(new Date(agent.last_heartbeat), { addSuffix: true })
+              {(agent.last_heartbeat ?? agent.last_heartbeat_at)
+                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
                 : "no heartbeat"}
             </span>
           </div>

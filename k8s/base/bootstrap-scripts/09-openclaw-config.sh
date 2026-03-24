@@ -562,6 +562,22 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
     echo "[bootstrap] falha ao aplicar patch de elevated no openclaw.json"
   fi
 fi
+
+# Workspace unico por projeto para todos os agentes (sem isolamento por agente).
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      (.agents.list[]?.workspace) = "/data/openclaw/backlog/implementation"
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar workspace compartilhado no openclaw.json"
+  fi
+fi
+
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
 # Todos os agentes aprovam automaticamente exec sem precisar de UI de aprovacao.
 EXEC_APPROVALS_FILE=~/.openclaw/exec-approvals.json
@@ -649,15 +665,16 @@ EOF
      "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
   mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
 }
-repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
-repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
-repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
-repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
-repair_main_session "dev_frontend" "/data/openclaw/workspace-dev_frontend" "Dev_Frontend pronto. Pode me acionar para implementacao de tasks frontend, testes e atualizacao de status."
-repair_main_session "dev_mobile" "/data/openclaw/workspace-dev_mobile" "Dev_Mobile pronto. Pode me acionar para implementacao de tasks mobile, testes e atualizacao de status."
-repair_main_session "qa_engineer" "/data/openclaw/workspace-qa_engineer" "QA_Engineer pronto. Pode me acionar para validacao, testes BDD e relatorios de qualidade."
-repair_main_session "devops_sre" "/data/openclaw/workspace-devops_sre" "DevOps_SRE pronto. Pode me acionar para pipelines, infra, SLOs e escalacao de incidentes."
-repair_main_session "security_engineer" "/data/openclaw/workspace-security_engineer" "Security_Engineer pronto. Pode me acionar para scans de seguranca, CVEs e escalacao de vulnerabilidades."
-repair_main_session "ux_designer" "/data/openclaw/workspace-ux_designer" "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
-repair_main_session "dba_data_engineer" "/data/openclaw/workspace-dba_data_engineer" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
-repair_main_session "memory_curator" "/data/openclaw/workspace-memory_curator" "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
+SHARED_PROJECT_WORKSPACE="/data/openclaw/backlog/implementation"
+repair_main_session "ceo" "${SHARED_PROJECT_WORKSPACE}" "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
+repair_main_session "po" "${SHARED_PROJECT_WORKSPACE}" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
+repair_main_session "arquiteto" "${SHARED_PROJECT_WORKSPACE}" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
+repair_main_session "dev_backend" "${SHARED_PROJECT_WORKSPACE}" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."
+repair_main_session "dev_frontend" "${SHARED_PROJECT_WORKSPACE}" "Dev_Frontend pronto. Pode me acionar para implementacao de tasks frontend, testes e atualizacao de status."
+repair_main_session "dev_mobile" "${SHARED_PROJECT_WORKSPACE}" "Dev_Mobile pronto. Pode me acionar para implementacao de tasks mobile, testes e atualizacao de status."
+repair_main_session "qa_engineer" "${SHARED_PROJECT_WORKSPACE}" "QA_Engineer pronto. Pode me acionar para validacao, testes BDD e relatorios de qualidade."
+repair_main_session "devops_sre" "${SHARED_PROJECT_WORKSPACE}" "DevOps_SRE pronto. Pode me acionar para pipelines, infra, SLOs e escalacao de incidentes."
+repair_main_session "security_engineer" "${SHARED_PROJECT_WORKSPACE}" "Security_Engineer pronto. Pode me acionar para scans de seguranca, CVEs e escalacao de vulnerabilidades."
+repair_main_session "ux_designer" "${SHARED_PROJECT_WORKSPACE}" "UX_Designer pronto. Pode me acionar para wireframes, fluxos de usuario e design tokens."
+repair_main_session "dba_data_engineer" "${SHARED_PROJECT_WORKSPACE}" "DBA_DataEngineer pronto. Pode me acionar para schemas, migrations, queries e compliance LGPD."
+repair_main_session "memory_curator" "${SHARED_PROJECT_WORKSPACE}" "Memory_Curator pronto. Executo curadoria diaria de padroes cross-agent e promocao para SHARED_MEMORY."
