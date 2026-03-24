@@ -17,7 +17,7 @@ spec:
       serviceAccountName: clawdevs-panel
       containers:
         - name: worker
-          image: clawdevs-panel-backend:latest
+          image: clawdevsai/clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c"]
           args:

@@ -22,9 +22,13 @@ PANEL_FRONTEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-frontend
 POSTGRES_IMAGE_REPO ?= clawdevsai/postgres-runtime
 REDIS_IMAGE_REPO ?= clawdevsai/redis-runtime
 STACK_IMAGE_TAG ?= latest
+PUSH_IMAGE ?=
+PUSH_IMAGE_ENV_RAW := $(shell [ -f k8s/.env ] && sed -n 's/^PUSH_IMAGE=//p' k8s/.env | head -n 1 | tr -d '\r' || true)
+PUSH_IMAGE_MODE_RAW := $(if $(strip $(PUSH_IMAGE)),$(strip $(PUSH_IMAGE)),$(strip $(PUSH_IMAGE_ENV_RAW)))
+PUSH_IMAGE_MODE := $(if $(strip $(PUSH_IMAGE_MODE_RAW)),$(strip $(PUSH_IMAGE_MODE_RAW)),remote)
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-down clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-down clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release image-mode-prepare images-build-local
 
 help:
 	@echo "Targets disponiveis:"
@@ -101,7 +105,12 @@ preflight:
 			echo "Erro: $$key vazio em k8s/.env. Preencha os segredos antes de aplicar."; \
 			exit 1; \
 		fi; \
-	done
+	done; \
+	push_mode="$(PUSH_IMAGE_MODE)"; \
+	if [ "$$push_mode" != "local" ] && [ "$$push_mode" != "remote" ]; then \
+		echo "Erro: PUSH_IMAGE invalido ($$push_mode). Use PUSH_IMAGE=local ou PUSH_IMAGE=remote em k8s/.env."; \
+		exit 1; \
+	fi
 
 ifeq ($(OS),Windows_NT)
 NULL_DEV ?= NUL
@@ -179,7 +188,7 @@ dashboard:
 dashboard-url:
 	minikube dashboard -p $(PROFILE) --url
 
-ollama-apply: preflight ollama-volume-apply
+ollama-apply: preflight image-mode-prepare ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pod.yaml --server-side --force-conflicts
 
 ollama-volume-apply:
@@ -200,7 +209,7 @@ net-allow-egress:
 net-test-openclaw:
 	kubectl --context=$(KUBE_CONTEXT) exec deployment/openclaw -- bash -lc "apt-get update >/dev/null 2>&1 || true; apt-get install -y --no-install-recommends curl ca-certificates dnsutils >/dev/null 2>&1 || true; echo 'DNS:'; nslookup google.com | head -n 5; echo 'HTTPS:'; curl -I -m 10 https://google.com | head -n 1"
 
-openclaw-apply: preflight manifests-validate net-allow-egress
+openclaw-apply: preflight image-mode-prepare manifests-validate net-allow-egress
 	kubectl --context=$(KUBE_CONTEXT) apply -k $(KUSTOMIZE_DIR) --server-side --force-conflicts
 
 openclaw-apply-gpu: preflight net-allow-egress
@@ -277,6 +286,26 @@ clawdevs-rebuild:
 	$(MAKE) stack-apply
 
 stack-apply: ollama-apply openclaw-apply panel-apply
+
+image-mode-prepare:
+	@set -eu; \
+	push_mode="$(PUSH_IMAGE_MODE)"; \
+	if [ "$$push_mode" = "local" ]; then \
+		echo "[image-mode-prepare] PUSH_IMAGE=local -> build local no Minikube."; \
+		$(MAKE) images-build-local; \
+	else \
+		echo "[image-mode-prepare] PUSH_IMAGE=remote -> deploy por pull do Docker Hub."; \
+	fi
+
+images-build-local:
+	minikube image build -t $(OPENCLAW_IMAGE_REPO):$(OPENCLAW_IMAGE_TAG) -f docker/openclaw-runtime/Dockerfile .
+	minikube image build -t $(OLLAMA_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/ollama-runtime/Dockerfile .
+	minikube image build -t $(SEARXNG_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/searxng-runtime/Dockerfile .
+	minikube image build -t $(SEARXNG_PROXY_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/searxng-proxy/Dockerfile .
+	minikube image build -t $(PANEL_BACKEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/backend/
+	minikube image build -t $(PANEL_FRONTEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/frontend/
+	minikube image build -t $(POSTGRES_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/postgres-runtime/Dockerfile .
+	minikube image build -t $(REDIS_IMAGE_REPO):$(STACK_IMAGE_TAG) -f docker/redis-runtime/Dockerfile .
 
 stack-status:
 	kubectl --context=$(KUBE_CONTEXT) get pods -l app=ollama
@@ -431,11 +460,10 @@ redis-image-push:
 	docker push $(REDIS_IMAGE_REPO):$(STACK_IMAGE_TAG)
 
 panel-build: ## Build control panel Docker images in minikube context
-	eval $$(minikube docker-env) && \
-	docker build -t clawdevs-panel-backend:latest control-panel/backend/ && \
-	docker build -t clawdevs-panel-frontend:latest control-panel/frontend/
+	minikube image build -t $(PANEL_BACKEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/backend/
+	minikube image build -t $(PANEL_FRONTEND_IMAGE_REPO):$(STACK_IMAGE_TAG) control-panel/frontend/
 
-panel-apply: ## Deploy control panel to cluster
+panel-apply: image-mode-prepare ## Deploy control panel to cluster
 	kubectl apply -k k8s/base/control-panel/
 
 panel-status: ## Show control panel pod status
