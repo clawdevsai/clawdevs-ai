@@ -7,7 +7,9 @@ stream_agent_sessions() {
       current_size="$(wc -c < "${session_file}" 2>/dev/null || echo 0)"
       previous_size="${agent_offsets["${session_file}"]:-0}"
       if [ "${current_size}" -gt "${previous_size}" ]; then
-        tail -c +$((previous_size + 1)) "${session_file}" | sed "s#^#[agent:${agent_name}] #"
+        tail -c +$((previous_size + 1)) "${session_file}" \
+          | sed "s#^#[agent:${agent_name}] #" \
+          | grep -Ev '\[tools\] read failed: (EISDIR: illegal operation on a directory, read|Offset [0-9]+ is beyond end of file \([0-9]+ lines total\))'
         agent_offsets["${session_file}"]="${current_size}"
       fi
     done
@@ -31,6 +33,7 @@ if [ "${AGENT_ERROR_ROUTER_ENABLED:-false}" = "true" ]; then
         agent="$(echo "${f}" | sed -E 's#^.*/agents/([^/]+)/sessions/.*$#\1#')"
         [ "${agent}" = "ceo" ] && continue
         tail_snippet="$(tail -n 80 "${f}" 2>/dev/null || true)"
+        echo "${tail_snippet}" | grep -Eiq '\[tools\] read failed: (EISDIR: illegal operation on a directory, read|Offset [0-9]+ is beyond end of file \([0-9]+ lines total\))' && continue
         echo "${tail_snippet}" | grep -Eiq 'error|falha|exception|unauthorized|forbidden|timeout|critical|critico|traceback|panic' || continue
         event_hash="$(printf '%s' "${agent}:${tail_snippet}" | sha256sum | awk '{print $1}')"
         grep -q "${event_hash}" "${ERROR_SEEN}" 2>/dev/null && continue
