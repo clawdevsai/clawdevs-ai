@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
+import { AxiosError } from "axios"
 import { Search } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
@@ -90,9 +91,10 @@ export default function AgentsPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState("")
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["agents"],
     queryFn: fetchAgents,
+    retry: false,
   })
 
   // Live-update via WebSocket "agents" channel
@@ -147,6 +149,20 @@ export default function AgentsPage() {
             Array.from({ length: 9 }).map((_, i) => (
               <AgentCardSkeleton key={i} />
             ))
+          ) : isError ? (
+            <div className="col-span-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 text-sm text-[hsl(var(--muted-foreground))]">
+              {(error as AxiosError | null)?.response?.status === 401 ? (
+                <>
+                  Session expired or not authenticated.{" "}
+                  <Link href="/login" className="text-[hsl(var(--primary))] underline underline-offset-2">
+                    Sign in again
+                  </Link>
+                  .
+                </>
+              ) : (
+                "Could not load agents right now."
+              )}
+            </div>
           ) : filtered.length === 0 ? (
             <EmptyState query={search} />
           ) : (

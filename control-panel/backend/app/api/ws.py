@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 from typing import Dict, List
+from urllib.parse import urlparse
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from app.core.auth import decode_token
@@ -54,7 +55,10 @@ async def websocket_endpoint(
 
     # Validate Origin header — CORSMiddleware does not protect WebSocket connections.
     origin = websocket.headers.get("origin", "")
-    if origin not in settings.allowed_origins:
+    parsed = urlparse(origin) if origin else None
+    origin_host = parsed.hostname if parsed else None
+    is_local_browser = origin_host in {"127.0.0.1", "localhost"}
+    if origin not in settings.allowed_origins and not is_local_browser:
         logger.warning(f"WS rejected invalid origin: origin={origin!r}, channel={channel}")
         await websocket.close(code=4003)
         return

@@ -63,6 +63,7 @@ Comunicacao entre agentes via sessao persistente:
 - **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
 - **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
 - **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
+- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
 
 Agentes disponiveis e suas keys:
 - CEO: `agent:ceo:main`

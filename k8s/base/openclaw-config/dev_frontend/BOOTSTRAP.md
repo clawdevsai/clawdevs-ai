@@ -10,11 +10,14 @@
    - `${PROJECT_ROOT}`
    - `${PROJECT_ROOT}/src` ou `${PROJECT_ROOT}/app` (Next.js App Router)
    - `${PROJECT_ROOT}/components` ou `${PROJECT_ROOT}/src/components`
+   - se inexistente, usar fallback `/data/openclaw/backlog/implementation` e marcar contexto como `standby` (sem lançar erro)
 4. Detectar framework por arquivos de build:
    - `next.config.js` / `next.config.ts` → Next.js
    - `vite.config.ts` → Vite / React
    - `nuxt.config.ts` → Nuxt
    - `package.json` → verificar campo `"scripts"` para inferir framework
+   - antes de ler arquivos de build, validar se o arquivo existe
+   - se nenhum arquivo de build existir, não falhar; operar por `technology_stack` ou aguardar task
 5. Definir comandos padrão (install/test/lint/build) por framework.
 6. Verificar toolchain no PATH: `node`, `npm`, `npx`.
 7. Verificar presença de Playwright ou Cypress para e2e.
