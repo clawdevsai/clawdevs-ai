@@ -9,7 +9,7 @@ MEMORY ?= 7168
 K8S_VERSION ?= v1.34.1
 GPU ?= 1
 PF_SERVICE ?= service/clawdevs-ai
-PF_PORTS ?= 18789:18789
+PF_PORTS ?= 31879:18789
 KUSTOMIZE_DIR ?= k8s
 OPENCLAW_IMAGE_REPO ?= clawdevsai/openclaw-runtime
 OPENCLAW_IMAGE_TAG ?= latest
@@ -315,7 +315,7 @@ stack-status:
 	kubectl --context=$(KUBE_CONTEXT) get svc ollama clawdevs-ai
 
 port-forward-start:
-	kubectl --context=$(KUBE_CONTEXT) port-forward $(PF_SERVICE) $(PF_PORTS)
+	kubectl --context=$(KUBE_CONTEXT) port-forward --address 0.0.0.0 $(PF_SERVICE) $(PF_PORTS)
 
 port-forward-stop:
 	@echo "Sem PID/daemon. Use Ctrl+C na sessao onde o port-forward esta rodando."

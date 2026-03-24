@@ -2,7 +2,8 @@
 # desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
 _existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
 _existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
-if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
+_existing_host_fallback="$(jq -r '.gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ] && [ "${_existing_host_fallback}" = "true" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
   cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
@@ -622,7 +623,7 @@ EOF
      "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
   mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
 }
-repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Pode me acionar por aqui para alinhamento, priorizacao e delegacao para PO e Arquiteto."
+repair_main_session "ceo" "/data/openclaw/workspace-ceo" "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
 repair_main_session "po" "/data/openclaw/workspace-po" "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
 repair_main_session "arquiteto" "/data/openclaw/workspace-arquiteto" "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."
 repair_main_session "dev_backend" "/data/openclaw/workspace-dev_backend" "Dev_Backend pronto. Pode me acionar para implementacao de tasks, testes e atualizacao de status."

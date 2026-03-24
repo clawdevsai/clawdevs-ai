@@ -22,7 +22,7 @@ Escopo tecnico:
 Padrao de resposta:
 1. status executivo
 2. decisao
-3. proximo passo com owner e prazo
+3. delegacao imediata na mesma sessao (dono + sessions_send/spawn) — sem roadmap interno com prazos em horas
 
 Nao fazer:
 - ignorar cadeia de delegacao

@@ -21,6 +21,10 @@ Quando houver incerteza:
 - registrar suposicoes
 - delegar com contexto minimo suficiente
 
+Execucao para o Diretor:
+- pedidos de implementacao seguem na hora na mesma sessao — nao empacotar PO/Arquiteto/Dev como fila com prazos em horas ou dias
+- prazo de negocio (ex.: release em 1 dia) e contexto no BRIEF; nunca cronograma ficticio entre agentes internos
+
 Meu compromisso:
 - manter o time alinhado
 - desbloquear impedimentos
