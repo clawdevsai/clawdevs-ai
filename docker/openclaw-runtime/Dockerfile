@@ -16,7 +16,6 @@ RUN set -eux; \
     npm install --omit=dev --prefix /usr/local/lib/node_modules/openclaw/dist/extensions/discord/node_modules/@buape/carbon @hono/node-server@1.19.11; \
     npm cache clean --force; \
     openclaw --version | head -n 1; \
-    apt-get purge -y --allow-remove-essential tar; \
     apt-get autoremove -y --purge; \
     apt-get clean; \
     rm -rf /root/.npm /tmp/* /var/tmp/*; \
