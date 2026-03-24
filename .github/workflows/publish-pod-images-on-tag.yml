@@ -7,56 +7,67 @@ on:
         description: "Tag da imagem (ex: 2026.3.23). Se vazio, usa a tag Git."
         required: false
         type: string
+      target_pod:
+        description: "Pod para publicar (all = todos)"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - openclaw
+          - ollama
+          - searxng
+          - searxng-proxy
+          - panel-backend
+          - panel-frontend
+          - panel-db
+          - panel-redis
 
 jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Build matrix from selected pod
+        id: set-matrix
+        env:
+          TARGET_POD: ${{ inputs.target_pod }}
+        run: |
+          set -euo pipefail
+          MATRIX_JSON='[
+            {"pod":"openclaw","image":"openclaw-runtime","context":".","file":"docker/openclaw-runtime/Dockerfile","is_openclaw":"false"},
+            {"pod":"ollama","image":"ollama-runtime","context":".","file":"docker/ollama-runtime/Dockerfile","is_openclaw":"false"},
+            {"pod":"searxng","image":"searxng-runtime","context":".","file":"docker/searxng-runtime/Dockerfile","is_openclaw":"false"},
+            {"pod":"searxng-proxy","image":"searxng-proxy","context":".","file":"docker/searxng-proxy/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-backend","image":"clawdevs-panel-backend","context":"control-panel/backend","file":"control-panel/backend/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-frontend","image":"clawdevs-panel-frontend","context":"control-panel/frontend","file":"control-panel/frontend/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-db","image":"postgres-runtime","context":".","file":"docker/postgres-runtime/Dockerfile","is_openclaw":"false"},
+            {"pod":"panel-redis","image":"redis-runtime","context":".","file":"docker/redis-runtime/Dockerfile","is_openclaw":"false"}
+          ]'
+
+          if [ "${TARGET_POD}" = "all" ]; then
+            FILTERED_MATRIX="$(echo "${MATRIX_JSON}" | jq -c '.')"
+          else
+            FILTERED_MATRIX="$(echo "${MATRIX_JSON}" | jq -c --arg pod "${TARGET_POD}" '[.[] | select(.pod == $pod)]')"
+          fi
+
+          if [ "${FILTERED_MATRIX}" = "[]" ]; then
+            echo "target_pod invalido: ${TARGET_POD}" >&2
+            exit 1
+          fi
+
+          echo "matrix=${FILTERED_MATRIX}" >> "$GITHUB_OUTPUT"
+
   publish:
+    needs: prepare-matrix
     runs-on: ubuntu-latest
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - pod: openclaw
-            image: openclaw-runtime
-            context: .
-            file: docker/openclaw-runtime/Dockerfile
-            is_openclaw: "false"
-          - pod: ollama
-            image: ollama-runtime
-            context: .
-            file: docker/ollama-runtime/Dockerfile
-            is_openclaw: "false"
-          - pod: searxng
-            image: searxng-runtime
-            context: .
-            file: docker/searxng-runtime/Dockerfile
-            is_openclaw: "false"
-          - pod: searxng-proxy
-            image: searxng-proxy
-            context: .
-            file: docker/searxng-proxy/Dockerfile
-            is_openclaw: "false"
-          - pod: panel-backend
-            image: clawdevs-panel-backend
-            context: control-panel/backend
-            file: control-panel/backend/Dockerfile
-            is_openclaw: "false"
-          - pod: panel-frontend
-            image: clawdevs-panel-frontend
-            context: control-panel/frontend
-            file: control-panel/frontend/Dockerfile
-            is_openclaw: "false"
-          - pod: panel-db
-            image: postgres-runtime
-            context: .
-            file: docker/postgres-runtime/Dockerfile
-            is_openclaw: "false"
-          - pod: panel-redis
-            image: redis-runtime
-            context: .
-            file: docker/redis-runtime/Dockerfile
-            is_openclaw: "false"
+        include: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
 
     steps:
       - name: Checkout
