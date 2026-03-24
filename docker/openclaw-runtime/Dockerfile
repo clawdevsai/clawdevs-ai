@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM public.ecr.aws/docker/library/node:22-bookworm-slim
 
 ARG OPENCLAW_VERSION=2026.3.22
 ARG DEBIAN_FRONTEND=noninteractive

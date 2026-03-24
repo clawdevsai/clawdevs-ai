@@ -1,1 +1,1 @@
-FROM redis:8-alpine
+FROM public.ecr.aws/docker/library/redis:8-alpine
