@@ -25,3 +25,11 @@ mkdir -p "${OPENCLAW_STATE_DIR}/agents/dev_frontend/agent" "${OPENCLAW_STATE_DIR
 mkdir -p "${OPENCLAW_STATE_DIR}/agents/devops_sre/agent" "${OPENCLAW_STATE_DIR}/agents/security_engineer/agent"
 mkdir -p "${OPENCLAW_STATE_DIR}/agents/ux_designer/agent" "${OPENCLAW_STATE_DIR}/agents/dba_data_engineer/agent"
 mkdir -p "${OPENCLAW_STATE_DIR}/agents/memory_curator/agent"
+
+# Compatibilidade com referencias legadas: /data/openclaw/backlog/TASK-XXX.md
+# Mapeia para o arquivo canônico em backlog/tasks/TASK-XXX-*.md quando existir.
+for task_file in "${OPENCLAW_STATE_DIR}"/backlog/tasks/TASK-[0-9][0-9][0-9]-*.md; do
+  [ -e "${task_file}" ] || continue
+  task_num="$(basename "${task_file}" | sed -E 's/^(TASK-[0-9]{3}).*/\1/')"
+  ln -sfn "tasks/$(basename "${task_file}")" "${OPENCLAW_STATE_DIR}/backlog/${task_num}.md"
+done

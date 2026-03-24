@@ -536,6 +536,32 @@ sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/ope
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
 fi
+# Garantir elevated habilitado globalmente e por agente (inclui cenarios de config ja existente).
+# Evita erro: "elevated is not available right now (runtime=direct)" em sessoes Telegram.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq --arg chat_id "${TELEGRAM_CHAT_ID}" '
+      .tools.elevated = {
+        "enabled": true,
+        "allowFrom": {
+          "telegram": [$chat_id]
+        }
+      }
+      | (.agents.list[]?.tools.elevated) = {
+        "enabled": true,
+        "allowFrom": {
+          "telegram": [$chat_id]
+        }
+      }
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar patch de elevated no openclaw.json"
+  fi
+fi
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
 # Todos os agentes aprovam automaticamente exec sem precisar de UI de aprovacao.
 EXEC_APPROVALS_FILE=~/.openclaw/exec-approvals.json
