@@ -128,7 +128,21 @@ jobs:
           file: ${{ matrix.file }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          push: true
+          outputs: |
+            type=registry
+            type=docker
+
+      - name: Prepare local Scout tag
+        env:
+          VERSION_TAG: ${{ steps.vars.outputs.version_tag }}
+          IMAGE_NAME: ${{ matrix.image }}
+        run: |
+          set -euo pipefail
+          SRC="clawdevsai/${IMAGE_NAME}:${VERSION_TAG}"
+          DST="scout-${IMAGE_NAME}:${VERSION_TAG}"
+          docker image inspect "${SRC}" >/dev/null
+          docker tag "${SRC}" "${DST}"
+          docker image inspect "${DST}" >/dev/null
 
       - name: CVE gate (critical/high)
         if: ${{ matrix.image != 'postgres-runtime' }}
@@ -137,7 +151,7 @@ jobs:
           command: cves
           dockerhub-user: ${{ steps.hub.outputs.username }}
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
-          image: registry://clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          image: local://scout-${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: critical,high
           only-fixed: true
           ignore-base: ${{ matrix.image == 'ollama-runtime' }}
@@ -151,7 +165,7 @@ jobs:
           command: cves
           dockerhub-user: ${{ steps.hub.outputs.username }}
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
-          image: registry://clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          image: local://scout-${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: critical,high
           only-fixed: true
           only-package-types: apk
@@ -167,7 +181,7 @@ jobs:
           command: cves
           dockerhub-user: ${{ steps.hub.outputs.username }}
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
-          image: registry://clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          image: local://scout-${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: medium
           ignore-base: ${{ matrix.image == 'ollama-runtime' }}
           summary: true
@@ -181,7 +195,7 @@ jobs:
           command: cves
           dockerhub-user: ${{ steps.hub.outputs.username }}
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
-          image: registry://clawdevsai/${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
+          image: local://scout-${{ matrix.image }}:${{ steps.vars.outputs.version_tag }}
           only-severities: medium
           only-fixed: true
           only-package-types: apk
