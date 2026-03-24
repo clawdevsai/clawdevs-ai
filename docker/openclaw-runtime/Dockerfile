@@ -14,6 +14,11 @@ RUN set -eux; \
     npm install -g --omit=dev "${OPENCLAW_NPM_SPEC}"; \
     npm install --omit=dev --prefix /usr/local/lib/node_modules/openclaw/dist/extensions/discord @hono/node-server@1.19.11; \
     npm install --omit=dev --prefix /usr/local/lib/node_modules/openclaw/dist/extensions/discord/node_modules/@buape/carbon @hono/node-server@1.19.11; \
+    shopt -s nullglob; \
+    PI_FILES=(/usr/local/lib/node_modules/openclaw/dist/pi-embedded-*.js); \
+    shopt -u nullglob; \
+    test "${#PI_FILES[@]}" -gt 0; \
+    node -e "import(process.argv[1]).catch(() => process.exit(1))" "file://${PI_FILES[0]}"; \
     npm cache clean --force; \
     openclaw --version | head -n 1; \
     apt-get autoremove -y --purge; \
