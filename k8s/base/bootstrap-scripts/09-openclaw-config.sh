@@ -1,8 +1,20 @@
+# Verificar se o config ja existe e tem o token correto - evitar sobrescrita
+# desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
+_existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
+_existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
+_bind_valid=0
+case "${_existing_bind}" in auto|lan|loopback|custom|tailnet) _bind_valid=1 ;; esac
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_bind_valid}" -eq 1 ]; then
+  echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
+  mkdir -p ~/.openclaw
+  cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+else
+echo "[bootstrap] escrevendo openclaw.json (primeira execucao ou token mudou)"
 cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
 {
   "gateway": {
     "mode": "local",
-    "bind": "all",
+    "bind": "lan",
     "port": 18789,
     "auth": {
       "token": "__TOKEN__"
@@ -521,6 +533,7 @@ sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_ST
 sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+fi
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
 # Todos os agentes aprovam automaticamente exec sem precisar de UI de aprovacao.
 EXEC_APPROVALS_FILE=~/.openclaw/exec-approvals.json
