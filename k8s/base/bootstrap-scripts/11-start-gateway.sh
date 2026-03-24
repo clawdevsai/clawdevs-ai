@@ -1,6 +1,6 @@
 echo "[bootstrap] starting openclaw gateway"
 set +e
-openclaw gateway
+openclaw gateway run --bind lan --port 18789
 gateway_exit=$?
 set -e
 echo "[bootstrap] openclaw gateway exited with code ${gateway_exit}"

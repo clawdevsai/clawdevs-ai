@@ -2,9 +2,7 @@
 # desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
 _existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
 _existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
-_bind_valid=0
-case "${_existing_bind}" in auto|lan|loopback|custom|tailnet) _bind_valid=1 ;; esac
-if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_bind_valid}" -eq 1 ]; then
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
   cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
@@ -16,6 +14,9 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
     "mode": "local",
     "bind": "lan",
     "port": 18789,
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
     "auth": {
       "token": "__TOKEN__"
     }
