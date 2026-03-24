@@ -200,7 +200,6 @@ spec:
           command: ["/bin/bash", "-lc"]
           args:
             - |
-              find /bootstrap/scripts -type f -name "*.sh" -exec sed -i 's/\r$//' {} +
               . /bootstrap/scripts/00-env.sh
               . /bootstrap/scripts/01-deps.sh
               . /bootstrap/scripts/02-web-tools.sh

@@ -2,7 +2,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
 {
   "gateway": {
     "mode": "local",
-    "bind": "lan",
+    "bind": "all",
     "port": 18789,
     "auth": {
       "token": "__TOKEN__"
