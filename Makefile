@@ -24,37 +24,52 @@ REDIS_IMAGE_REPO ?= clawdevsai/redis-runtime
 STACK_IMAGE_TAG ?= latest
 
 
-.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release
+.PHONY: help preflight manifests-validate minikube-up minikube-down minikube-status minikube-logs minikube-delete minikube-addons clawdevs-up clawdevs-down clawdevs-rebuild dashboard dashboard-url openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs ollama-apply ollama-volume-apply ollama-logs stack-apply stack-status port-forward-start port-forward-stop port-forward-status net-allow-egress net-test-openclaw reset-all destroy-all storage-enable-expansion gpu-doctor docker-k8s-check docker-k8s-context gpu-plugin-apply gpu-node-check gpu-migrate-apply spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist brief-template clarify-template plan-template task-template validate-template sdd-prompts sdd-example sdd-real-initiative openclaw-image-build openclaw-image-push openclaw-image-release
 
 help:
-	@echo "Targets disponiveis (sem GPU):"
-	@echo "  make minikube-up    - sobe Minikube no Docker Desktop com GPU"
-	@echo "  make minikube-down  - para Minikube"
-	@echo "  make minikube-addons - habilita addons do Minikube"
-	@echo "  make clawdevs-up   - sobe Minikube, volumes e pods em um unico comando (sem validar status)"
-	@echo "  make minikube-context - ajusta kubeconfig e seta contexto clawdevs-ai"
-	@echo "  make dashboard      - abre dashboard do Minikube"
-	@echo "  make dashboard-url  - mostra URL do dashboard"
-	@echo "  make ollama-apply   - aplica k8s/base/ollama-pod.yaml (Pod + Service)"
-	@echo "  make ollama-volume-apply - cria PVC ollama-data"
-	@echo "  make ollama-logs    - mostra logs do pod ollama"
-	@echo "  make openclaw-apply - aplica k8s sem apagar deployment/sessoes"
-	@echo "  make openclaw-restart - reinicia o deployment openclaw preservando PVC e sessoes"
-	@echo "  make openclaw-kustomization - aplica k8s via kustomize"
-	@echo "  make openclaw-logs  - mostra logs do deployment openclaw"
-	@echo "  make openclaw-image-build OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
-	@echo "  make openclaw-image-push OPENCLAW_IMAGE_TAG=latest"
-	@echo "  make openclaw-image-release OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
+	@echo "Targets disponiveis:"
+	@echo ""
+	@echo "Bootstrap / subida:"
+	@echo "  make clawdevs-up            - sobe stack completo sem deletar recursos existentes"
+	@echo "  make minikube-up            - sobe Minikube no Docker Desktop com GPU"
+	@echo "  make minikube-context       - ajusta kubeconfig e seta contexto clawdevs-ai"
+	@echo "  make minikube-addons        - habilita addons do Minikube"
+	@echo "  make storage-enable-expansion - habilita expansao de volume no storageclass standard"
+	@echo "  make preflight              - valida k8s/.env antes do deploy"
+	@echo "  make manifests-validate     - valida renderizacao do kustomize"
+	@echo ""
+	@echo "Deploy / operacao:"
+	@echo "  make stack-apply            - aplica ollama + openclaw + control-panel"
+	@echo "  make stack-status           - status de pods e services do stack"
+	@echo "  make ollama-volume-apply    - cria PVC ollama-data"
+	@echo "  make ollama-apply           - aplica k8s/base/ollama-pod.yaml (Pod + Service)"
+	@echo "  make openclaw-apply         - aplica k8s sem apagar deployment/sessoes"
+	@echo "  make openclaw-restart       - reinicia o statefulset clawdevs-ai preservando PVC e sessoes"
+	@echo "  make net-allow-egress       - aplica policy liberando egress"
+	@echo "  make net-test-openclaw      - testa internet no pod openclaw"
 	@echo "  make port-forward-start PF_SERVICE=service/openclaw PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-stop  PF_PID=.openclaw-forward.pid"
 	@echo "  make port-forward-status PF_PORTS=18789:18789 PF_PID=.openclaw-forward.pid"
-	@echo "  make preflight      - valida k8s/.env antes do deploy"
-	@echo "  make manifests-validate - valida renderizacao do kustomize"
-	@echo "  make net-allow-egress        - aplica policy liberando egress"
-	@echo "  make net-test-openclaw       - testa internet no pod openclaw"
-	@echo "  make reset-all    - apaga pods e volumes do stack e recria tudo do zero"
-	@echo "  make stack-apply    - aplica ollama + openclaw"
-	@echo "  make stack-status   - status de pods e service do stack"
+	@echo "  make dashboard              - abre dashboard do Minikube"
+	@echo "  make dashboard-url          - mostra URL do dashboard"
+	@echo ""
+	@echo "Build de imagens:"
+	@echo "  make openclaw-image-build OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
+	@echo "  make openclaw-image-push OPENCLAW_IMAGE_TAG=latest"
+	@echo "  make openclaw-image-release OPENCLAW_IMAGE_TAG=latest OPENCLAW_VERSION=2026.3.22"
+	@echo ""
+	@echo "Reset / destrutivo:"
+	@echo "  make reset-all              - apaga pods e volumes do stack e recria tudo do zero"
+	@echo "  make clawdevs-down          - destroi tudo (pods, volumes, imagens e perfil Minikube)"
+	@echo "  make destroy-all            - limpeza destrutiva completa do ambiente"
+	@echo "  make minikube-down          - para Minikube e remove o perfil"
+	@echo ""
+	@echo "Observabilidade (logs no final):"
+	@echo "  make minikube-status"
+	@echo "  make minikube-delete"
+	@echo "  make minikube-logs"
+	@echo "  make ollama-logs"
+	@echo "  make openclaw-logs"
 	@echo "  make spec-template  - mostra o template de SPEC e o backlog de specs"
 	@echo "  make vibe-playbook   - mostra o playbook de vibe coding"
 	@echo "  make sdd-contract    - mostra o contrato SDD do repositorio"
@@ -69,7 +84,6 @@ help:
 	@echo "  make sdd-prompts     - mostra o pack de prompts operacionais"
 	@echo "  make sdd-example     - mostra o ciclo completo de exemplo"
 	@echo "  make sdd-real-initiative - mostra a iniciativa real pronta para uso"
-	@echo "  make minikube-status|minikube-logs|minikube-delete"
 	@echo ""
 	@echo "Fluxo GPU real (Docker Desktop Kubernetes):"
 	@echo "  make gpu-doctor          - valida host NVIDIA + Docker Desktop + kube context"
@@ -131,40 +145,33 @@ ifneq ($(GPU),0)
 endif
 
 clawdevs-up:
+	@set -e; \
+	steps="preflight minikube-up minikube-context minikube-addons storage-enable-expansion ollama-volume-apply stack-apply"; \
+	total=7; \
+	i=1; \
+	for step in $$steps; do \
+		echo ""; \
+		echo "════════════════════════════════════════════"; \
+		echo " [$$i/$$total] Executando $$step..."; \
+		echo "════════════════════════════════════════════"; \
+		$(MAKE) $$step; \
+		i=$$((i + 1)); \
+	done; \
+	echo ""; \
+	echo "✔ clawdevs-up concluido (nao destrutivo)."; \
+	echo "ℹ para logs no final: make openclaw-logs"
+
+clawdevs-down:
 	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [1/6] Subindo cluster Minikube..."
+	@echo " [clawdevs-down] Destruindo ambiente completo..."
 	@echo "════════════════════════════════════════════"
-	$(MAKE) minikube-up
-	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [2/6] Ajustando contexto kubeconfig..."
-	@echo "════════════════════════════════════════════"
-	$(MAKE) minikube-context
-	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [3/6] Habilitando addons do Minikube..."
-	@echo "════════════════════════════════════════════"
-	$(MAKE) minikube-addons
-	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [4/6] Habilitando expansao de volumes..."
-	@echo "════════════════════════════════════════════"
-	$(MAKE) storage-enable-expansion
-	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [5/6] Subindo volumes..."
-	@echo "════════════════════════════════════════════"
-	$(MAKE) ollama-volume-apply
-	@echo ""; echo "════════════════════════════════════════════"
-	@echo " [6/6] Subindo pods e servicos..."
-	@echo "════════════════════════════════════════════"
-	$(MAKE) stack-apply
-	@echo ""; echo "✔  clawdevs-up concluido (sem validar status)."
+	$(MAKE) destroy-all
 
 minikube-status:
 	minikube status --profile=$(PROFILE)
 
 minikube-logs:
 	minikube logs --profile=$(PROFILE)
-
-minikube-dashboard:
-	minikube dashboard -p $(PROFILE) --url
 
 dashboard:
 	minikube dashboard -p $(PROFILE)
@@ -173,7 +180,7 @@ dashboard-url:
 	minikube dashboard -p $(PROFILE) --url
 
 ollama-apply: preflight ollama-volume-apply
-	kubectl --context=$(KUBE_CONTEXT) delete pod ollama --ignore-not-found
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pod.yaml --server-side --force-conflicts
 
 ollama-volume-apply:
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pvc.yaml --server-side --force-conflicts
