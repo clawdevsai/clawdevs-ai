@@ -16,6 +16,7 @@ class Task(SQLModel, table=True):
     github_issue_number: Optional[int] = None
     github_issue_url: Optional[str] = None
     github_repo: Optional[str] = None
+    label: Optional[str] = Field(default=None, index=True)  # back_end|front_end|mobile|tests|devops|dba|security|ux
     due_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
