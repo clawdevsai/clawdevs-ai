@@ -49,7 +49,7 @@ DOCKER_IMAGES_PROJECT := $(shell docker images --filter=reference=*clawdevs* --f
 # .PHONY Targets
 # ────────────────────────────────────────────────────────────────────────────
 .PHONY: help
-.PHONY: preflight manifests-validate
+.PHONY: preflight manifests-validate secrets-apply
 .PHONY: minikube-up minikube-down minikube-context minikube-addons minikube-status minikube-logs storage-enable-expansion
 .PHONY: clawdevs-up clawdevs-down reset-all destroy-all
 .PHONY: ollama-apply ollama-volume-apply ollama-logs ollama-sign ollama-list
@@ -195,6 +195,9 @@ preflight:
 manifests-validate:
 	kubectl kustomize $(KUSTOMIZE_DIR)
 
+secrets-apply:
+	kubectl --context=$(KUBE_CONTEXT) apply -k $(KUSTOMIZE_DIR) --server-side --force-conflicts
+
 # ────────────────────────────────────────────────────────────────────────────
 # Minikube
 # ────────────────────────────────────────────────────────────────────────────
@@ -285,8 +288,8 @@ gpu-migrate-apply:
 
 clawdevs-up:
 	@set -e; \
-	steps="preflight minikube-up minikube-context minikube-addons storage-enable-expansion ollama-volume-apply stack-apply"; \
-	total=7; \
+	steps="preflight minikube-up minikube-context minikube-addons storage-enable-expansion ollama-volume-apply secrets-apply stack-apply"; \
+	total=8; \
 	i=1; \
 	for step in $$steps; do \
 		echo ""; \
@@ -400,7 +403,7 @@ panel-forward:
 # Stack Completo
 # ────────────────────────────────────────────────────────────────────────────
 
-stack-apply: ollama-apply openclaw-apply panel-apply
+stack-apply: ollama-apply openclaw-apply-gpu panel-apply
 
 stack-status:
 	kubectl --context=$(KUBE_CONTEXT) get pods -l app=ollama
