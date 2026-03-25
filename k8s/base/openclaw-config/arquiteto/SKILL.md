@@ -213,30 +213,28 @@ Use este documento como **skill única** para orientar decisões de arquitetura,
 
 ## GitHub (gh CLI)
 
-**Quando usar:** Interagir com issues, pull requests, workflows, checks e endpoints de API no GitHub.
+**Quando usar:** Interagir com pull requests, workflows, checks e endpoints de API no GitHub. Para criação de tasks, usar o control panel API (`$PANEL_API_URL/tasks`).
 
 ### Diretrizes gerais
-- Usar o CLI `gh` para todas as ações no GitHub.
+- Usar o CLI `gh` para operações de PR, label, workflow e run view no GitHub.
 - Usar `GITHUB_REPOSITORY` como alvo padrão para comandos escopados ao repositório.
 - Usar `GITHUB_TOKEN` para autenticação. Se necessário: exporte `GH_TOKEN="$GITHUB_TOKEN"` antes de executar `gh`.
 - Quando não estiver dentro de um repositório git, sempre passar `--repo "$GITHUB_REPOSITORY"`.
 - **Nunca** hardcode `owner/repo` a menos que o solicitante peça outro repositório.
 - Preferir `--json` + `--jq` para saída estruturada.
-- Labels: **nunca** enviar string tipo JSON como valor escalar (ex.: `"[EPIC01]"`).
-- Em `gh issue create`: passar um `--label` por label (ex.: `--label task --label P0 --label EPIC01`).
-- Em `gh issue create`: **não usar** `--body` inline com `\n`; sempre usar `--body-file` apontando para arquivo `.md`.
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API (`$PANEL_API_URL/tasks`).
 - Em `gh api` para `/issues/{n}/labels`: enviar arrays com campos repetidos (`-f labels[]=EPIC01`) ou corpo JSON.
 - Documentação oficial: `https://cli.github.com/manual/gh`
 
 ### Quick reference
 
-#### Issues
+#### Tasks no control panel (substituiu gh issue create)
 ```bash
-# Listar issues abertas
-gh issue list --repo "$GITHUB_REPOSITORY" --json number,title,labels --jq '.[] | "\(.number): \(.title) [\(.labels[].name)]"'
+# Listar tasks do panel
+curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end"
 
-# Criar issue a partir de task
-cat > /tmp/ISSUE-TASK-XXX.md <<'EOF'
+# Criar task a partir de task file
+cat > /tmp/TASK-XXX.md <<'EOF'
 ## Objetivo
 Implementar <feature> com foco em segurança, performance e custo.
 
@@ -266,13 +264,14 @@ Implementar <feature> com foco em segurança, performance e custo.
 - ADR: /data/openclaw/backlog/architecture/ADR-XXX-<slug>.md
 EOF
 
-gh issue create --repo "$GITHUB_REPOSITORY" \
-  --title "Task: TASK-XXX - Título" \
-  --body-file /tmp/ISSUE-TASK-XXX.md \
-  --label task --label P0 --label EPIC01
-
-# Adicionar labels via API
-gh api "repos/$GITHUB_REPOSITORY/issues/123/labels" --method POST -f labels[]=EPIC01 -f labels[]=P1
+TASK_BODY=$(cat /tmp/TASK-XXX.md | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+TASK_RESPONSE=$(curl -s -X POST \
+  -H "Authorization: Bearer $PANEL_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Task: TASK-XXX - Título\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GITHUB_REPOSITORY\",\"description\":$TASK_BODY}" \
+  "$PANEL_API_URL/tasks")
+TASK_ID=$(echo "$TASK_RESPONSE" | jq -r '.id')
+echo "Task criada: $TASK_ID"
 ```
 
 #### Pull requests e checks
@@ -294,15 +293,15 @@ gh api "repos/$GITHUB_REPOSITORY/pulls/55" --jq '.title, .state, .user.login'
 
 ---
 
-## Fluxo Obrigatório: Docs -> Commit -> Issues -> Validação -> Session Finished
+## Fluxo Obrigatório: Docs -> Commit -> Panel Task -> Validação -> Session Finished
 
 **Quando usar:** Sempre que houver documentos gerados por CEO, PO ou Arquiteto para publicação no repositório.
 
 ### Ordem obrigatória
 1. Consolidar documentos `.md` da sessão em `/data/openclaw/backlog/implementation/docs/`.
 2. Fazer o **primeiro commit** com os documentos.
-3. Criar/editar issues com `--body-file` (Markdown renderizável).
-4. Validar resultado (issue criada/editada, links, formato e erros).
+3. Criar task no control panel via `$PANEL_API_URL/tasks` (POST) com `title`, `label` e `github_repo`.
+4. Validar resultado (task criada, `task_id` retornado, links, formato e erros).
 5. Encerrar sessão movendo artefatos para `/data/openclaw/backlog/session_finished/<session_id>/`.
 
 ### Comandos de referência (exec)
@@ -315,25 +314,27 @@ git -C /data/openclaw/backlog/implementation add docs/
 git -C /data/openclaw/backlog/implementation commit -m "docs(session): publicar artefatos CEO/PO/Arquiteto"
 git -C /data/openclaw/backlog/implementation rev-parse --short HEAD
 
-# 3) Criar/editar issue com body em .md
-gh issue create --repo "$GITHUB_REPOSITORY" \
-  --title "Task: TASK-XXX - Título" \
-  --body-file /tmp/ISSUE-TASK-XXX.md \
-  --label task --label P1
+# 3) Criar task no control panel
+TASK_BODY=$(cat /tmp/ISSUE-TASK-XXX.md | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+curl -s -X POST \
+  -H "Authorization: Bearer $PANEL_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Task: TASK-XXX - Título\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GITHUB_REPOSITORY\",\"description\":$TASK_BODY}" \
+  "$PANEL_API_URL/tasks"
 
 # 4) Validação pós-criação
-gh issue view <numero> --repo "$GITHUB_REPOSITORY" --json number,title,url,state
+curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end"
 ```
 
 ### Critérios de validação
 - Commit de docs gerado com hash válido.
-- Body de issue renderiza Markdown corretamente (sem `\n` literal).
+- Task criada no control panel com `task_id` retornado e registrado.
 - Seções obrigatórias presentes: `Objetivo`, `O que desenvolver`, `Como desenvolver`, `Critérios de aceitação`, `Definição de pronto (DoD)`.
 - Links de referência para arquivos `.md` incluídos.
 
 ### Tratamento de erros e notificação
-- Se falhar commit: **não criar issue**; notificar PO com erro e correção proposta.
-- Se falhar criação/edição de issue: manter docs commitados, notificar PO e registrar bloqueio.
+- Se falhar commit: **não criar panel task**; notificar PO com erro e correção proposta.
+- Se falhar criação de panel task: manter docs commitados, notificar PO e registrar bloqueio.
 - Se falhar validação final: reabrir ciclo de correção antes de encerrar sessão.
 
 ### Encerramento de sessão
@@ -341,7 +342,7 @@ gh issue view <numero> --repo "$GITHUB_REPOSITORY" --json number,title,url,state
 - Mover/arquivar artefatos de trabalho da sessão para essa pasta.
 - Gerar `SESSION-SUMMARY.md` com:
   - commit hash,
-  - issues criadas/editadas,
+  - tasks criadas no panel (com `task_id`),
   - validações executadas,
   - erros encontrados (se houver) e status final.
 
@@ -362,7 +363,7 @@ gh issue view <numero> --repo "$GITHUB_REPOSITORY" --json number,title,url,state
 - **TASK-XXX-<slug>.md**: task técnica detalhada (1–3 dias)
 - **ADR-XXX-<slug>.md** (opcional): decisão arquitetural documentada
 - **DIAGRAMA-<slug>.md** (opcional): diagrama de arquitetura (Mermaid)
-- **GitHub issues** (quando solicitado): issues rastreáveis com labels
+- **Panel tasks** (quando solicitado): tasks rastreáveis no control panel com label e github_repo
 
 ---
 
@@ -498,9 +499,9 @@ IDEA-<slug> - <título da ideia>
 YYYY-MM-DD
 ```
 
-### Template de issue (GitHub)
+### Template de task no control panel
 
-**Uso:** criar issues a partir de tasks via `gh issue create`.
+**Uso:** criar tasks no control panel via `$PANEL_API_URL/tasks` (POST).
 
 ```markdown
 ## Objetivo
@@ -550,14 +551,14 @@ YYYY-MM-DD
 - ✅ Security para dados sensíveis.
 - ✅ Observabilidade (logs, métricas, tracing) para integrações.
 
-### GitHub issue
+### Panel task
 - ✅ Título descritivo (ex.: "Task: TASK-XXX - Título").
-- ✅ Body contém objetivo, escopo, critérios e referências a arquivos.
-- ✅ Body contém "Como desenvolver" (passo a passo técnico) e "Definição de pronto (DoD)".
-- ✅ Body renderiza Markdown corretamente (sem `\n` literal no texto).
-- ✅ Labels passadas como múltiplos `--label` (não JSON string).
-- ✅ Issue criada/editada com `--body-file <arquivo.md>`.
-- ✅ Comando inclui `--repo "$GITHUB_REPOSITORY"` quando fora de repositório git.
+- ✅ Campo `description` contém objetivo, escopo, critérios e referências a arquivos.
+- ✅ Campo `description` contém "Como desenvolver" (passo a passo técnico) e "Definição de pronto (DoD)".
+- ✅ Campo `label` corresponde à trilha correta (ex.: `back_end`, `front_end`, `tests`).
+- ✅ Campo `github_repo` preenchido com `$ACTIVE_GITHUB_REPOSITORY`.
+- ✅ `task_id` retornado registrado para atualizações posteriores.
+- ✅ Nunca usar `gh issue create` — sempre usar `$PANEL_API_URL/tasks`.
 
 ---
 
@@ -657,8 +658,8 @@ flowchart TD
     J -->|Passou| K[Gerar TASK-XXX.md]
     J -->|Falhou| L[Corrigir tasks]
     L --> I
-    K --> M{Criar GitHub issues?}
-    M -->|Sim| N[gh issue create com labels e referências]
+    K --> M{Criar task no control panel?}
+    M -->|Sim| N[POST $PANEL_API_URL/tasks com label e github_repo]
     M -->|Não| O[Apenas arquivos]
     N --> P[Vincular a US (quando aplicável)]
     O --> P
