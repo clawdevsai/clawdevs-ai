@@ -112,8 +112,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       "memorySearch": {
         "enabled": true,
         "provider": "ollama",
-        "model": "nomic-embed-text",
-        "baseUrl": "http://ollama:11434"
+        "model": "nomic-embed-text"
       },
       "model": "ollama/nemotron-3-super:cloud",
       "bootstrapMaxChars": 25000,
@@ -572,6 +571,20 @@ sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/ope
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
 fi
+# Remover campos depreciados do openclaw.json (roda sempre, inclusive em configs reaproveitados).
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq 'del(.agents.defaults.memorySearch.baseUrl)' \
+      "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao remover campos depreciados do openclaw.json"
+  fi
+fi
+
 # Garantir elevated habilitado globalmente e por agente (inclui cenarios de config ja existente).
 # Evita erro: "elevated is not available right now (runtime=direct)" em sessoes Telegram.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
@@ -715,6 +728,100 @@ EOF
      "${sess_dir}/sessions.json" > "${sess_dir}/sessions.json.tmp"
   mv "${sess_dir}/sessions.json.tmp" "${sess_dir}/sessions.json"
 }
+# Configurar provider LLM dinamico via PROVEDOR_LLM.
+# Regras:
+# - PROVEDOR_LLM=openrouter|open-router|or -> usa OpenRouter
+# - PROVEDOR_LLM=ollama -> usa Ollama
+# - PROVEDOR_LLM vazio/auto/invalido -> auto-detecta (OPENROUTER_API_KEY => openrouter, senao ollama)
+_provedor_raw="${PROVEDOR_LLM:-}"
+_provedor="$(printf '%s' "${_provedor_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+if [ -z "${_provedor}" ] || [ "${_provedor}" = "auto" ]; then
+  if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+    _provedor="openrouter"
+  else
+    _provedor="ollama"
+  fi
+fi
+case "${_provedor}" in
+  openrouter|open-router|or)
+    _provedor="openrouter"
+    ;;
+  ollama)
+    _provedor="ollama"
+    ;;
+  *)
+    echo "[bootstrap] AVISO: PROVEDOR_LLM invalido (${_provedor_raw}), aplicando fallback automatico"
+    if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+      _provedor="openrouter"
+    else
+      _provedor="ollama"
+    fi
+    ;;
+esac
+echo "[bootstrap] LLM provider selecionado=${_provedor}"
+
+if [ "${_provedor}" = "openrouter" ]; then
+  if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+    echo "[bootstrap] AVISO: provider=openrouter mas OPENROUTER_API_KEY nao definida; mantendo modelos atuais"
+  else
+    _tmp_or="$(mktemp)"
+    _or_model="${OPENROUTER_MODEL:-stepfun/step-3.5-flash:free}"
+    _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+    case "${_or_model}" in
+      openrouter/*) _or_model_full="${_or_model}" ;;
+      *) _or_model_full="openrouter/${_or_model}" ;;
+    esac
+    _or_model_id="${_or_model_full#openrouter/}"
+    if jq \
+      --arg apiKey "${OPENROUTER_API_KEY}" \
+      --arg baseUrl "${_or_base_url}" \
+      --arg model "${_or_model_full}" \
+      --arg modelId "${_or_model_id}" \
+      '
+        .models.providers.openrouter = {
+          "apiKey": $apiKey,
+          "baseUrl": $baseUrl,
+          "models": [
+            { "id": $modelId, "name": $modelId }
+          ]
+        }
+        | .agents.defaults.model = $model
+        | (.agents.list[].model) = $model
+      ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or}"; then
+      mv "${_tmp_or}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+      mkdir -p ~/.openclaw
+      cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+      echo "[bootstrap] provider=openrouter aplicado para todos os agentes (model=${_or_model_full})"
+    else
+      rm -f "${_tmp_or}"
+      echo "[bootstrap] ERRO ao aplicar patch openrouter no openclaw.json"
+    fi
+  fi
+fi
+
+# Compat: schema atual exige models.providers.openrouter.baseUrl.
+# Se existir provider openrouter legado sem baseUrl, completa com default.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_or_base="$(mktemp)"
+  _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+  if jq \
+    --arg baseUrl "${_or_base_url}" \
+    '
+      if .models.providers.openrouter? then
+        .models.providers.openrouter.baseUrl = (.models.providers.openrouter.baseUrl // $baseUrl)
+      else
+        .
+      end
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or_base}"; then
+    mv "${_tmp_or_base}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_or_base}"
+    echo "[bootstrap] falha ao aplicar compat de openrouter.baseUrl"
+  fi
+fi
+
 repair_main_session "ceo"              "${OPENCLAW_STATE_DIR}/workspace-ceo"              "CEO pronto. Delegacao imediata na mesma sessao — sem fila com prazos em horas entre agentes. Pode acionar por aqui."
 repair_main_session "po"               "${OPENCLAW_STATE_DIR}/workspace-po"               "PO pronto. Pode me acionar para planejamento, backlog, prioridades e coordenacao com Arquiteto."
 repair_main_session "arquiteto"        "${OPENCLAW_STATE_DIR}/workspace-arquiteto"        "Arquiteto pronto. Pode me acionar para desenho tecnico, tasks e trade-offs de arquitetura."

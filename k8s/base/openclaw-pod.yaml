@@ -162,6 +162,30 @@ spec:
               value: "America/Sao_Paulo"
             - name: MEMORY_BASE_PATH
               value: "/data/openclaw/memory"
+            - name: PROVEDOR_LLM
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: PROVEDOR_LLM
+                  optional: true
+            - name: OPENROUTER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OPENROUTER_API_KEY
+                  optional: true
+            - name: OPENROUTER_MODEL
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OPENROUTER_MODEL
+                  optional: true
+            - name: OPENROUTER_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: openclaw-auth
+                  key: OPENROUTER_BASE_URL
+                  optional: true
             - name: OPENCLAW_LOG_LEVEL
               valueFrom:
                 secretKeyRef:
@@ -222,7 +246,34 @@ spec:
               . /bootstrap/scripts/08-git-hooks.sh
               . /bootstrap/scripts/09-openclaw-config.sh
               . /bootstrap/scripts/10-background-services.sh
-              . /bootstrap/scripts/11-start-gateway.sh
+              # Compat fix: remove chave depreciada que quebra o boot em configs persistidas.
+              if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+                _tmp_openclaw_json="$(mktemp)"
+                if jq 'del(.agents.defaults.memorySearch.baseUrl)' \
+                    "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+                  mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+                  mkdir -p ~/.openclaw
+                  cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+                else
+                  rm -f "${_tmp_openclaw_json}"
+                  echo "[bootstrap] warning: failed to sanitize deprecated memorySearch.baseUrl"
+                fi
+              fi
+
+              echo "[bootstrap] starting openclaw gateway"
+              echo "[bootstrap] running openclaw doctor --fix"
+              openclaw doctor --fix || echo "[bootstrap] warning: openclaw doctor --fix failed, proceeding with existing config"
+              set +e
+              openclaw gateway run --bind lan --port 18789
+              gateway_exit=$?
+              set -e
+              echo "[bootstrap] openclaw gateway exited with code ${gateway_exit}"
+              latest_gateway_log="$(ls -1t /tmp/openclaw/openclaw-*.log 2>/dev/null | head -n 1 || true)"
+              if [ -n "${latest_gateway_log}" ] && [ -f "${latest_gateway_log}" ]; then
+                cp "${latest_gateway_log}" "${BOOTSTRAP_LOG_DIR}/openclaw-gateway-last.log" || true
+                cat "${latest_gateway_log}" || true
+              fi
+              exit "${gateway_exit}"
       volumes:
         - name: agent-config
           configMap:

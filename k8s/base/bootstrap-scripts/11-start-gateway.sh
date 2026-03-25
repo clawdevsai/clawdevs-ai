@@ -1,4 +1,6 @@
 echo "[bootstrap] starting openclaw gateway"
+echo "[bootstrap] running openclaw doctor --fix"
+openclaw doctor --fix || echo "[bootstrap] warning: openclaw doctor --fix failed, proceeding with existing config"
 set +e
 openclaw gateway run --bind lan --port 18789
 gateway_exit=$?

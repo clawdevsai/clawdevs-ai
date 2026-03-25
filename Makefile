@@ -360,7 +360,7 @@ openclaw-dashboard:
 # ────────────────────────────────────────────────────────────────────────────
 
 panel-apply: image-mode-prepare 
-	kubectl apply -k k8s/base/control-panel/
+	kubectl --context=$(KUBE_CONTEXT) apply -k k8s/base/control-panel/ --server-side --force-conflicts
 
 panel-status:
 	kubectl get pods -l app.kubernetes.io/part-of=clawdevs-panel 2>/dev/null || \

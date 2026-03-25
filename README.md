@@ -298,7 +298,7 @@ Para manter o pod estavel e ainda ter logs úteis, use `OPENCLAW_LOG_LEVEL=info`
 
 O `make minikube-up` já sobe o profile com `--gpus=all`, então o node passa a anunciar `nvidia.com/gpu` sem passo manual extra.
 
-O deploy padrao `kubectl apply -k k8s` usa so o `base` (CPU no manifest do `ollama`). Para GPU no Ollama, use o overlay `k8s/overlays/gpu` (por exemplo `make openclaw-apply-gpu` ou `make gpu-migrate-apply` no fluxo Docker Desktop).
+O deploy padrao `kubectl apply -k k8s --server-side --force-conflicts` usa so o `base` (CPU no manifest do `ollama`). Para GPU no Ollama, use o overlay `k8s/overlays/gpu` (por exemplo `make openclaw-apply-gpu` ou `make gpu-migrate-apply` no fluxo Docker Desktop).
 
 ## Fluxo Alternativo: Docker Desktop Kubernetes
 
@@ -462,10 +462,10 @@ k8s/
 O comando padrão de deploy continua sendo:
 
 ```bash
-kubectl apply -k k8s
+kubectl apply -k k8s --server-side --force-conflicts
 ```
 
-O `base` concentra o stack comum e os agentes. O overlay `gpu` adiciona `RuntimeClass`, device plugin e o patch do `ollama` para GPU; nao entra no `kubectl apply -k k8s` ate voce aplicar explicitamente esse overlay ou os targets Make que o usam. Detalhes: `docs/README.md`.
+O `base` concentra o stack comum e os agentes. O overlay `gpu` adiciona `RuntimeClass`, device plugin e o patch do `ollama` para GPU; nao entra no `kubectl apply -k k8s --server-side --force-conflicts` ate voce aplicar explicitamente esse overlay ou os targets Make que o usam. Detalhes: `docs/README.md`.
 
 
 https://clawhub.ai/pskoett/self-improving-agent
