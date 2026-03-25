@@ -1,4 +1,5 @@
 from typing import Annotated
+from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,3 +57,21 @@ async def me(current_user: CurrentUser):
         username=current_user.username,
         role=current_user.role,
     )
+
+
+@router.post("/agent-token", response_model=TokenResponse)
+async def create_agent_token(
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Gera JWT de 30 dias para uso dos agentes OpenClaw via curl."""
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required",
+        )
+    token = create_access_token(
+        data={"sub": current_user.username, "type": "agent"},
+        expires_delta=timedelta(days=30),
+    )
+    return TokenResponse(access_token=token)
