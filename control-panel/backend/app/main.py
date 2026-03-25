@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlmodel import select
+import traceback
+import logging
 
 from app.core.config import get_settings
 from app.core.database import AsyncSessionLocal
@@ -20,6 +23,8 @@ from app.api import metrics as metrics_api
 from app.api import ws as ws_api
 
 settings = get_settings()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def bootstrap_admin():

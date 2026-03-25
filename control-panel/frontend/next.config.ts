@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
+const backend = process.env.BACKEND_URL ?? "http://clawdevs-panel-backend:8000";
+
 const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     unoptimized: true,
   },
   async rewrites() {
-    const backend =
-      process.env.BACKEND_URL ?? "http://clawdevs-panel-backend:8000";
     return [
       {
         source: "/api/ws/:path*",

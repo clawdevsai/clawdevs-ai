@@ -60,9 +60,9 @@ class AgentsListResponse(BaseModel):
 
 @router.get("", response_model=AgentsListResponse)
 async def list_agents(
-    _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    """List all agents."""
     await sync_agents_runtime(session)
     result = await session.exec(select(Agent).order_by(Agent.slug))
     agents = result.all()

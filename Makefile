@@ -54,7 +54,7 @@ DOCKER_IMAGES_PROJECT := $(shell docker images --filter=reference=*clawdevs* --f
 .PHONY: clawdevs-up clawdevs-down reset-all destroy-all
 .PHONY: ollama-apply ollama-volume-apply ollama-logs ollama-sign ollama-list
 .PHONY: openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs openclaw-dashboard
-.PHONY: panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward
+.PHONY: panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward services-expose services-stop
 .PHONY: stack-apply stack-status
 .PHONY: net-allow-egress net-test-openclaw
 .PHONY: dashboard dashboard-url
@@ -120,6 +120,8 @@ help:
 	@echo "│ make panel-apply              - Deploy control panel           │"
 	@echo "│ make panel-url                - Mostra URLs de acesso          │"
 	@echo "│ make panel-forward            - Port-forward para localhost:3000│"
+	@echo "│ make services-expose          - Expoe todos em portas fixas    │"
+	@echo "│ make services-stop            - Para todos os port-forwards    │"
 	@echo "│ make panel-status             - Status dos pods                │"
 	@echo "│ make panel-db-migrate         - Executa migrations Alembic     │"
 	@echo "│ make panel-restart            - Restart panel pods             │"
@@ -398,6 +400,39 @@ panel-url:
 
 panel-forward:
 	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-frontend 3000:3000
+
+services-expose:
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Expondo servicos em portas fixas do localhost..."
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "Iniciando port-forwards em background:"
+	@echo "  - Painel (Frontend):  http://localhost:3000"
+	@echo "  - Painel (Backend):   http://localhost:8000 (API docs: /docs)"
+	@echo "  - OpenClaw (Gateway): http://localhost:18789"
+	@echo ""
+	@echo "Para parar: make services-stop"
+	@echo ""
+	@start /b powershell -NoProfile -WindowStyle Hidden -Command "kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-frontend 3000:3000 2>&1 | Out-Null" 2>/dev/null || \
+	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-frontend 3000:3000 > /dev/null 2>&1 &
+	@sleep 2
+	@start /b powershell -NoProfile -WindowStyle Hidden -Command "kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-backend 8000:8000 2>&1 | Out-Null" 2>/dev/null || \
+	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-backend 8000:8000 > /dev/null 2>&1 &
+	@sleep 2
+	@start /b powershell -NoProfile -WindowStyle Hidden -Command "kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-ai 18789:18789 2>&1 | Out-Null" 2>/dev/null || \
+	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-ai 18789:18789 > /dev/null 2>&1 &
+	@sleep 2
+	@echo "✔ Port-forwards iniciados!"
+	@echo ""
+	@echo "Acesse:"
+	@echo "  http://localhost:3000  - Painel de Controle"
+	@echo "  http://localhost:8000/docs - API Docs"
+	@echo "  http://localhost:18789   - OpenClaw Gateway"
+
+services-stop:
+	@echo "Parando port-forwards..."
+	-taskkill /F /IM kubectl.exe 2>/dev/null || pkill -f "port-forward" 2>/dev/null || true
+	@echo "✔ Port-forwards parados."
 
 # ────────────────────────────────────────────────────────────────────────────
 # Stack Completo
