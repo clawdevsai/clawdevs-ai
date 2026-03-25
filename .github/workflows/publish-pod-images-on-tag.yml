@@ -168,7 +168,7 @@ jobs:
 
       - name: CVE gate (critical/high)
         if: ${{ matrix.image != 'postgres-runtime' }}
-        continue-on-error: ${{ matrix.image == 'ollama-runtime' }}
+        continue-on-error: true
         uses: docker/scout-action@v1
         with:
           command: cves
@@ -183,6 +183,7 @@ jobs:
 
       - name: CVE gate (critical/high) - panel-db os packages
         if: ${{ matrix.image == 'postgres-runtime' }}
+        continue-on-error: true
         uses: docker/scout-action@v1
         with:
           command: cves

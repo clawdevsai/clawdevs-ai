@@ -28,6 +28,24 @@ spec:
                 sleep 2
               done
               echo "PostgreSQL is ready!"
+          volumeMounts:
+            - name: openclaw-data
+              mountPath: /data/openclaw
+        - name: fix-permissions
+          image: busybox:1.36
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Fixing permissions on /data/openclaw..."
+              chmod -R 755 /data/openclaw
+              chown -R 1000:1000 /data/openclaw
+              echo "Permissions fixed!"
+          volumeMounts:
+            - name: openclaw-data
+              mountPath: /data/openclaw
       containers:
         - name: backend
           image: clawdevsai/clawdevs-panel-backend:latest
@@ -93,7 +111,6 @@ spec:
           volumeMounts:
             - name: openclaw-data
               mountPath: /data/openclaw
-              readOnly: true
       volumes:
         - name: openclaw-data
           persistentVolumeClaim:
