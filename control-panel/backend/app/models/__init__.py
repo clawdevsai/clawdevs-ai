@@ -8,6 +8,7 @@ from .memory_entry import MemoryEntry
 from .cron_execution import CronExecution
 from .activity_event import ActivityEvent
 from .metric import Metric
+from .repository import Repository
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "CronExecution",
     "ActivityEvent",
     "Metric",
+    "Repository",
 ]
