@@ -57,7 +57,7 @@ DISPLAY_NAME_MAP = {
     "security_engineer": "Thiago",
     "ux_designer": "Felipe",
     "dba_data_engineer": "Igor",
-    "memory_curator": "Mnemon",
+    "memory_curator": "Memmo",
 }
 
 
