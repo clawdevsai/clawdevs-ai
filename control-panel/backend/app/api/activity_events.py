@@ -8,7 +8,7 @@ from datetime import datetime
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
-from app.models import ActivityEvent, Agent
+from app.models import ActivityEvent, Agent, Session
 
 router = APIRouter()
 
@@ -20,50 +20,75 @@ class ActivityEventResponse(BaseModel):
     agent_id: Optional[str] = None
     created_at: datetime
 
-    @classmethod
-    def from_orm(cls, event: ActivityEvent, agent_map: dict) -> "ActivityEventResponse":
-        # Build description from event data
-        description = event.payload.get("description", "") if event.payload else ""
-        if not description:
-            description = _build_description(event)
 
-        return cls(
-            id=str(event.id),
-            event_type=event.event_type,
-            description=description,
-            agent_id=str(event.agent_id) if event.agent_id else None,
-            created_at=event.created_at,
-        )
+def _build_description_from_session(session: Session) -> str:
+    """Build a human-readable description from session data."""
+    channel = session.channel_type or "unknown"
+    agent = session.agent_slug or "unknown"
+
+    if session.status == "active":
+        return f"Active session with {agent} via {channel}"
+    else:
+        return f"Session ended with {agent}"
 
 
-def _build_description(event: ActivityEvent) -> str:
-    """Build a human-readable description from the event data."""
-    event_type = event.event_type
-    entity_type = event.entity_type or "item"
-    entity_id = event.entity_id or "unknown"
-
-    descriptions = {
-        "session.created": f"New session started",
-        "session.ended": f"Session ended",
-        "session.message": f"New message in session",
-        "agent.status_change": f"Agent status changed",
-        "agent.heartbeat": f"Agent heartbeat received",
-        "cron.executed": f"Cron job executed",
-        "task.created": f"Task created",
-        "task.completed": f"Task completed",
-        "approval.requested": f"Approval requested",
-        "approval.approved": f"Request approved",
-        "approval.rejected": f"Request rejected",
-        "memory.added": f"Memory entry added",
-        "sdd.created": f"SDD document created",
-    }
-
-    return descriptions.get(event_type, f"{event_type.replace('.', ' ').title()}")
+def _event_type_from_session(session: Session) -> str:
+    """Determine event type from session status."""
+    if session.status == "active":
+        return "session.active"
+    elif session.status == "ended":
+        return "session.ended"
+    else:
+        return "session.updated"
 
 
 class ActivityEventsListResponse(BaseModel):
     items: list[ActivityEventResponse]
     total: int
+
+
+async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResponse]:
+    """Generate activity events from recent sessions (in-memory, no DB table needed)."""
+    # Get agents mapping for display names
+    agent_result = await db_session.exec(select(Agent))
+    agents = {a.id: a for a in agent_result.all()}
+    agent_by_slug = {a.slug: a for a in agents.values()}
+
+    # Get recent sessions
+    result = await db_session.exec(
+        select(Session)
+        .order_by(Session.last_active_at.desc().nulls_last())
+        .limit(20)
+    )
+    sessions = result.all()
+
+    items = []
+    for idx, session in enumerate(sessions):
+        # Find agent info
+        agent_id = None
+        agent_name = session.agent_slug or "Unknown"
+        if session.agent_slug and session.agent_slug in agent_by_slug:
+            agent = agent_by_slug[session.agent_slug]
+            agent_id = str(agent.id)
+            agent_name = agent.display_name or agent.slug
+
+        # Build description
+        channel = session.channel_type or "direct"
+        if session.status == "active":
+            desc = f"Active session with {agent_name} via {channel}"
+        else:
+            desc = f"Session {session.status} with {agent_name}"
+
+        event = ActivityEventResponse(
+            id=f"sess-{session.id}-{idx}",
+            event_type=_event_type_from_session(session),
+            description=desc,
+            agent_id=agent_id,
+            created_at=session.last_active_at or session.created_at or datetime.utcnow(),
+        )
+        items.append(event)
+
+    return items
 
 
 @router.get("", response_model=ActivityEventsListResponse)
@@ -74,50 +99,20 @@ async def list_activity_events(
     agent_id: Optional[str] = Query(None),
     event_type: Optional[str] = Query(None),
 ):
-    """List recent activity events with optional filtering."""
-    from app.services.activity_sync import sync_all_activity
+    """List recent activity events generated from sessions and other sources."""
+    # Generate activity from sessions (in-memory approach - no DB table needed)
+    items = await _generate_activity_from_sessions(session)
 
-    # Build base query
-    query = select(ActivityEvent).order_by(desc(ActivityEvent.created_at))
-
-    # Apply filters
+    # Apply agent filter if specified
     if agent_id:
-        try:
-            agent_uuid = UUID(agent_id)
-            query = query.where(ActivityEvent.agent_id == agent_uuid)
-        except ValueError:
-            pass  # Invalid UUID, ignore filter
+        items = [i for i in items if i.agent_id == agent_id]
 
+    # Apply event type filter if specified
     if event_type:
-        query = query.where(ActivityEvent.event_type == event_type)
-
-    # Get total count
-    count_query = select(ActivityEvent).where(query.whereclause) if query.whereclause else select(ActivityEvent)
-    count_result = await session.exec(count_query)
-    total = len(count_result.all())
-
-    # If no events exist, sync from sessions
-    if total == 0:
-        await sync_all_activity(session)
-        # Re-query after sync
-        count_result = await session.exec(count_query)
-        total = len(count_result.all())
+        items = [i for i in items if i.event_type == event_type]
 
     # Apply limit
-    query = query.limit(limit)
-
-    result = await session.exec(query)
-    events = result.all()
-
-    # Build agent map for description enrichment
-    agent_ids = {e.agent_id for e in events if e.agent_id}
-    agent_map = {}
-    if agent_ids:
-        agent_result = await session.exec(
-            select(Agent).where(Agent.id.in_(agent_ids))
-        )
-        agent_map = {a.id: a for a in agent_result.all()}
-
-    items = [ActivityEventResponse.from_orm(e, agent_map) for e in events]
+    total = len(items)
+    items = items[:limit]
 
     return ActivityEventsListResponse(items=items, total=total)

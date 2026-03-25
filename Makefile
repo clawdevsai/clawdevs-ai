@@ -382,24 +382,8 @@ panel-restart:
 panel-destroy:
 	kubectl delete -k k8s/base/control-panel/ || true
 
-panel-url:
-	@echo "┌────────────────────────────────────────────────────────────┐"
-	@echo "│     ClawDevs AI Control Panel URLs                         │"
-	@echo "├────────────────────────────────────────────────────────────┤"
-	@echo "│ NodePort (funciona de outro host na mesma rede que o VM):  │"
-	@echo "│   Frontend: http://$$(minikube ip):31880                    │"
-	@echo "│   Backend:  http://$$(minikube ip):31881                    │"
-	@echo "│   API Docs: http://$$(minikube ip):31881/docs               │"
-	@echo "├────────────────────────────────────────────────────────────┤"
-	@echo "│ Windows + Minikube driver docker: o IP acima costuma NAO   │"
-	@echo "│ abrir no navegador. Use uma destas opcoes:                 │"
-	@echo "│   make panel-forward  -> http://localhost:3000             │"
-	@echo "│   minikube service clawdevs-panel-frontend --url           │"
-	@echo "│     (deixe o terminal aberto; abra a URL http://127.0.0.1)  │"
-	@echo "└────────────────────────────────────────────────────────────┘"
-
 panel-forward:
-	kubectl --context=$(KUBE_CONTEXT) port-forward svc/clawdevs-panel-frontend 3000:3000
+	minikube service clawdevs-panel-frontend --url -p clawdevs-a
 
 services-expose:
 	@echo "════════════════════════════════════════════════════════════════"
