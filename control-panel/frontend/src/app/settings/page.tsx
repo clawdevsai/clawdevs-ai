@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { CheckCircle, XCircle, RefreshCw, Shield } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +24,27 @@ interface ClusterInfo {
 
 interface GatewayHealth {
   status: string
+}
+
+interface Repository {
+  id: string
+  name: string
+  full_name: string
+  description?: string
+  default_branch: string
+  is_active: boolean
+}
+
+interface RepositoriesResponse {
+  items: Repository[]
+  total: number
+}
+
+interface CreateRepoPayload {
+  name: string
+  full_name: string
+  description?: string
+  default_branch: string
 }
 
 // ---- Fetchers / Mutators --------------------------------------------------
@@ -49,6 +70,21 @@ const changePassword = (body: {
     method: "POST",
     data: body,
   })
+
+const fetchRepositories = () =>
+  customInstance<RepositoriesResponse>({
+    url: "/repositories?include_inactive=true",
+    method: "GET",
+  })
+
+const createRepository = (body: CreateRepoPayload) =>
+  customInstance<Repository>({ url: "/repositories", method: "POST", data: body })
+
+const updateRepository = (id: string, body: Partial<Repository>) =>
+  customInstance<Repository>({ url: `/repositories/${id}`, method: "PATCH", data: body })
+
+const deleteRepository = (id: string) =>
+  customInstance<void>({ url: `/repositories/${id}`, method: "DELETE" })
 
 // ---- Helpers --------------------------------------------------------------
 
@@ -98,6 +134,168 @@ function ReadOnlyValue({ value }: { value: string }) {
     <span className="font-mono text-sm text-[hsl(var(--foreground))] break-all">
       {value}
     </span>
+  )
+}
+
+function RepositoriesSection() {
+  const queryClient = useQueryClient()
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: "", full_name: "", description: "", default_branch: "main" })
+  const [formError, setFormError] = useState("")
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["repositories"],
+    queryFn: fetchRepositories,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createRepository,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["repositories"] })
+      setShowForm(false)
+      setForm({ name: "", full_name: "", description: "", default_branch: "main" })
+      setFormError("")
+    },
+    onError: () => setFormError("Falha ao criar repositório."),
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      updateRepository(id, { is_active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["repositories"] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteRepository,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["repositories"] }),
+  })
+
+  const repos = data?.items ?? []
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-[hsl(var(--foreground))]">Repositórios cadastrados</span>
+        <button
+          onClick={() => setShowForm((v) => !v)}
+          className="px-3 py-1.5 text-xs rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity"
+        >
+          + Add Repository
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-[hsl(var(--muted-foreground))]">Nome *</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="ClawDevs API"
+                className="px-3 py-1.5 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-[hsl(var(--muted-foreground))]">org/repo *</label>
+              <input
+                value={form.full_name}
+                onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+                placeholder="myorg/myrepo"
+                className="px-3 py-1.5 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-[hsl(var(--muted-foreground))]">Branch default</label>
+              <input
+                value={form.default_branch}
+                onChange={(e) => setForm((f) => ({ ...f, default_branch: e.target.value }))}
+                placeholder="main"
+                className="px-3 py-1.5 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-[hsl(var(--muted-foreground))]">Descrição</label>
+              <input
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Opcional"
+                className="px-3 py-1.5 text-sm rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+              />
+            </div>
+          </div>
+          {formError && <p className="text-xs text-red-400">{formError}</p>}
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => { setShowForm(false); setFormError("") }}
+              className="px-3 py-1.5 text-xs rounded-lg border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/30"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (!form.name.trim() || !form.full_name.trim()) {
+                  setFormError("Nome e org/repo são obrigatórios.")
+                  return
+                }
+                createMutation.mutate({
+                  name: form.name.trim(),
+                  full_name: form.full_name.trim(),
+                  description: form.description.trim() || undefined,
+                  default_branch: form.default_branch.trim() || "main",
+                })
+              }}
+              disabled={createMutation.isPending}
+              className="px-3 py-1.5 text-xs rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
+            >
+              {createMutation.isPending ? "Salvando…" : "Salvar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="text-xs text-[hsl(var(--muted-foreground))]">Carregando…</div>
+      ) : repos.length === 0 ? (
+        <div className="text-xs text-[hsl(var(--muted-foreground))]">Nenhum repositório cadastrado.</div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {repos.map((repo) => (
+            <div
+              key={repo.id}
+              className="flex items-center justify-between rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-2.5"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-[hsl(var(--foreground))]">{repo.name}</span>
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                  {repo.full_name} · {repo.default_branch}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleMutation.mutate({ id: repo.id, is_active: !repo.is_active })}
+                  className={`px-2 py-0.5 text-xs rounded-full transition-colors ${
+                    repo.is_active
+                      ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30"
+                      : "bg-[hsl(var(--muted))]/30 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50"
+                  }`}
+                >
+                  {repo.is_active ? "Ativo" : "Inativo"}
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Remover "${repo.name}"?`)) deleteMutation.mutate(repo.id)
+                  }}
+                  className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -388,6 +586,12 @@ export default function SettingsPage() {
               Revoke &amp; Sign Out
             </button>
           </FieldRow>
+        </div>
+
+        {/* ── Repositories ─────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4">
+          <SectionDivider title="Repositórios" />
+          <RepositoriesSection />
         </div>
       </div>
     </AppLayout>
