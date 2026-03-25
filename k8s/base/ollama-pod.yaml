@@ -42,15 +42,24 @@ spec:
                 secretKeyRef:
                   name: ollama-auth
                   key: OLLAMA_API_KEY
+            # Espelha models.providers.ollama.models em bootstrap-scripts/09-openclaw-config.sh (ids).
+            # start-ollama.sh (docker/ollama-runtime) faz ollama pull para cada token (espaco).
             - name: OLLAMA_AUTO_PULL_MODELS
-              value: "false"
+              value: "true"
             - name: OLLAMA_BOOT_MODELS
-              value: ""
+              value: "qwen3-next:80b-cloud gpt-oss:120b-cloud nemotron-3-super:cloud qwen3-coder:480b-cloud gemma3:27b-cloud qwen3-vl:235b-cloud qwen3.5:397b-cloud minimax-m2.7:cloud qwen3-coder-next:cloud nomic-embed-text"
+          startupProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 120
           readinessProbe:
             httpGet:
               path: /api/tags
               port: 11434
-            initialDelaySeconds: 15
+            initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
@@ -58,7 +67,7 @@ spec:
             httpGet:
               path: /api/tags
               port: 11434
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 4

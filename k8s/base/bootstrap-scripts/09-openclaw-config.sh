@@ -62,6 +62,10 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
           {
             "id": "minimax-m2.7:cloud",
             "name": "minimax-m2.7:cloud"
+          },
+          {
+            "id": "qwen3-coder-next:cloud",
+            "name": "qwen3-coder-next:cloud"
           }
         ]
       }
@@ -169,7 +173,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "po",
         "name": "PO",
-        "model": "ollama/nemotron-3-super:cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-po",
         "agentDir": "/data/openclaw/agents/po/agent",
         "skills": ["po_product_delivery"],
@@ -202,7 +206,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "arquiteto",
         "name": "Arquiteto",
-        "model": "ollama/qwen3.5:397b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-arquiteto",
         "agentDir": "/data/openclaw/agents/arquiteto/agent",
         "skills": ["arquiteto_engineering"],
@@ -235,7 +239,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "dev_backend",
         "name": "Dev_Backend",
-        "model": "ollama/qwen3-coder:480b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-dev_backend",
         "agentDir": "/data/openclaw/agents/dev_backend/agent",
         "skills": ["dev_backend_implementation"],
@@ -267,7 +271,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "dev_frontend",
         "name": "Dev_Frontend",
-        "model": "ollama/qwen3-coder:480b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-dev_frontend",
         "agentDir": "/data/openclaw/agents/dev_frontend/agent",
         "skills": ["dev_frontend_implementation"],
@@ -299,7 +303,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "dev_mobile",
         "name": "Dev_Mobile",
-        "model": "ollama/qwen3-coder:480b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-dev_mobile",
         "agentDir": "/data/openclaw/agents/dev_mobile/agent",
         "skills": ["dev_mobile_implementation"],
@@ -331,7 +335,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "qa_engineer",
         "name": "QA_Engineer",
-        "model": "ollama/nemotron-3-super:cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-qa_engineer",
         "agentDir": "/data/openclaw/agents/qa_engineer/agent",
         "skills": ["qa_engineer_validation"],
@@ -363,7 +367,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "devops_sre",
         "name": "DevOps_SRE",
-        "model": "ollama/nemotron-3-super:cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-devops_sre",
         "agentDir": "/data/openclaw/agents/devops_sre/agent",
         "skills": ["devops_sre_operations"],
@@ -395,7 +399,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "security_engineer",
         "name": "Security_Engineer",
-        "model": "ollama/qwen3.5:397b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-security_engineer",
         "agentDir": "/data/openclaw/agents/security_engineer/agent",
         "skills": ["security_engineer_scan"],
@@ -427,7 +431,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "ux_designer",
         "name": "UX_Designer",
-        "model": "ollama/nemotron-3-super:cloud",
+        "model": "ollama/nminimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-ux_designer",
         "agentDir": "/data/openclaw/agents/ux_designer/agent",
         "skills": ["ux_designer_artifacts"],
@@ -459,7 +463,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "dba_data_engineer",
         "name": "DBA_DataEngineer",
-        "model": "ollama/qwen3.5:397b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-dba_data_engineer",
         "agentDir": "/data/openclaw/agents/dba_data_engineer/agent",
         "skills": ["dba_data_engineer_schema"],
@@ -491,7 +495,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       {
         "id": "memory_curator",
         "name": "Memory_Curator",
-        "model": "ollama/qwen3-coder:480b-cloud",
+        "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-memory_curator",
         "agentDir": "/data/openclaw/agents/memory_curator/agent",
         "skills": ["memory_curator_promotion"],

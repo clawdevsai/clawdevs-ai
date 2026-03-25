@@ -42,6 +42,12 @@ spec:
               echo "Fixing permissions on /data/openclaw..."
               chmod -R 755 /data/openclaw
               chown -R 1000:1000 /data/openclaw
+              # Ensure openclaw.json is readable if it exists
+              if [ -f /data/openclaw/openclaw.json ]; then
+                chmod 644 /data/openclaw/openclaw.json
+                chown 1000:1000 /data/openclaw/openclaw.json
+                echo "Fixed openclaw.json permissions"
+              fi
               echo "Permissions fixed!"
           volumeMounts:
             - name: openclaw-data
