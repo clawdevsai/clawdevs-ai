@@ -20,10 +20,9 @@ class TestRunSyncAgents:
     @pytest.mark.asyncio
     async def test_run_sync_agents_success(self):
         """Test run_sync_agents calls sync_agents_runtime."""
-        with patch('app.tasks.periodic_sync.SessionLocal') as mock_session_local:
+        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
             mock_session = AsyncMock()
-            mock_session_local.return_value.__aenter__ = AsyncMock(return_value=mock_session)
-            mock_session_local.return_value.__aexit__ = AsyncMock(return_value=None)
+            mock_session_local.return_value.__aenter__.return_value = mock_session
 
             with patch('app.tasks.periodic_sync.sync_agents_runtime') as mock_sync:
                 mock_sync.return_value = None
@@ -35,9 +34,9 @@ class TestRunSyncAgents:
     @pytest.mark.asyncio
     async def test_run_sync_agents_handles_exception(self):
         """Test run_sync_agents logs and raises exceptions."""
-        with patch('app.tasks.periodic_sync.SessionLocal') as mock_session_local:
+        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
             mock_session = AsyncMock()
-            mock_session_local.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session_local.return_value.__aenter__.return_value = mock_session
 
             with patch('app.tasks.periodic_sync.sync_agents_runtime') as mock_sync:
                 mock_sync.side_effect = Exception("Sync failed")
@@ -52,9 +51,9 @@ class TestRunSyncSessions:
     @pytest.mark.asyncio
     async def test_run_sync_sessions_success(self):
         """Test run_sync_sessions calls sync_sessions."""
-        with patch('app.tasks.periodic_sync.SessionLocal') as mock_session_local:
+        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
             mock_session = AsyncMock()
-            mock_session_local.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session_local.return_value.__aenter__.return_value = mock_session
 
             with patch('app.tasks.periodic_sync.sync_sessions') as mock_sync:
                 mock_sync.return_value = None
@@ -70,9 +69,9 @@ class TestRunSyncTasks:
     @pytest.mark.asyncio
     async def test_run_sync_tasks_success(self):
         """Test run_sync_tasks calls sync_tasks."""
-        with patch('app.tasks.periodic_sync.SessionLocal') as mock_session_local:
+        with patch('app.tasks.periodic_sync.AsyncSessionLocal') as mock_session_local:
             mock_session = AsyncMock()
-            mock_session_local.return_value.__aenter__ = AsyncMock(return_value=mock_session)
+            mock_session_local.return_value.__aenter__.return_value = mock_session
 
             with patch('app.tasks.periodic_sync.sync_tasks') as mock_sync:
                 mock_sync.return_value = None

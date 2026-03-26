@@ -19,15 +19,18 @@ class OpenClawClient:
             return False
 
     async def get_sessions(self, limit: int = 50) -> list:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(
-                f"{self.base_url}/v1/sessions",
-                headers=self.headers,
-                params={"limit": limit},
-            )
-            if r.status_code != 200:
-                return []
-            return r.json().get("items", r.json() if isinstance(r.json(), list) else [])
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    f"{self.base_url}/v1/sessions",
+                    headers=self.headers,
+                    params={"limit": limit},
+                )
+                if r.status_code != 200:
+                    return []
+                return r.json().get("items", r.json() if isinstance(r.json(), list) else [])
+        except Exception:
+            return []
 
     async def get_session(self, session_id: str) -> Optional[dict]:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -54,15 +57,18 @@ class OpenClawClient:
     async def decide_approval(
         self, approval_id: str, decision: str, justification: str = ""
     ) -> Optional[dict]:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.post(
-                f"{self.base_url}/v1/approvals/{approval_id}/decide",
-                headers=self.headers,
-                json={"decision": decision, "justification": justification},
-            )
-            if r.status_code not in (200, 201):
-                return None
-            return r.json()
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.post(
+                    f"{self.base_url}/v1/approvals/{approval_id}/decide",
+                    headers=self.headers,
+                    json={"decision": decision, "justification": justification},
+                )
+                if r.status_code not in (200, 201):
+                    return None
+                return r.json()
+        except Exception:
+            return None
 
 
 openclaw_client = OpenClawClient()

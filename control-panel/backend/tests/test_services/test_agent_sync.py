@@ -254,12 +254,7 @@ class TestSyncAgentsRuntime:
             }
         }
 
-        with patch('pathlib.Path.exists') as mock_exists:
-            # Return True for qa_engineer sessions file
-            def exists_side_effect(path):
-                return "qa_engineer" in str(path)
-            mock_exists.side_effect = exists_side_effect
-
+        with patch('pathlib.Path.exists', return_value=True):
             with patch('pathlib.Path.read_text') as mock_read:
                 mock_read.return_value = json.dumps(sessions_data)
 
@@ -297,10 +292,7 @@ class TestSyncAgentsRuntime:
         """Test that config cache is cleared before reading."""
         from app.services.agent_sync import sync_agents_runtime
 
-        with patch('app.services.agent_sync._get_openclaw_config') as mock_config:
-            mock_config.return_value = {"agents": {"list": []}}
+        with patch('app.services.agent_sync._get_openclaw_config.cache_clear') as mock_cache_clear:
             with patch('pathlib.Path.exists', return_value=False):
                 await sync_agents_runtime(db_session)
-            # Not necessarily calling cache_clear directly due to caching decorator,
-            # but the function itself calls cache_clear
-            assert mock_config.called
+            mock_cache_clear.assert_called_once()
