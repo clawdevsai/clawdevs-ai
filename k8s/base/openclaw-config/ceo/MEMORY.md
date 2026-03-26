@@ -1,19 +1,19 @@
 # MEMORY — CEO
 
-> Aprendizados acumulados pelo agente CEO entre sessões.
-> Leia este arquivo ao iniciar cada tarefa. Escreva ao concluir.
+> Learnings accumulated by the CEO agent between sessions.
+> Read this file at the start of each task. Write to it upon completion.
 
 ## Active Patterns
 
-<!-- Padrões verificados e ativos para este agente -->
-<!-- Formato: - [PATTERN] <descrição concisa> | Descoberto: YYYY-MM-DD | Fonte: TASK-XXX -->
+<!-- Verified and active patterns for this agent -->
+<!-- Format: - [PATTERN] <concise description> | Discovered: YYYY-MM-DD | Source: TASK-XXX -->
 
 ## Promotion Candidates
 
-<!-- Padrões candidatos à promoção (identificados em outros agentes também) -->
-<!-- Formato: - [CANDIDATE] <descrição> | Agentes: <lista> | Contagem: N -->
+<!-- Patterns candidate for promotion (also identified in other agents) -->
+<!-- Format: - [CANDIDATE] <description> | Agents: <list> | Count: N -->
 
 ## Archived
 
-<!-- Padrões superados ou irrelevantes -->
-<!-- Formato: - [ARCHIVED] <descrição> | Arquivado: YYYY-MM-DD | Motivo: <razão> -->
+<!-- Superseded or irrelevant patterns -->
+<!-- Format: - [ARCHIVED] <description> | Archived: YYYY-MM-DD | Reason: <reason> -->

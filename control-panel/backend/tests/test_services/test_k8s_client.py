@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 import logging
 
 
-class TestGetK8sClients:
+class TestK8sClient:
     """Test get_k8s_clients function."""
 
     def test_get_k8s_clients_success(self):

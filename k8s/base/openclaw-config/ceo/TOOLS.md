@@ -2,71 +2,71 @@
 
 ## Tooling Contract - CEO
 
-Ferramentas principais:
-- read / write: ler e registrar artefatos no backlog
-- sessions_spawn / sessions_send / sessions_list: orquestrar subagentes
-- `exec("gh <args>")`: consultar GitHub autenticado para issues, PRs, workflows e metadados, sem alterar o repositório
-- message: comunicacao executiva quando necessario
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "cloud cost benchmark 2025"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://cloud.google.com/pricing"`
+Main tools:
+- read / write: read and record artifacts in the backlog
+- sessions_spawn / sessions_send / sessions_list: orchestrate sub-agents
+- `exec("gh <args>")`: query authenticated GitHub for issues, PRs, workflows and metadata, without modifying the repository
+- message: executive communication when necessary
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "cloud cost benchmark 2025"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://cloud.google.com/pricing"`
 
-Diretrizes:
-- usar sessao persistente para PO
-- registrar decisao e proximo passo
-- manter contexto unico por iniciativa
-- validar `/data/openclaw/contexts/active_repository.env` antes de delegar ou consultar
-- quando a demanda mencionar outro repo, executar `claw-repo-switch <repo> [branch]` antes de seguir
-- fazer handshake de ferramentas uma unica vez por ciclo (exec/gh + web-search/web-read + read/write)
-- se uma ferramenta falhar, registrar a falha uma unica vez e aplicar fallback imediato
-- nao narrar tentativa interna de comando/ferramenta; responder apenas com resultado, bloqueio e proximo passo
+Guidelines:
+- use persistent session for PO
+- record decision and next step
+- maintain unique context per initiative
+- validate `/data/openclaw/contexts/active_repository.env` before delegating or querying
+- when the demand mentions another repo, execute `claw-repo-switch <repo> [branch]` before proceeding
+- perform tool handshake only once per cycle (exec/gh + web-search/web-read + read/write)
+- if a tool fails, record the failure once and apply immediate fallback
+- do not narrate internal command/tool attempts; respond only with result, blockage and next step
 
-Restrições:
-- nao usar ferramenta para contornar politica de seguranca
-- nao expor secrets em output
-- nao operar fora de paths autorizados
-- nao usar git/gh para commit, push, merge ou abrir PR/MR
-- nao clonar repositorio nem baixar codigo-fonte
-- em GitHub/GitLab, usar `exec("gh ...")` e `exec("web-search ...")`/`exec("web-read ...")` para consulta; nunca para alteração
-- nao permitir acao com repo divergente de `ACTIVE_GITHUB_REPOSITORY`
+Restrictions:
+- do not use tools to bypass security policy
+- do not expose secrets in output
+- do not operate outside authorized paths
+- do not use git/gh for commit, push, merge or opening PR/MR
+- do not clone repositories or download source code
+- on GitHub/GitLab, use `exec("gh ...")` and `exec("web-search ...")`/`exec("web-read ...")` for querying; never for modification
+- do not allow actions with a repo that diverges from `ACTIVE_GITHUB_REPOSITORY`
 
 ## github_permissions
-- **Tipo:** `read-only`
-- **Operações permitidas:** `gh issue list`, `gh pr list`, `gh workflow list`, `gh run view`, `gh label list` — consulta apenas
-- **Proibido:** `gh issue create/edit/close`, `gh pr create/merge`, `gh label create/edit/delete`, `gh workflow run`, qualquer operação de escrita
+- **Type:** `read-only`
+- **Permitted operations:** `gh issue list`, `gh pr list`, `gh workflow list`, `gh run view`, `gh label list` — query only
+- **Prohibited:** `gh issue create/edit/close`, `gh pr create/merge`, `gh label create/edit/delete`, `gh workflow run`, any write operation
 
-Qualidade de uso:
-- toda acao deve ser rastreavel
-- toda delegacao deve ter objetivo e criterio de sucesso
-- toda escalacao deve citar risco e impacto
+Usage quality:
+- every action must be traceable
+- every delegation must have an objective and success criterion
+- every escalation must cite risk and impact
 
 ## Fast Execution Policy
-- Ordem de coleta para diagnostico rapido:
-  1) backlog/status local
-  2) README e artefatos locais
+- Collection order for rapid diagnostics:
+  1) local backlog/status
+  2) README and local artifacts
   3) `exec("gh ...")` read-only
   4) web-search / web-read (exec)
-- Nao repetir sondagem de capacidade (`gh --version`, `web-search`/`web-read`, etc.) no mesmo ciclo.
-- Se o acesso externo estiver indisponivel, emitir `STATUS_SNAPSHOT` com:
-  - `contexto_confirmado`
-  - `evidencias_obtidas`
-  - `lacunas`
-  - `acao_recomendada`
-- Limite de verbosidade operacional: no maximo 1 linha de status por etapa.
+- Do not repeat capability probing (`gh --version`, `web-search`/`web-read`, etc.) in the same cycle.
+- If external access is unavailable, emit `STATUS_SNAPSHOT` with:
+  - `confirmed_context`
+  - `obtained_evidence`
+  - `gaps`
+  - `recommended_action`
+- Operational verbosity limit: at most 1 status line per step.
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
-- **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Session key format:** `agent:<id>:main` (e.g.: `agent:arquiteto:main`, `agent:ceo:main`)
+- **Discovery:** `sessions_list()` filtering `kind: main` to get active session keys
+- **`sessions_spawn`:** hierarchical background delegation - orchestrator delegates task to sub-agent; result returns via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Prohibited:** using `message` with `agent:<id>:main` (use `sessions_send`; `message` is only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`

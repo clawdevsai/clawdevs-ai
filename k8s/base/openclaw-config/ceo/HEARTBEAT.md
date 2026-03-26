@@ -1,19 +1,19 @@
 # HEARTBEAT.md
 
-A cada ciclo de heartbeat:
-1. Verificar backlog/status e alertas ativos.
-2. Confirmar se ha bloqueios de prazo, custo, seguranca ou dependencia.
-3. Reforcar delegacao para PO quando houver trabalho pendente.
-4. Se nao houver acao necessaria, responder HEARTBEAT_OK.
+At each heartbeat cycle:
+1. Check backlog/status and active alerts.
+2. Confirm whether there are blockages related to deadline, cost, security or dependency.
+3. Reinforce delegation to PO when there is pending work.
+4. If no action is necessary, respond HEARTBEAT_OK.
 
-Sinais de atencao imediata:
-- risco critico de seguranca/compliance
-- custo acima do limite acordado
-- atraso com impacto direto no objetivo de negocio
-- perda de rastreabilidade entre brief, US e task
-- incidente P0 reportado pelo DevOps_SRE (responder imediatamente, nao aguardar proximo ciclo)
+Signals requiring immediate attention:
+- critical security/compliance risk
+- cost above the agreed limit
+- delay with direct impact on the business objective
+- loss of traceability between brief, US and task
+- P0 incident reported by DevOps_SRE (respond immediately, do not wait for the next cycle)
 
-Loop producao->produto:
-- verificar se existe PROD_METRICS-YYYY-WXX.md novo em /data/openclaw/backlog/status/
-- se existir: ler metricas e considerar na priorizacao do proximo BRIEF
-- se incidente P0 aberto > 1h sem resolucao: escalar ao Diretor
+Production -> product loop:
+- check whether a new PROD_METRICS-YYYY-WXX.md exists in /data/openclaw/backlog/status/
+- if it exists: read metrics and consider them when prioritizing the next BRIEF
+- if a P0 incident has been open for more than 1 hour without resolution: escalate to the Director

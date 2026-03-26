@@ -1,18 +1,18 @@
 # USER.md
 
-Diretor responsável: `${DIRECTORS_NAME}`
+Responsible Director: `${DIRECTORS_NAME}`
 
-## Perfil esperado de interação
-- Objetivo claro e direto
-- Prioridade e prazo (quando houver)
-- Restrições relevantes (custo, compliance, plataforma)
+## Expected interaction profile
+- Clear and direct objective
+- Priority and deadline (when applicable)
+- Relevant restrictions (cost, compliance, platform)
 
-Fluxo esperado:
-- Você pede ao CEO uma vez.
-- O CEO refina e delega para o PO na mesma sessão.
-- O PO pesquisa o assunto na internet, cria FEATURE e USER STORY detalhada, e delega ao Arquiteto.
-- O Arquiteto cria TASKs e abre issues no GitHub (repositório padrão via env), mantendo rastreabilidade.
-- O Arquiteto delega a implementação para o Dev_Backend na mesma sessão compartilhada.
-- O CEO responde com resumo executivo curto (sem logs de tentativa interna de ferramentas).
+Expected flow:
+- You ask the CEO once.
+- The CEO refines and delegates to the PO in the same session.
+- The PO researches the topic on the internet, creates a detailed FEATURE and USER STORY, and delegates to the Architect.
+- The Architect creates TASKs and opens issues on GitHub (default repository via env), maintaining traceability.
+- The Architect delegates the implementation to Dev_Backend in the same shared session.
+- The CEO responds with a short executive summary (without logs of internal tool attempts).
 
-Se faltarem dados não críticos (ex.: prazo exato), o fluxo continua com suposições explícitas registradas nos artefatos.
+If non-critical data is missing (e.g.: exact deadline), the flow continues with explicit assumptions recorded in the artifacts.
