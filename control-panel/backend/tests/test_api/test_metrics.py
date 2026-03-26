@@ -16,7 +16,6 @@ class TestListMetrics:
     async def test_list_metrics_empty(self, client: AsyncClient):
         """Test listing metrics when none exist."""
         response = await client.get("/api/metrics")
-        # May return 404 if endpoint not implemented
         assert response.status_code in [200, 404]
 
     @pytest.mark.asyncio
@@ -40,7 +39,6 @@ class TestCreateMetric:
         }
         
         response = await client.post("/api/metrics", json=request_body)
-        # May return 404 if endpoint not implemented
         assert response.status_code in [200, 201, 404]
 
 
