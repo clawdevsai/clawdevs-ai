@@ -1,44 +1,44 @@
 ---
 name: dba_data_engineer_schema
-description: Skill DBA/DataEngineer para schema, migrations, otimização de queries e compliance LGPD
+description: Skill DBA/DataEngineer for schema, migrations, query optimization and LGPD compliance
 ---
 
-# Skills do DBA_DataEngineer
+# DBA_DataEngineer Skills
 
-Use este documento como skill única para orientar design de schema, migrations e otimização.
+Use this document as a single skill to guide schema design, migrations and optimization.
 
 ---
 
-## Criar Schema / Migration
+## Create Schema / Migration
 
 Workflow:
-1. Ler TASK-XXX.md e US-XXX.md para entender o modelo de dados necessário.
-2. Pesquisar na web engines e padrões para o domínio (ex: time-series, documentos, relacional).
-3. Projetar schema com ERD em Markdown/Mermaid.
-4. Identificar dados pessoais → documentar data map LGPD.
-5. Criar migration up + down com ferramentas do projeto.
-6. Testar migration em dev: `migrate up` + validar dados + `migrate down` + validar rollback.
-7. Documentar custo estimado de storage.
-8. Persistir artefatos em `/data/openclaw/backlog/database/`.
-9. Reportar ao Arquiteto com evidências (migration status, ERD, LGPD map).
+1. Read TASK-XXX.md and US-XXX.md to understand the required data model.
+2. Search the web for engines and standards for the domain (e.g. time-series, documents, relational).
+3. Design schema with ERD in Markdown/Mermaid.
+4. Identify personal data → document data map LGPD.
+5. Create up + down migration with project tools.
+6. Test migration in dev: `migrate up` + validate data + `migrate down` + validate rollback.
+7. Document estimated storage cost.
+8. Persist artifacts in `/data/openclaw/backlog/database/`.
+9. Report to the Architect with evidence (migration status, ERD, LGPD map).
 
 ---
 
-## Otimizar Query
+## Optimize Query
 
 Workflow:
-1. Capturar EXPLAIN PLAN da query problemática (before).
-2. Identificar: full table scan, missing index, N+1, subquery ineficiente.
-3. Propor e aplicar otimização (índice, reescrita, denormalização pontual).
-4. Capturar EXPLAIN PLAN after + benchmark de latência p95.
-5. Verificar que não há regressão em queries relacionadas.
-6. Documentar decisão em ADR se for mudança de estrutura.
-7. Reportar ao Dev_Backend e Arquiteto com evidências.
+1. Capture EXPLAIN PLAN from the problematic query (before).
+2. Identify: full table scan, missing index, N+1, inefficient subquery.
+3. Propose and apply optimization (index, rewriting, spot denormalization).
+4. Capture EXPLAIN PLAN after + p95 latency benchmark.
+5. Check that there is no regression in related queries.
+6. Document decision in ADR if it is a change in structure.
+7. Report to Dev_Backend and Architect with evidence.
 
 ---
 
-## Agendamento de 4h (Obrigatório)
+## 4-hour appointment (Required)
 
-1. A cada 4h (offset :30), consultar GitHub por issues abertas com label `dba`.
-2. Se houver issue elegível, iniciar execução.
-3. Se não houver, registrar standby e encerrar ciclo sem processamento desnecessário.
+1. Every 4h (offset :30), check GitHub for open issues with label `dba`.
+2. If there is an eligible issue, start execution.
+3. If there is none, register standby and close the cycle without unnecessary processing.

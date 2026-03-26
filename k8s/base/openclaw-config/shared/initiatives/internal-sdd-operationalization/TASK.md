@@ -1,4 +1,4 @@
-# TASK
+#TASK
 
 ## Related artifacts
 - BRIEF: `BRIEF.md`
@@ -7,40 +7,40 @@
 - Plan: `PLAN.md`
 
 ## Objective
-- Publicar e operacionalizar o fluxo SDD como padrao da ClawDevs AI.
+- Publish and operationalize the SDD flow as ClawDevs AI standard.
 
 ## Scope
 - Includes:
-  - templates oficiais
-  - prompts operacionais
+  - official templates
+  - operational prompts
   - checklist SDD
-  - exemplo completo
+  - complete example
 - Does not include:
-  - mudanca de arquitetura do gateway
-  - mudanca de stack
-  - reescrita do runtime do agente
+  - gateway architecture change
+  - stack change
+  - agent runtime rewrite
 
 ## Acceptance criteria
-1. Dado um novo agente, quando ele iniciar, entao encontra os artefatos SDD principais.
-2. Dado uma nova iniciativa, quando ela for aberta, entao existe um caminho claro para BRIEF -> SPEC -> CLARIFY -> PLAN -> TASK -> VALIDATE.
-3. Dado o README, quando alguém abrir o repo, entao o fluxo fica evidente em poucos segundos.
+1. Given a new agent, when it starts, it then finds the main SDD artifacts.
+2. Given a new initiative, when it opens, then there is a clear path to BRIEF -> SPEC -> CLARIFY -> PLAN -> TASK -> VALIDATE.
+3. Given the README, when someone opens the repo, then the flow becomes evident in a few seconds.
 
 ## Implementation steps
-1. Publicar templates e contratos compartilhados.
-2. Distribuir os arquivos aos workspaces dos agentes.
-3. Atualizar README e Makefile.
-4. Validar a renderização do Kustomize.
+1. Publish shared templates and contracts.
+2. Distribute files to agent workspaces.
+3. Update README and Makefile.
+4. Validate Kustomize rendering.
 
 ## Tests
 - Unit: N/A
 - Integration: `kubectl kustomize k8s`
-- Validation: leitura dos prompts e atalhos
+- Validation: reading prompts and shortcuts
 
 ## NFRs
-- Performance: impacto nulo no runtime.
-- Cost: sem aumento material de custo.
-- Security: sem segredos ou credenciais.
-- Observability: docs rastreaveis em markdown.
+- Performance: zero impact on runtime.
+- Cost: no material increase in cost.
+- Security: no secrets or credentials.
+- Observability: traceable docs in markdown.
 
 ## Done when
-- O fluxo fica pronto para uso interno e para projetos.
+- The flow is ready for internal use and for projects.

@@ -49,16 +49,30 @@
         },
         "project_type": {
           "type": "string",
-          "enum": ["web", "mobile", "desktop", "api", "saas", "automation", "data", "ai", "other"]
+          "enum": [
+            "web",
+            "mobile",
+            "desktop",
+            "api",
+            "saas",
+            "automation",
+            "data",
+            "ai",
+            "other"
+          ]
         },
         "platforms": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1
         },
         "languages": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "deadline": {
           "type": "string"
@@ -69,11 +83,21 @@
         },
         "data_classification": {
           "type": "string",
-          "enum": ["P0", "P1", "P2", "nao"]
+          "enum": [
+            "P0",
+            "P1",
+            "P2",
+            "nao"
+          ]
         }
       },
-      "required": ["brief_id"]
+      "required": [
+        "brief_id"
+      ]
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

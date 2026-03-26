@@ -1,35 +1,35 @@
 # BOOTSTRAP.md - Security_Engineer
 
-1. Carregar env:
+1. Upload env:
    - `GITHUB_ORG`
    - `ACTIVE_GITHUB_REPOSITORY`
    - `OPENCLAW_ENV`
    - `PROJECT_ROOT` (default `/data/openclaw/backlog/implementation`)
-2. Ler `README.md` do repositório para entender stack, linguagens e frameworks utilizados.
-3. Validar estrutura base:
+2. Read `README.md` the repository to understand the stack, languages and frameworks used.
+3. Validate base structure:
    - `${PROJECT_ROOT}`
-   - se inexistente, usar fallback `/data/openclaw/backlog/implementation` e marcar contexto como `standby` (sem lançar erro)
-4. Inicializar diretórios de trabalho de segurança:
-   - `/data/openclaw/backlog/security/` → relatórios de segurança e CVEs
-   - `/data/openclaw/backlog/security/scans/` → resultados de scans SAST/DAST
-   - `/data/openclaw/backlog/security/patches/` → evidências de patches aplicados
-5. Detectar manifests de dependências no repositório:
+   - if non-existent, use fallback `/data/openclaw/backlog/implementation` and mark context as `standby` (without throwing an error)
+4. Initialize security working directories:
+   - `/data/openclaw/backlog/security/` → security reports and CVEs
+   - `/data/openclaw/backlog/security/scans/` → SAST/DAST scan results
+   - `/data/openclaw/backlog/security/patches/` → evidence of patches applied
+5. Detect dependency manifests in the repository:
    - `package.json` → `npm audit`
    - `requirements.txt` / `pyproject.toml` → `pip-audit`
    - `go.mod` → `osv-scanner`
    - `Cargo.toml` → `cargo audit` / `osv-scanner`
    - `pom.xml` / `build.gradle` → `trivy fs`
-   - antes de ler manifest, validar se o arquivo existe
-   - se nenhum manifest existir, não falhar; operar por `technology_stack` ou aguardar task
-6. Configurar cache de ferramentas de segurança:
-   - Atualizar banco de dados do Trivy: `trivy image --download-db-only`
-   - Atualizar regras do Semgrep: `semgrep --update`
-   - Verificar banco de dados local do OSV
-7. Verificar toolchain no PATH: `semgrep`, `trivy`, `gitleaks`, `trufflehog`, `osv-scanner`, `npm`, `pip-audit`.
-8. Configurar logger com `task_id`, `scan_type` e `cvss_threshold`.
-9. Habilitar acesso total à internet para consulta a CVE databases, NVD, OSV, GHSA e Snyk Advisor.
-10. Validar autenticação `gh` e permissões para criar PRs e issues no repositório ativo.
-11. Configurar agendamento:
-    - intervalo fixo: 6 horas (cron: `0 */6 * * *`)
-    - origem de trabalho: cron + issues GitHub com label `security` + mensagens de dev agents
-12. Pronto.
+   - before reading manifest, validate that the file exists
+   - if no manifest exists, do not fail; operate by `technology_stack` or wait for task
+6. Configure security tools cache:
+   - Update Trivy Database: `trivy image --download-db-only`
+   - Update Semgrep rules: `semgrep --update`
+   - Check local OSV database
+7. Check toolchain in PATH: `semgrep`, `trivy`, `gitleaks`, `trufflehog`, `osv-scanner`, `npm`, `pip-audit`.
+8. Configure logger with `task_id`, `scan_type` and `cvss_threshold`.
+9. Enable full internet access to consult CVE databases, NVD, OSV, GHSA and Snyk Advisor.
+10. Validate `gh` authentication and permissions to create PRs and issues in the active repository.
+11. Set up scheduling:
+    - fixed interval: 6 hours (cron: `0 */6 * * *`)
+    - job source: cron + GitHub issues with label `security` + messages from dev agents
+12. Ready.

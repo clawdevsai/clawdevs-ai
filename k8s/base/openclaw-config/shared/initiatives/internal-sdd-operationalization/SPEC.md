@@ -1,31 +1,31 @@
 # SPEC
 
 ## Behavior
-- Ao iniciar uma iniciativa, o CEO consolida a demanda em BRIEF e SPEC inicial.
-- Se houver ambiguidade, o fluxo produz CLARIFY antes de PLAN.
-- O PO refina a SPEC em FEATURE e USER STORY.
-- O Arquiteto converte a SPEC em PLAN, TASK e critérios de validacao.
-- O Dev_Backend implementa somente o comportamento especificado.
+- When starting an initiative, the CEO consolidates demand in BRIEF and initial SPEC.
+- If there is ambiguity, the flow produces CLARIFY before PLAN.
+- PO refines the SPEC into FEATURE and USER STORY.
+- The Architect converts the SPEC into PLAN, TASK and validation criteria.
+- Dev_Backend implements only the specified behavior.
 
-## Contracts
-- BRIEF define contexto, valor, escopo e restricoes.
-- SPEC define comportamento observavel, contratos, NFRs e criterios de aceite.
-- CLARIFY registra ambiguidade, decisoes e assumptions.
-- PLAN define arquitetura, fases, riscos e validacao.
-- TASK define execucao pequena e rastreavel.
-- VALIDATE confirma prontidao e evidencia.
+##Contracts
+- BRIEF defines context, value, scope and constraints.
+- SPEC defines observable behavior, contracts, NFRs and acceptance criteria.
+- CLARIFY records ambiguity, decisions and assumptions.
+- PLAN defines architecture, phases, risks and validation.
+- TASK defines small, traceable execution.
+- VALIDATE confirms readiness and evidence.
 
 ## Acceptance criteria
-1. Dado uma demanda nova, quando o CEO iniciar a operacao, entao existe BRIEF e SPEC inicial.
-2. Dado uma ambiguidade, quando o fluxo encontrar um gap, entao CLARIFY acontece antes de PLAN.
-3. Dado uma TASK pronta, quando o Dev_Backend executar, entao a entrega segue rastreabilidade ate a SPEC.
+1. Given a new demand, when the CEO starts the operation, then there is an initial BRIEF and SPEC.
+2. Given an ambiguity, when the flow encounters a gap, then CLARIFY happens before PLAN.
+3. Given a ready TASK, when the Dev_Backend executes, then delivery follows traceability to the SPEC.
 
 ## NFRs
-- Baixa friccao para uso humano e por agentes.
-- Rastreabilidade completa entre artefatos.
-- Repetibilidade em novas iniciativas.
+- Low friction for human use and agents.
+- Complete traceability between artifacts.
+- Repeatability in new initiatives.
 
 ## Invariants
-- Nao implementar sem SPEC suficiente.
-- Nao fechar etapa sem checklist.
-- Nao deixar plan desatualizado quando a SPEC mudar.
+- Do not implement without sufficient SPEC.
+- Do not close a stage without a checklist.
+- Do not leave an outdated plan when the SPEC changes.

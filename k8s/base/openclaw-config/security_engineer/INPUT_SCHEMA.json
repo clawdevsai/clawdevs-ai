@@ -44,18 +44,18 @@
         "target_url": {
           "type": "string",
           "format": "uri",
-          "description": "URL da aplicação para DAST scan (staging ou produção)"
+          "description": "Application URL for DAST scan (staging or production)"
         },
         "cve_id": {
           "type": "string",
           "pattern": "^CVE-\\d{4}-\\d{4,}$",
-          "description": "CVE ID específico para auto_patch ou investigação"
+          "description": "Specific CVE ID for auto_patch or investigation"
         },
         "cvss_threshold": {
           "type": "number",
           "minimum": 0,
           "maximum": 10,
-          "description": "Threshold mínimo de CVSS para reportar/agir. Default: 4.0"
+          "description": "Minimum CVSS threshold for reporting/acting. Default: 4.0"
         },
         "pr_auto_open": {
           "type": "boolean",
@@ -63,34 +63,50 @@
         },
         "branch": {
           "type": "string",
-          "description": "Branch alvo para scan (default: branch ativo do repositório)"
+          "description": "Target branch for scanning (default: active branch of the repository)"
         },
         "pr_number": {
           "type": "integer",
-          "description": "Número do PR a ser escaneado (SAST/secret scan em PRs)"
+          "description": "PR number to be scanned (SAST/secret scan on PRs)"
         },
         "scan_type": {
           "type": "string",
-          "enum": ["dependencies", "sast", "dast", "secrets", "supply_chain", "full"],
-          "description": "Tipo específico de scan quando intent é genérico"
+          "enum": [
+            "dependencies",
+            "sast",
+            "dast",
+            "secrets",
+            "supply_chain",
+            "full"
+          ],
+          "description": "Specific type of scan when intent is generic"
         },
         "cvss_score": {
           "type": "number",
           "minimum": 0,
           "maximum": 10,
-          "description": "CVSS score da vulnerabilidade encontrada (para disparar regras autonomous_critical_fix e p0_security_escalation_to_ceo)"
+          "description": "CVSS score of the vulnerability found (to trigger autonomous_critical_fix and p0_security_escalation_to_ceo rules)"
         },
         "severity": {
           "type": "string",
-          "enum": ["critical", "high", "medium", "low", "info"],
-          "description": "Severidade classificada do finding (usado em regras de escalação)"
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "info"
+          ],
+          "description": "Classified finding severity (used in escalation rules)"
         },
         "secret_found": {
           "type": "boolean",
-          "description": "Indica se um secret foi detectado no scan (dispara regra secret_found_immediate_action)"
+          "description": "Indicates whether a secret was detected in the scan (triggers rule secret_found_immediate_action)"
         }
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

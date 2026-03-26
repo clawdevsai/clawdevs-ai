@@ -1,27 +1,27 @@
 # BOOT.md - DevOps_SRE
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md`.
-3. Ler `README.md` do repositório para entender a aplicação, stack e infraestrutura.
-4. Carregar `SOUL.md`.
-5. Carregar `INPUT_SCHEMA.json`.
-6. Ler `/data/openclaw/memory/shared/SHARED_MEMORY.md` — aplicar padrões globais do time como contexto base.
-7. Ler `/data/openclaw/memory/devops_sre/MEMORY.md` — resgatar aprendizados próprios de infraestrutura relevantes.
-8. Validar `/data/openclaw/` e workspace de infraestrutura.
-9. Detectar stack de infra: Kubernetes manifests, Terraform, Helm, GitHub Actions workflows.
-10. Verificar ferramentas no PATH: `kubectl`, `terraform`, `helm`, `gh`, `git`.
-11. Verificar cloud CLI disponível: `aws`, `gcloud`, `az`.
-12. Validar variáveis via `/data/openclaw/contexts/active_repository.env`: `ACTIVE_GITHUB_REPOSITORY`.
-13. Verificar SLOs e alertas ativos em `/data/openclaw/backlog/status/`.
-14. Ao concluir a sessão: registrar até 3 aprendizados em `/data/openclaw/memory/devops_sre/MEMORY.md`.
-15. Pronto para receber tasks do Arquiteto ou incidentes de produção.
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md`.
+3. Read `README.md` the repository to understand the application, stack and infrastructure.
+4. Load `SOUL.md`.
+5. Load `INPUT_SCHEMA.json`.
+6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
+7. Read `/data/openclaw/memory/devops_sre/MEMORY.md` — retrieve your own relevant infrastructure learnings.
+8. Validate `/data/openclaw/` and infrastructure workspace.
+9. Detect infrastructure stack: Kubernetes manifests, Terraform, Helm, GitHub Actions workflows.
+10. Check tools in PATH: `kubectl`, `terraform`, `helm`, `gh`, `git`.
+11. Check available cloud CLI: `aws`, `gcloud`, `az`.
+12. Validate variables via `/data/openclaw/contexts/active_repository.env`: `ACTIVE_GITHUB_REPOSITORY`.
+13. Check active SLOs and alerts at `/data/openclaw/backlog/status/`.
+14. When completing the session: register up to 3 learnings in `/data/openclaw/memory/devops_sre/MEMORY.md`.
+15. Ready to receive tasks from the Architect or production incidents.
 
-## healthcheck
-- `/data/openclaw/` acessível? ✅
-- INPUT_SCHEMA.json carregado? ✅
-- Stack de infra detectada? ✅
-- Ferramentas `kubectl`, `gh`, `terraform` disponíveis? ✅ (warn se ausentes, não falhar)
-- SHARED_MEMORY.md e MEMORY.md (devops_sre) lidos? ✅
-- `ACTIVE_GITHUB_REPOSITORY` definido? ✅
+##healthcheck
+- `/data/openclaw/` accessible? ✅
+- INPUT_SCHEMA.json loaded? ✅
+- Infra stack detected? ✅
+- Are `kubectl`, `gh`, `terraform` tools available? ✅ (warn if missing, don't crash)
+- SHARED_MEMORY.md and MEMORY.md (devops_sre) read? ✅
+- `ACTIVE_GITHUB_REPOSITORY` set? ✅

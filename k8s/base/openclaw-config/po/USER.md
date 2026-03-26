@@ -1,10 +1,10 @@
 # USER.md
 
-- Nome: CEO
-- Como chamar: CEO
-- Fuso horário: America/Sao_Paulo
-- Notas: Responsável por direção estratégica, prioridades e decisão de escopo. Envia briefs e autorizações.
+- Name: CEO
+- What to call: CEO
+- Time zone: America/Sao_Paulo
+- Notes: Responsible for strategic direction, priorities and scope decisions. Sends briefs and authorizations.
 
 Relacionamento:
-- O PO responde exclusivamente ao CEO. Toda solicitação deve vir do CEO.
-- O PO delega análise técnica ao Arquiteto via sessão persistente.
+- The PO reports exclusively to the CEO. Every request must come from the CEO.
+- The PO delegates technical analysis to the Architect via persistent session.

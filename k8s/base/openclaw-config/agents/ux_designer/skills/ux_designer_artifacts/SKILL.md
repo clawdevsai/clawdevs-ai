@@ -1,46 +1,46 @@
 ---
 name: ux_designer_artifacts
-description: Skill de design UX para wireframes, fluxos de usuário, design tokens e artefatos visuais
+description: UX design skill for wireframes, user flows, design tokens and visual artifacts
 ---
 
-# Skills do UX_Designer
+# UX_Designer Skills
 
-Use este documento como skill única para orientar criação de artefatos UX.
+Use this document as a single skill to guide the creation of UX artifacts.
 
 ---
 
-## Criar Artefato UX Completo
+## Create Complete UX Artifact
 
-Use esta skill quando receber uma User Story com componente de UI do PO.
+Use this skill when you receive a User Story with a PO UI component.
 
 Workflow:
-1. Ler US-XXX.md e SPEC-XXX.md para entender o objetivo e critérios de aceite.
-2. Pesquisar referências de UX para o domínio do produto (mínimo 3 referências).
-3. Mapear user flow com Mermaid: happy path, estados de erro, edge cases.
-4. Criar wireframe em Markdown por tela: layout, componentes, estados (empty/loading/error/success).
-5. Definir design tokens relevantes: cores, tipografia, espaçamentos, breakpoints.
-6. Especificar componentes principais: props, variantes, comportamento responsivo, acessibilidade WCAG AA.
-7. Persistir UX-XXX-<slug>.md em `/data/openclaw/backlog/ux/`.
-8. Reportar ao PO com link do artefato e resumo de decisões de design.
+1. Read US-XXX.md and SPEC-XXX.md to understand the purpose and acceptance criteria.
+2. Search UX references for the product domain (minimum 3 references).
+3. Map user flow with Mermaid: happy path, error states, edge cases.
+4. Create wireframe in Markdown per screen: layout, components, states (empty/loading/error/success).
+5. Define relevant design tokens: colors, typography, spacing, breakpoints.
+6. Specify core components: props, variants, responsive behavior, WCAG AA accessibility.
+7. Persist UX-XXX-<slug>.md in `/data/openclaw/backlog/ux/`.
+8. Report to PO with artifact link and summary of design decisions.
 
 ---
 
-## Estrutura do Artefato UX-XXX.md
+## UX-XXX.md Artifact Structure
 
 ```markdown
 # UX-XXX — <título da feature>
 
-## Objetivo
-<objetivo da experiência do usuário>
+## Objective
+<user experience objective>
 
 ## Persona Primária
 <persona, contexto de uso, dispositivo>
 
 ## User Flow
 ```mermaid
-flowchart TD
-  A[Entrada] --> B[Ação principal] --> C[Estado de sucesso]
-  B --> D[Estado de erro]
+TD flowchart
+  A[Input] --> B[Main Action] --> C[Success Status]
+  B --> D[Error status]
 ```
 
 ## Wireframes
@@ -65,9 +65,9 @@ flowchart TD
 ## Referências
 - [Fonte 1](url) — <o que foi adaptado>
 
-## Critérios de Aceite UX
+## UX Acceptance Criteria
 - [ ] User flow implementado conforme diagrama
 - [ ] Todos os estados de tela cobertos
-- [ ] WCAG AA validado
+- [ ] WCAG AA validated
 - [ ] Design tokens aplicados corretamente
 ```

@@ -16,10 +16,10 @@ User corrects you or points out mistakes. You complete significant work and want
 Use this workflow when debugging defects with the QA companion skill `qa-bug-investigation`.
 
 **PT-BR**
-- Antes de investigar: carregue `memory.md` (HOT) e, se existir, `domains/code.md` ou `projects/<projeto>.md`
-- Durante a investigação: registre hipóteses descartadas e causa raiz validada
-- Após fix/teste: registre um `LESSON` curto e reutilizável em `corrections.md`
-- Após 3 recorrências da mesma classe de falha: peça confirmação para promover regra
+- Before investigating: load `memory.md` (HOT) and, if it exists, `domains/code.md` or `projects/<project>.md`
+- During investigation: record discarded hypotheses and validated root cause
+- After fix/test: register a short and reusable `LESSON` at `corrections.md`
+- After 3 recurrences of the same failure class: ask for confirmation to promote rule
 
 **EN**
 - Before investigation: load HOT memory and the smallest relevant domain/project file
@@ -27,7 +27,7 @@ Use this workflow when debugging defects with the QA companion skill `qa-bug-inv
 - After fix/test: log one concise reusable lesson in `corrections.md`
 - After 3 recurrences of the same failure class: ask confirmation to promote a rule
 
-## Architecture
+##Architecture
 
 Memory lives in `~/self-improving/` with tiered structure. If `~/self-improving/` does not exist, run `setup.md`.
 Workspace setup should add the standard self-improving steering to the workspace AGENTS, SOUL, and `HEARTBEAT.md` files, with recurring maintenance routed through `heartbeat-rules.md`.
@@ -81,9 +81,7 @@ After completing significant work, pause and evaluate:
 
 1. **Did it meet expectations?** — Compare outcome vs intent
 2. **What could be better?** — Identify improvements for next time
-3. **Is this a pattern?** — If yes, log to `corrections.md`
-
-**When to self-reflect:**
+3. **Is this a pattern?** — If yes, log to `corrections.md`**When to self-reflect:**
 - After completing a multi-step task
 - After receiving feedback (positive or negative)
 - After fixing a bug or mistake

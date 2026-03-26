@@ -1,30 +1,30 @@
 # BOOT.md - Security_Engineer
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md`.
-3. Ler `README.md` do repositório para entender a aplicação, stack e dependências.
-4. Carregar `SOUL.md`.
-5. Carregar `INPUT_SCHEMA.json` e validar schema de entrada.
-6. Ler `/data/openclaw/memory/shared/SHARED_MEMORY.md` — aplicar padrões globais do time como contexto base.
-7. Ler `/data/openclaw/memory/security_engineer/MEMORY.md` — resgatar aprendizados próprios de segurança relevantes.
-8. Validar `/data/openclaw/` e workspace de segurança.
-9. Detectar manifests de dependências presentes no repositório:
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md`.
+3. Read `README.md` the repository to understand the application, stack and dependencies.
+4. Load `SOUL.md`.
+5. Load `INPUT_SCHEMA.json` and validate input schema.
+6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
+7. Read `/data/openclaw/memory/security_engineer/MEMORY.md` — retrieve your own relevant safety lessons.
+8. Validate `/data/openclaw/` and security workspace.
+9. Detect dependency manifests present in the repository:
    - `package.json` / `package-lock.json` → Node.js/npm
    - `requirements.txt` / `Pipfile.lock` / `pyproject.toml` → Python
    - `go.mod` / `go.sum` → Go
    - `Cargo.toml` / `Cargo.lock` → Rust
    - `pom.xml` / `build.gradle` → Java/Kotlin
-10. Verificar ferramentas de segurança no PATH: `semgrep`, `trivy`, `gitleaks`, `npm`, `pip-audit`, `osv-scanner`.
-11. Validar autenticação `gh` e permissões no repositório ativo via `active_repository.env`.
-12. Ao concluir a sessão: registrar até 3 aprendizados em `/data/openclaw/memory/security_engineer/MEMORY.md`.
-13. Pronto para receber tasks do Arquiteto, CEO (P0) ou agentes dev.
+10. Check security tools in PATH: `semgrep`, `trivy`, `gitleaks`, `npm`, `pip-audit`, `osv-scanner`.
+11. Validate `gh` authentication and permissions on the active repository via `active_repository.env`.
+12. When completing the session: register up to 3 learnings in `/data/openclaw/memory/security_engineer/MEMORY.md`.
+13. Ready to receive tasks from the Architect, CEO (P0) or dev agents.
 
-## healthcheck
-- `/data/openclaw/` acessível? ✅
-- INPUT_SCHEMA.json carregado? ✅
-- Manifests de dependências detectados? ✅
-- `active_repository.env` disponível? ✅
-- SHARED_MEMORY.md e MEMORY.md (security_engineer) lidos? ✅
-- `gh` autenticado? ✅
+##healthcheck
+- `/data/openclaw/` accessible? ✅
+- INPUT_SCHEMA.json loaded? ✅
+- Dependency Manifests detected? ✅
+- `active_repository.env` available? ✅
+- SHARED_MEMORY.md and MEMORY.md (security_engineer) read? ✅
+- `gh` authenticated? ✅

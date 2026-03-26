@@ -1,34 +1,34 @@
 # SDD OPERATING MODEL
 
-ClawDevs AI aplica Spec-Driven Development em dois niveis:
+ClawDevs AI applies Spec-Driven Development on two levels:
 
-1. **Internamente**: na propria plataforma, nos agentes, no bootstrap, na infraestrutura e nas automacoes do repo.
-2. **Nos projetos**: em qualquer entrega feita para clientes, produtos ou times internos.
+1. **Internally**: on the platform itself, on the agents, on the bootstrap, on the infrastructure and in the repo automations.
+2. **In projects**: in any delivery made to customers, products or internal teams.
 
-## Regra central
-- A SPEC define o comportamento pretendido.
-- O codigo e a implementacao executavel dessa SPEC.
-- Mudancas sem SPEC clara nao devem seguir para implementacao.
+## Central rule
+- SPEC defines the intended behavior.
+- The code is the executable implementation of this SPEC.
+- Changes without a clear SPEC should not proceed for implementation.
 
-## Fonte de verdade
-- Para comportamento e contrato, a fonte de verdade e a SPEC aprovada.
-- Para execucao, runtime e automacao, o codigo precisa refletir a SPEC.
-- Para negocio e prioridade, o BRIEF e a SPEC precisam permanecer alinhados.
+## Source of truth
+- For behavior and contract, the source of truth is the approved SPEC.
+- For execution, runtime and automation, the code needs to reflect the SPEC.
+- For business and priority, BRIEF and SPEC need to remain aligned.
 
-## Como aplicar internamente
-- Toda melhoria da plataforma ClawDevs AI começa com BRIEF ou demanda equivalente.
-- Em seguida, escrever SPEC com comportamento observavel e criterio de aceite.
-- Depois, quebrar em US e TASK para execucao.
-- Se a mudanca afetar agentes, bootstrap, manifests ou automacoes, o mesmo fluxo continua valendo.
+## How to apply internally
+- Every improvement to the ClawDevs AI platform starts with BRIEF or equivalent demand.
+- Then, write SPEC with observable behavior and acceptance criteria.
+- Then, break into US and TASK for execution.
+- If the change affects agents, bootstrap, manifests or automations, the same flow continues to apply.
 
-## Como aplicar nos projetos
-- Toda feature de projeto tambem segue BRIEF -> SPEC -> US -> TASK.
-- A SPEC deve cobrir contratos, NFRs, integracoes e riscos.
-- O trabalho deve sair em slices pequenos, demonstraveis e reversiveis.
-- Depois da primeira entrega visivel, endurecer com testes, observabilidade e rollback.
+## How to apply to projects
+- Every project feature also follows BRIEF -> SPEC -> US -> TASK.
+- SPEC must cover contracts, NFRs, integrations and risks.
+- The work must be done in small, demonstrable and reversible slices.
+- After the first visible delivery, harden with testing, observability and rollback.
 
-## Resultado esperado
-- Menos ambiguidade.
-- Menos retrabalho.
-- Mais previsibilidade.
-- Melhor rastreabilidade entre o que foi pedido, especificado e entregue.
+## Expected result
+- Less ambiguity.
+- Less rework.
+- More predictability.
+- Better traceability between what was ordered, specified and delivered.

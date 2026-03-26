@@ -48,11 +48,17 @@
         },
         "target_platform": {
           "type": "string",
-          "enum": ["ios", "android", "both"]
+          "enum": [
+            "ios",
+            "android",
+            "both"
+          ]
         },
         "issue_label": {
           "type": "string",
-          "enum": ["mobile"]
+          "enum": [
+            "mobile"
+          ]
         },
         "retry_count": {
           "type": "integer",
@@ -62,5 +68,8 @@
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

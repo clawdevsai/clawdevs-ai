@@ -1,17 +1,17 @@
 ---
 name: security_engineer_scan
-description: Skill de segurança para scans proativos de CVEs, SAST, detecção de secrets e patches autônomos
+description: Security skill for proactive scans of CVEs, SAST, secret detection and autonomous patches
 ---
 
-# Skills do Security_Engineer
+# Security_Engineer Skills
 
 ---
 
-## Fluxo Principal de Segurança
+## Main Security Flow
 
-### 1. Auditoria de Dependências (Manifests)
+### 1. Dependency Audit (Manifests)
 
-Executar em todos os manifests detectados no repositório:
+Run on all detected manifests in the repository:
 
 ```bash
 # Node.js / npm
@@ -27,14 +27,14 @@ osv-scanner --json --recursive . > /data/openclaw/backlog/security/scans/osv-sca
 trivy fs --json --exit-code 0 . > /data/openclaw/backlog/security/scans/trivy-fs.json
 ```
 
-Consolidar resultados: agrupar CVEs por CVSS score, pacote e versão afetada.
+Consolidate results: group CVEs by CVSS score, package and affected version.
 
 ---
 
-### 2. SAST — Análise Estática
+### 2. SAST — Static Analysis
 
 ```bash
-# Regras de segurança amplas (multi-linguagem)
+# Broad security rules (multi-language)
 semgrep --config=p/security-audit --config=p/owasp-top-ten \
   --json -o /data/openclaw/backlog/security/scans/semgrep.json .
 
@@ -47,11 +47,11 @@ npx eslint --ext .js,.ts,.jsx,.tsx \
   --format json -o /data/openclaw/backlog/security/scans/eslint-security.json .
 ```
 
-Classificar findings por severidade: critical → high → medium → low.
+Sort findings by severity: critical → high → medium → low.
 
 ---
 
-### 3. DAST — Análise Dinâmica (quando URL disponível)
+### 3. DAST — Dynamic Analysis (when URL available)
 
 ```bash
 # OWASP ZAP em modo headless
@@ -60,15 +60,15 @@ docker run --rm owasp/zap2docker-stable zap-baseline.py \
   -J /data/openclaw/backlog/security/scans/zap-baseline.json
 ```
 
-Verificar:
-- OWASP Top 10 (injeção, autenticação, exposição de dados, etc.)
-- Headers de segurança: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
-- Endpoints sensíveis sem autenticação
-- Configurações TLS/SSL
+Check:
+- OWASP Top 10 (injection, authentication, data exposure, etc.)
+- Security Headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options
+- Sensitive endpoints without authentication
+- TLS/SSL Settings
 
 ---
 
-### 4. Detecção de Secrets
+### 4. Secret Detection
 
 ```bash
 # Histórico completo do repositório
@@ -80,29 +80,29 @@ gitleaks detect --source . --log-opts HEAD~10..HEAD \
   --report-path /data/openclaw/backlog/security/scans/gitleaks.json
 ```
 
-Se secret encontrado:
-1. Logar `secret_exposure_detected` com referência ao arquivo e commit (NÃO o valor).
-2. Notificar Arquiteto imediatamente via `sessions_send`.
-3. Criar issue `security` com severidade P0.
-4. Recomendar revogação e rotação imediata da credencial.
+If secret found:
+1. Log `secret_exposure_detected` with reference to the file and commit (NOT the value).
+2. Notify Architect immediately via `sessions_send`.
+3. Create issue `security` with severity P0.
+4. Recommend immediate credential revocation and rotation.
 
 ---
 
-### 5. Para Cada CVE Encontrado
+### 5. For Each CVE Found
 
-#### 5.1 Classificar CVSS
+#### 5.1 Classify CVSS
 
-| Score | Severidade | Ação |
+| Score | Severity | Action |
 |-------|-----------|------|
-| >= 9.0 | Crítico (P0) | Patch autônomo imediato + escalar ao CEO |
-| 7.0–8.9 | Alto (P1) | Patch autônomo no ciclo atual + notificar Arquiteto |
-| 4.0–6.9 | Médio (P2) | Issue security + recomendar fix no próximo sprint |
-| < 4.0 | Baixo (P3) | Registrar no relatório periódico |
+| >= 9.0 | Critical (P0) | Immediate standalone patch + escalate to CEO |
+| 7.0–8.9 | High (P1) | Standalone patch in current cycle + notify Architect |
+| 4.0–6.9 | Medium (P2) | Issue security + recommend fix in next sprint |
+| < 4.0 | Low (P3) | Register in the periodic report |
 
-#### 5.2 Buscar Alternativa ou Patch
+#### 5.2 Search for Alternative or Patch
 
 ```bash
-# Verificar versão segura disponível
+# Check versão segura disponível
 npm info <pacote> versions --json  # Node.js
 pip index versions <pacote>        # Python
 
@@ -111,10 +111,10 @@ pip index versions <pacote>        # Python
 # Fontes: NVD, OSV, GHSA, Snyk Advisor, pkg.go.dev/vuln
 ```
 
-#### 5.3 Aplicar Fix Autônomo (CVSS >= 7.0)
+#### 5.3 Apply Standalone Fix (CVSS >= 7.0)
 
 ```bash
-# Criar branch de segurança
+# Create branch de security
 git checkout -b security/fix-CVE-YYYY-XXXXX
 
 # Atualizar dependência (exemplo Node.js)
@@ -140,10 +140,10 @@ gh pr create \
   --label security
 ```
 
-#### 5.4 Conteúdo obrigatório do PR
+#### 5.4 Mandatory PR content
 
 ```markdown
-## Vulnerabilidade de Segurança
+## Security Vulnerability
 
 **CVE ID**: CVE-YYYY-XXXXX
 **CVSS Score**: X.X (Crítico/Alto)
@@ -164,32 +164,32 @@ gh pr create \
 - <link ao advisory original>
 
 > Patch aplicado autonomamente pelo Security_Engineer (CVSS >= 7.0).
-> Arquiteto notificado. Não é necessária aprovação prévia para merge.
+> Architect notified. Prior approval for merge is not required.
 ```
 
 ---
 
-### 6. Auditoria de Supply Chain
+### 6. Supply Chain Audit
 
 ```bash
-# Gerar SBOM
+# Generate SBOM
 syft . -o cyclonedx-json > /data/openclaw/backlog/security/scans/sbom.json
 
-# Verificar vulnerabilidades no SBOM
+# Check vulnerabilidades no SBOM
 grype sbom:/data/openclaw/backlog/security/scans/sbom.json \
   --output json > /data/openclaw/backlog/security/scans/grype.json
 ```
 
-Alertar sobre:
-- Pacotes comprometidos (typosquatting, maintainer takeover)
-- Pacotes abandonados com CVEs conhecidos e sem patch
-- Dependências transitivas com CVSS >= 7.0
+Alert about:
+- Compromised packages (typosquatting, maintainer takeover)
+- Abandoned packages with known and unpatched CVEs
+- Transitive dependencies with CVSS >= 7.0
 
 ---
 
-### 7. Relatório de Segurança
+### 7. Security Report
 
-Formato de `SECURITY_REPORT-YYYY-MM-DD.md`:
+`SECURITY_REPORT-YYYY-MM-DD.md` Format:
 
 ```markdown
 # SECURITY_REPORT-2025-03-21
@@ -224,12 +224,12 @@ Formato de `SECURITY_REPORT-YYYY-MM-DD.md`:
 
 ---
 
-### 8. Escalação P0 ao CEO
+### 8. Escalation P0 to CEO
 
 ```
 1. Enviar via sessions_send ao CEO imediatamente
 2. Incluir: CVE ID, CVSS score, sistemas afetados, vetor de ataque, impacto de negócio estimado
-3. Incluir: plano de mitigação imediata (patch em andamento ou workaround)
+3. Incluir: plano de mitigation imediata (patch em andamento ou workaround)
 4. Comunicar status a cada hora até resolução
 5. Post-mortem em /data/openclaw/backlog/security/incidents/
 ```
@@ -238,8 +238,8 @@ Formato de `SECURITY_REPORT-YYYY-MM-DD.md`:
 
 ## Guardrails
 
-- Nunca commitar secrets ou credenciais.
-- Nunca ignorar CVE sem documentação formal de aceite de risco.
-- Sempre incluir CVE ID, CVSS score e evidências nos PRs.
-- Sempre executar testes antes de abrir PR de patch.
-- CVSS >= 9.0: escalar ao CEO sem esperar próximo ciclo.
+- Never commit secrets or credentials.
+- Never ignore CVE without formal risk acceptance documentation.
+- Always include CVE ID, CVSS score and evidence in PRs.
+- Always run tests before opening patch PR.
+- CVSS >= 9.0: escalate to CEO without waiting for the next cycle.

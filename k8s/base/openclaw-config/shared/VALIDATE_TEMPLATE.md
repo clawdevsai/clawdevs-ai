@@ -3,26 +3,26 @@
 ## What to validate
 - Item:
 
-## Checks
+##Checks
 - [ ] Spec aligned
 - [ ] Tests passing
 - [ ] Logs and metrics present
 - [ ] Rollback defined
 - [ ] No unresolved ambiguity
 
-## Evidence
-- Comando:
-- Resultado:
-- Artefatos impactados:
+##Evidence
+- Command:
+- Result:
+- Impacted artifacts:
 
-## Decision
+##Decision
 - Status:
 - Notes:
 
 ## Gate summary
 - Readiness gate (READY/BLOCKED):
-- Checklist SDD critico (OK/PENDENTE):
-- Blockers e owner:
+- Critical SDD Checklist (OK/PENDING):
+- Blockers and owner:
 
 ## Traceability
 - BRIEF:

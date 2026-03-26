@@ -1,6 +1,6 @@
 # Internal SDD Operationalization
 
-Iniciativa interna para tornar o fluxo SDD o padrao operacional do ClawDevs AI.
+Internal initiative to make the SDD flow the ClawDevs AI operational standard.
 
 Artefatos:
 - `BRIEF.md`
@@ -10,7 +10,7 @@ Artefatos:
 - `TASK.md`
 - `VALIDATE.md`
 
-Objetivo:
-- reduzir ambiguidade entre agentes
-- padronizar handoff entre CEO, PO, Arquiteto e Dev_Backend
-- tornar o fluxo repetivel para a propria plataforma e para projetos entregues
+Objective:
+- reduce ambiguity between agents
+- standardize handoff between CEO, PO, Architect and Dev_Backend
+- make the flow repeatable for the platform itself and for delivered projects

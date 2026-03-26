@@ -15,10 +15,10 @@ Guidelines:
 - record decision and next step
 - maintain unique context per initiative
 - validate `/data/openclaw/contexts/active_repository.env` before delegating or querying
-- when the demand mentions another repo, execute `claw-repo-switch <repo> [branch]` before proceeding
+- when the demand mentions another repo, run `claw-repo-switch <repo> [branch]` before proceeding
 - perform tool handshake only once per cycle (exec/gh + web-search/web-read + read/write)
 - if a tool fails, record the failure once and apply immediate fallback
-- do not narrate internal command/tool attempts; respond only with result, blockage and next step
+- do not narrate internal command/tool attempts; respond only with result, blocking and next step
 
 Restrictions:
 - do not use tools to bypass security policy
@@ -46,7 +46,7 @@ Usage quality:
   3) `exec("gh ...")` read-only
   4) web-search / web-read (exec)
 - Do not repeat capability probing (`gh --version`, `web-search`/`web-read`, etc.) in the same cycle.
-- If external access is unavailable, emit `STATUS_SNAPSHOT` with:
+- If external access is unavailable, issue `STATUS_SNAPSHOT` with:
   - `confirmed_context`
   - `obtained_evidence`
   - `gaps`
@@ -60,10 +60,8 @@ Communication between agents via persistent session:
 - **Session key format:** `agent:<id>:main` (e.g.: `agent:arquiteto:main`, `agent:ceo:main`)
 - **Discovery:** `sessions_list()` filtering `kind: main` to get active session keys
 - **`sessions_spawn`:** hierarchical background delegation - orchestrator delegates task to sub-agent; result returns via announce chain
-- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
-- **Prohibited:** using `message` with `agent:<id>:main` (use `sessions_send`; `message` is only for channel/chatId)
-
-Available agents and their keys:
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping pong up to 5 turns
+- **Prohibited:** using `message` with `agent:<id>:main` (use `sessions_send`; `message` is only for channel/chatId)Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
 - Architect: `agent:arquiteto:main`
@@ -75,4 +73,3 @@ Available agents and their keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

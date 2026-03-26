@@ -1,41 +1,41 @@
 # BRIEF
 
-## Title
-- Operacionalizar SDD como padrao da ClawDevs AI
+##Title
+- Operationalize SDD as ClawDevs AI standard
 
 ## Context
-- A plataforma ja possui templates, checklist, prompts e contratos de SDD.
-- Falta consolidar isso como fluxo operacional oficial e repetivel para todos os agentes.
+- The platform already has templates, checklists, prompts and SDD contracts.
+- This remains to be consolidated as an official and repeatable operational flow for all agents.
 
 ## Goal
-- Fazer com que qualquer iniciativa interna siga o mesmo contrato SDD sem depender de explicacao adicional.
+- Make any internal initiative follow the same SDD contract without relying on additional explanation.
 
 ## Scope
 - Includes:
-  - uso de Constitution, BRIEF, SPEC, CLARIFY, PLAN, TASK e VALIDATE
-  - uso de prompts operacionais e templates
-  - alinhamento dos agentes ao contrato compartilhado
+  - use of Constitution, BRIEF, SPEC, CLARIFY, PLAN, TASK and VALIDATE
+  - use of operational prompts and templates
+  - alignment of agents to the shared contract
 - Does not include:
-  - mudança de stack
-  - mudança do runtime principal
-  - reescrita funcional dos agentes
+  - stack change
+  - main runtime change
+  - functional rewriting of agents
 
-## Constraints
-- Precisa funcionar em Windows / Docker Desktop / Kubernetes local.
-- Precisa ser documentado e replicavel.
-- Precisa manter custo operacional baixo.
+##Constraints
+- Needs to work on local Windows / Docker Desktop / Kubernetes.
+- Needs to be documented and replicable.
+- Need to keep operating costs low.
 
 ## Success metrics
-- Todo agente consegue localizar o fluxo em menos de 1 minuto.
-- Toda iniciativa nova passa pelo checklist SDD antes de executar.
-- O mesmo contrato serve para plataforma interna e projetos.
+- Every agent can locate the flow in less than 1 minute.
+- Every new initiative goes through the SDD checklist before execution.
+- The same contract applies to internal platforms and projects.
 
 ## Risks
-- Risco: virar documentação sem uso.
-- Mitigacao: tornar os prompts e templates o caminho normal de operacao.
+- Risk: becoming unused documentation.
+- Mitigation: make prompts and templates the normal path of operation.
 
 ## Assumptions
-- O time aceita usar arquivos markdown como contrato operacional.
+- The team accepts using markdown files as an operational contract.
 
 ## Next step
-- Produzir a SPEC de comportamento operacional.
+- Produce the operational behavior SPEC.

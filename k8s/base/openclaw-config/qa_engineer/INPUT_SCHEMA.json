@@ -51,14 +51,26 @@
         },
         "issue_label": {
           "type": "string",
-          "enum": ["tests"]
+          "enum": [
+            "tests"
+          ]
         },
         "test_type": {
           "type": "string",
-          "enum": ["e2e_web", "e2e_mobile", "contract", "load", "security", "bdd"]
+          "enum": [
+            "e2e_web",
+            "e2e_mobile",
+            "contract",
+            "load",
+            "security",
+            "bdd"
+          ]
         }
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

@@ -27,15 +27,20 @@
       "properties": {
         "force": {
           "type": "boolean",
-          "description": "Forçar ciclo mesmo que já tenha rodado hoje"
+          "description": "Force cycle even if it has already run today"
         },
         "agent_filter": {
           "type": "array",
-          "items": { "type": "string" },
-          "description": "Filtrar quais agentes processar (vazio = todos)"
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter which agents to process (empty = all)"
         }
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

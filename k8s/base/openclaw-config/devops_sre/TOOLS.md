@@ -1,43 +1,43 @@
 # TOOLS.md - DevOps_SRE
 
-## tools_disponíveis
-- `read(path)`: ler manifests, workflows, configs de infra e métricas.
-- `write(path, content)`: escrever workflows CI/CD, manifests IaC, relatórios de métricas.
-- `exec(command)`: executar kubectl, terraform, helm, docker, cloud CLIs.
-- `exec("gh <args>")`: gerenciar workflows, issues, PRs e consultar status de CI.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: commit/branch/merge de configs de infra sem comandos destrutivos.
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, PO ou CEO (P0).
-- `sessions_send(session_id, message)`: reportar incidentes ou status.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "kubernetes resource limits best practices 2025"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"`
+## available_tools
+- `read(path)`: read manifests, workflows, infrastructure configs and metrics.
+- `write(path, content)`: writing CI/CD workflows, IaC manifests, metrics reports.
+- `exec(command)`: run kubectl, terraform, helm, docker, cloud CLIs.
+- `exec("gh <args>")`: manage workflows, issues, PRs and check CI status.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: commit/branch/merge infra configs without destructive commands.
+- `sessions_spawn(agentId, mode, label)`: create session with Architect, PO or CEO (P0).
+- `sessions_send(session_id, message)`: report incidents or status.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "kubernetes resource limits best practices 2025"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**` e workspace de infra do projeto.
-- Bloquear comandos destrutivos sem TASK explícita.
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- Validar `active_repository.env` antes de qualquer ação.
-- `sessions_spawn` permitido para: `arquiteto`, `po`, `ceo`.
-- Nunca commitar secrets ou credenciais.
-- `terraform destroy` somente com TASK explícita e aprovação.
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `devops`. TASK_GITHUB_REPO = campo `github_repo` da task.
+## usage_rules
+- `read/write` only in `/data/openclaw/**` and project infrastructure workspace.
+- Block destructive commands without explicit TASK.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- Validate `active_repository.env` before taking any action.
+- `sessions_spawn` allowed for: `arquiteto`, `po`, `ceo`.
+- Never commit secrets or credentials.
+- `terraform destroy` only with explicit TASK and approval.
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process `devops` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `devops` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `devops` — automatically created at boot if it does not exist:
   `gh label create "devops" --color "#b60205" --description "DevOps/SRE tasks — routed to DevOps_SRE" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
-## comandos_principais
+## main_commands
 ### Kubernetes
 - `kubectl apply`, `kubectl rollout`, `kubectl get`, `kubectl logs`, `kubectl top`
 ### Terraform
@@ -49,38 +49,36 @@
 ### Cloud CLIs
 - AWS: `aws ec2`, `aws s3`, `aws ecs`, `aws eks`, `aws ce`
 - GCP: `gcloud compute`, `gcloud container`, `gcloud billing`
-- Azure: `az vm`, `az aks`, `az billing`
-
-## autonomia_de_pesquisa_e_aprendizado
-- Permissão total de acesso à internet para pesquisa, atualização de ferramentas de infra e descoberta de melhores práticas.
-- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-  - descobrir ferramentas de IaC, observabilidade e CI/CD mais eficientes e econômicas
-  - verificar CVEs, security advisories e patches de infraestrutura e cloud
-  - comparar custos de cloud (spot, serverless, managed services) entre providers
-  - ler documentação oficial de Kubernetes, Terraform, Helm, ArgoCD, GitHub Actions
-  - aprender padrões emergentes de SRE, chaos engineering e FinOps
-- Citar fonte e data da informação nos artefatos produzidos.
+- Azure: `az vm`, `az aks`, `az billing`## autonomia_de_pesquisa_e_aprendizado
+- Full internet access permission for research, updating infrastructure tools and discovering best practices.
+- Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+  - discover more efficient and cost-effective IaC, observability, and CI/CD tools
+  - check CVEs, security advisories and infrastructure and cloud patches
+  - compare cloud costs (spot, serverless, managed services) between providers
+  - read official documentation for Kubernetes, Terraform, Helm, ArgoCD, GitHub Actions
+  - learn emerging patterns in SRE, chaos engineering and FinOps
+- Cite source and date of information in the artifacts produced.
 
 ## rate_limits
-- `exec`: 120 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
+- `exec`: 120 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Forbidden:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -89,4 +87,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

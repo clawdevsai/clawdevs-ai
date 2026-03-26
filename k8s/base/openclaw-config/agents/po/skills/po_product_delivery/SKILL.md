@@ -1,28 +1,28 @@
 ---
 name: po_product_delivery
-description: Skill de entrega de produto para backlog, user stories, sequenciamento e handoff ao Arquiteto
+description: Product delivery skill for backlog, user stories, sequencing and handoff to the Architect
 ---
 
-# Entrega de Produto
+# Product Delivery
 
-Use esta skill quando um pedido exigir desenho de backlog, quebra de features, sequenciamento de entrega ou criterios de aceitacao.
+Use this skill when an order requires backlog design, feature breakdown, delivery sequencing or acceptance criteria.
 
-Checklist de saida:
-- declaracao do problema
-- resultado alvo
-- arquivo de ideia aprovado em `/data/openclaw/backlog/idea`
-- user stories separadas em `/data/openclaw/backlog/user_story`
-- handoff para Arquiteto com desenho tecnico e tasks
-- tasks priorizadas em `/data/openclaw/backlog/tasks`
-- criterios de aceitacao
-- riscos e dependencias
-- arquivos gerados em `/data/openclaw/backlog`
+Exit checklist:
+- problem statement
+- target result
+- idea file approved at `/data/openclaw/backlog/idea`
+- user separate stories at `/data/openclaw/backlog/user_story`
+- handoff for Architect with technical drawing and tasks
+- tasks prioritized in `/data/openclaw/backlog/tasks`
+- acceptance criteria
+- risks and dependencies
+- files generated in `/data/openclaw/backlog`
 
 ---
 
-## Template de User Story
+## User Story Template
 
-Use este template ao criar arquivos em `/data/openclaw/backlog/user_story/US-XXX-<slug>.md`.
+Use this template when creating files in `/data/openclaw/backlog/user_story/US-XXX-<slug>.md`.
 
 ```md
 # US-XXX - <Titulo curto>

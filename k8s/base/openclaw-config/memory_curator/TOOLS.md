@@ -1,25 +1,25 @@
 # TOOLS.md - Memory_Curator
 
-## tools_disponíveis
-- `read(path)`: Ler MEMORY.md de agentes e SHARED_MEMORY.md. Validar que path começa com `/data/openclaw/memory/` e não contém `..`.
-- `write(path, content)`: Escrever em MEMORY.md de agentes (mover padrões para Archived) e em SHARED_MEMORY.md (adicionar padrões globais). Validar schema antes de persistir.
-- `exec("tail -n 100 /data/openclaw/backlog/status/memory-curator.log")`: Consultar log do ciclo anterior.
+## available_tools
+- `read(path)`: Read agents MEMORY.md and SHARED_MEMORY.md. Validate that path starts with `/data/openclaw/memory/` and does not contain `..`.
+- `write(path, content)`: Write to agent MEMORY.md (move patterns to Archived) and to SHARED_MEMORY.md (add global patterns). Validate schema before persisting.
+- `exec("tail -n 100 /data/openclaw/backlog/status/memory-curator.log")`: Consult the log of the previous cycle.
 
-## regras_de_uso
-- `read` e `write` somente em `/data/openclaw/memory/**`.
-- Nunca deletar linhas de MEMORY.md — apenas mover entre seções (`Active Patterns` → `Archived`).
-- Nunca escrever em workspace de agente fora de `/data/openclaw/memory/`.
-- Nunca gravar em `/data/openclaw/backlog/` exceto no arquivo de log: `/data/openclaw/backlog/status/memory-curator.log`.
-- Nunca interagir com GitHub API (`gh`, `git`, etc.).
-- Operação idempotente: rodar duas vezes deve produzir o mesmo resultado que rodar uma vez.
+## usage_rules
+- `read` and `write` only on `/data/openclaw/memory/**`.
+- Never delete lines from MEMORY.md — only move between sections (`Active Patterns` → `Archived`).
+- Never write to an agent workspace outside of `/data/openclaw/memory/`.
+- Never write to `/data/openclaw/backlog/` except to the log file: `/data/openclaw/backlog/status/memory-curator.log`.
+- Never interact with GitHub API (`gh`, `git`, etc.).
+- Idempotent operation: running twice should produce the same result as running once.
 
 ## paths_autorizados
-- Leitura de agentes: `/data/openclaw/memory/<id>/MEMORY.md`
-  - IDs permitidos: `ceo`, `po`, `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`, `qa_engineer`, `security_engineer`, `devops_sre`, `ux_designer`, `dba_data_engineer`, `memory_curator`
-- Escrita shared: `/data/openclaw/memory/shared/SHARED_MEMORY.md`
+- Agent reading: `/data/openclaw/memory/<id>/MEMORY.md`
+  - Allowed IDs: `ceo`, `po`, `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`, `qa_engineer`, `security_engineer`, `devops_sre`, `ux_designer`, `dba_data_engineer`, `memory_curator`
+- Writing shared: `/data/openclaw/memory/shared/SHARED_MEMORY.md`
 - Log: `/data/openclaw/backlog/status/memory-curator.log`
 
-## proibições
-- Sem `sessions_spawn`, `sessions_send` ou `sessions_list` — não se comunica com outros agentes
-- Sem `exec("gh ...")` ou qualquer operação GitHub
-- Sem escrita fora de `/data/openclaw/memory/`
+## prohibitions
+- Without `sessions_spawn`, `sessions_send` or `sessions_list` — does not communicate with other agents
+- Without `exec("gh ...")` or any GitHub operations
+- No writing outside of `/data/openclaw/memory/`

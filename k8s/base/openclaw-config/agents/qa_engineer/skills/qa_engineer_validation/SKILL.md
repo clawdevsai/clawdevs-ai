@@ -1,15 +1,15 @@
 ---
 name: qa_engineer_validation
-description: Skill de validação QA para testes BDD, e2e, relatórios de qualidade e análise de cobertura
+description: QA validation skill for BDD, e2e testing, quality reporting and coverage analysis
 ---
 
-# Skills do QA_Engineer
+# QA_Engineer Skills
 
 ---
 
-## Ciclo Dev-QA (Core Skill)
+## Dev-QA Cycle (Core Skill)
 
-Este é o fluxo principal do QA_Engineer — executado a cada delegação de dev agent ou por polling.
+This is the main flow of QA_Engineer — executed with each dev agent delegation or by polling.
 
 ```
 Dev_Agent abre PR → delega QA_Engineer
@@ -28,22 +28,22 @@ retry 2 → QA re-executa
 retry 3 → ESCALAR AO ARQUITETO com histórico completo
 ```
 
-Regra de ouro: **nunca aprovar sem evidência real de execução dos testes.**
+Rule of thumb: **never approve without real evidence of test execution.**
 
 ---
 
-## Validar Cenários BDD da SPEC
+## Validate SPEC BDD Scenarios
 
 Workflow:
-1. Ler `SPEC-XXX-<slug>.md` — extrair todos os cenários BDD (`Given/When/Then`).
-2. Mapear cada cenário a um teste existente ou criar teste correspondente.
-3. Executar testes.
-4. Registrar resultado por cenário: ✅ PASS / ❌ FAIL + mensagem de erro.
-5. Reportar cobertura de cenários: `X/Y cenários aprovados`.
+1. Read `SPEC-XXX-<slug>.md` — extract all BDD scenarios (`Given/When/Then`).
+2. Map each scenario to an existing test or create a corresponding test.
+3. Run tests.
+4. Record result per scenario: ✅ PASS / ❌ FAIL + error message.
+5. Report scenario coverage: `X/Y cenários aprovados`.
 
 ---
 
-## Testes E2E Web (Playwright / Cypress)
+## E2E Web Tests (Playwright / Cypress)
 
 ```bash
 npx playwright test                        # todos os testes
@@ -55,7 +55,7 @@ npx cypress run --spec "cypress/e2e/**.cy.ts"
 
 ---
 
-## Testes E2E Mobile (Detox / Maestro)
+## E2E Mobile Tests (Detox / Maestro)
 
 ```bash
 npx detox build --configuration ios.sim.release
@@ -65,7 +65,7 @@ maestro test .maestro/flows/              # Maestro cross-platform
 
 ---
 
-## Testes de Contrato (Pact)
+## Contract Tests (Pact)
 
 ```bash
 npx pact-js verify                        # verificar contratos
@@ -74,21 +74,21 @@ npx pact-js publish                       # publicar contratos ao broker
 
 ---
 
-## Testes de Carga (k6)
+## Load Testing (k6)
 
 ```bash
 k6 run --vus 50 --duration 60s load_test.js
 k6 run --out json=results.json load_test.js
 ```
 
-Metas padrão (quando SPEC não definir):
-- Latência p95 < 300ms
-- Latência p99 < 500ms
-- Taxa de erro < 1%
+Standard goals (when SPEC not defined):
+- Latency p95 < 300ms
+- Latency p99 < 500ms
+- Error rate < 1%
 
 ---
 
-## Scan de Segurança Básico
+## Basic Security Scan
 
 ```bash
 npm audit --audit-level=critical           # dependências Node.js
@@ -98,7 +98,7 @@ npx secretlint "**/*"                      # secrets em código
 
 ---
 
-## Relatório PASS
+## PASS Report
 
 ```
 ✅ QA PASS — TASK-XXX | PR #YYY
@@ -111,22 +111,22 @@ Evidências: playwright-report/index.html
 
 ---
 
-## Relatório FAIL
+## FAIL Report
 
 ```
 ❌ QA FAIL — TASK-XXX | PR #YYY | Retry 1/3
 Cenários falhando:
   - Cenário 3: "When user submits form with invalid email"
-    Erro: Expected toast 'Email inválido', received nothing
+    Error: Expected toast 'Email inválido', received nothing
     Screenshot: test-results/scenario-3-fail.png
   - Cenário 7: "Given user is on checkout, When payment fails"
-    Erro: Timeout 5000ms — elemento #error-message não encontrado
+    Error: Timeout 5000ms — element #error-message not found
 Ação necessária: implementar toast de validação e mensagem de erro no checkout
 ```
 
 ---
 
-## Escalação ao Arquiteto (3º Retry)
+## Escalation to the Architect (3rd Retry)
 
 ```
 ⚠️ QA ESCALATION — TASK-XXX | 3 retries esgotados
@@ -134,7 +134,7 @@ Histórico:
   Retry 1: [data] — FAIL — cenários 3, 7
   Retry 2: [data] — FAIL — cenário 7 (3 persistiu)
   Retry 3: [data] — FAIL — cenário 7
-Possível causa raiz: lógica de erro no checkout não implementada conforme SPEC
+Possible root cause: checkout error logic not implemented according to the SPEC
 Ação sugerida: revisar SPEC-XXX cenário 7 com PO ou TASK com Arquiteto
 ```
 
@@ -142,7 +142,7 @@ Ação sugerida: revisar SPEC-XXX cenário 7 com PO ou TASK com Arquiteto
 
 ## Guardrails
 
-- Nunca aprovar sem evidência real.
-- Nunca implementar código de produção.
-- Nunca ignorar cenários BDD.
-- Sempre escalar no 3º retry.
+- Never approve without real evidence.
+- Never deploy production code.
+- Never ignore BDD scenarios.
+- Always climb on the 3rd retry.

@@ -39,14 +39,23 @@
         },
         "platform": {
           "type": "string",
-          "enum": ["web", "mobile", "both"]
+          "enum": [
+            "web",
+            "mobile",
+            "both"
+          ]
         },
         "issue_label": {
           "type": "string",
-          "enum": ["ux"]
+          "enum": [
+            "ux"
+          ]
         }
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

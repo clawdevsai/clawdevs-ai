@@ -1,46 +1,46 @@
 # TOOLS.md - Security_Engineer
 
-## tools_disponíveis
-- `read(path)`: ler manifests de dependências, código-fonte, configs, relatórios de scan e histórico git.
-- `write(path, content)`: escrever relatórios de segurança, evidências de CVEs e artefatos de patch.
-- `exec(command)`: executar ferramentas de segurança (npm audit, pip-audit, trivy, semgrep, gitleaks, osv-scanner, trufflehog, syft, grype).
-- `exec("gh <args>")`: criar PRs de patch, issues de segurança, consultar Dependabot alerts e gerenciar labels `security`.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=security&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: criar branches de segurança, commitar patches, verificar histórico de commits para detecção de secrets.
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto (P1/P2) ou CEO (P0).
-- `sessions_send(session_id, message)`: reportar vulnerabilidades críticas, status de patches e escalações.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "CVE-2024-1234 patch nodejs"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://nvd.nist.gov/vuln/detail/CVE-2024-1234"`
+## available_tools
+- `read(path)`: read dependency manifests, source code, configs, scan reports and git history.
+- `write(path, content)`: write security reports, evidence of CVEs and patch artifacts.
+- `exec(command)`: run security tools (npm audit, pip-audit, trivy, semgrep, gitleaks, osv-scanner, trufflehog, syft, grype).
+- `exec("gh <args>")`: create patch PRs, security issues, consult Dependabot alerts and manage `security` labels.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=security&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: create security branches, commit patches, check commit history to detect secrets.
+- `sessions_spawn(agentId, mode, label)`: create session with Architect (P1/P2) or CEO (P0).
+- `sessions_send(session_id, message)`: Report critical vulnerabilities, patch status and escalations.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "CVE-2024-1234 patch nodejs"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://nvd.nist.gov/vuln/detail/CVE-2024-1234"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**` e workspace do projeto.
-- Bloquear paths com `../` ou fora da allowlist (path traversal prevention).
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- Validar `active_repository.env` antes de qualquer ação.
-- `sessions_spawn` permitido para: `arquiteto`, `ceo` (somente P0).
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=security&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `security`. TASK_GITHUB_REPO = campo `github_repo` da task.
-- Nunca logar o valor de secrets ou credenciais detectadas.
-- Nunca commitar secrets, credenciais ou tokens em nenhuma circunstância.
-- `exec` com comandos de scanner: sempre redirecionar output para `/data/openclaw/backlog/security/scans/`.
+## usage_rules
+- `read/write` only in `/data/openclaw/**` and project workspace.
+- Block paths with `../` or outside the allowlist (path traversal prevention).
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- Validate `active_repository.env` before taking any action.
+- `sessions_spawn` allowed for: `arquiteto`, `ceo` (P0 only).
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=security&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process label `security` only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Never log the value of detected secrets or credentials.
+- Never commit secrets, credentials or tokens under any circumstances.
+- `exec` with scanner commands: always redirect output to `/data/openclaw/backlog/security/scans/`.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `security` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `security` — automatically created at boot if it does not exist:
   `gh label create "security" --color "#ee0701" --description "Security tasks — routed to Security_Engineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
-## comandos_principais
+## main_commands
 
-### Auditoria de Dependências
+### Dependency Audit
 ```bash
 # Node.js
 npm audit --json
@@ -79,7 +79,7 @@ docker run --rm owasp/zap2docker-stable zap-baseline.py -t "$TARGET_URL" -J repo
 docker run --rm owasp/zap2docker-stable zap-full-scan.py -t "$TARGET_URL" -J report.json
 ```
 
-### Detecção de Secrets
+### Secret Detection
 ```bash
 # Histórico completo
 trufflehog git file://. --json
@@ -93,68 +93,66 @@ gitleaks protect --staged
 
 ### Supply Chain / SBOM
 ```bash
-# Gerar SBOM
+# Generate SBOM
 syft . -o cyclonedx-json
 syft . -o spdx-json
 
-# Verificar vulnerabilidades no SBOM
+# Check vulnerabilidades no SBOM
 grype sbom:sbom.json --output json
 
-# Verificar imagem de container
+# Check imagem de container
 grype <imagem>:<tag>
 ```
 
 ### GitHub Security
 ```bash
-# Listar Dependabot alerts
+# List Dependabot alerts
 gh api repos/$ACTIVE_GITHUB_REPOSITORY/dependabot/alerts --jq '.[] | select(.state=="open")'
 
-# Criar issue de segurança
+# Create security issue
 gh issue create --repo "$ACTIVE_GITHUB_REPOSITORY" \
   --label security --title "CVE-YYYY-XXXXX: ..." --body "..."
 
-# Criar PR de patch
+# Create PR de patch
 gh pr create --repo "$ACTIVE_GITHUB_REPOSITORY" \
   --label security --title "security: fix CVE-YYYY-XXXXX" --body "..."
 ```
 
-## acesso_total_a_internet
+## full_internet_access
 
-Permissão total de acesso à internet para pesquisa de segurança, consulta a CVE databases e descoberta de patches.
+Full internet access permission for security research, querying CVE databases and discovering patches.Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+- consult NVD (https://nvd.nist.gov/vuln/search), OSV (https://osv.dev), GHSA and Snyk Advisor
+- check for patch available for specific CVE in any language
+- search for safer alternative libraries when no patch is available
+- read supply chain advisories (PyPI malware reports, npm security advisories, etc.)
+- see OWASP Top 10, CWE (Common Weakness Enumeration), NIST 800-53
+- learn emerging attack techniques and exploitation vectors to improve scan coverage
+- check maintainer reputation and package security incident history
+- compare security tools (Snyk vs Trivy vs Grype vs OWASP Dependency-Check)
 
-Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-- consultar NVD (https://nvd.nist.gov/vuln/search), OSV (https://osv.dev), GHSA e Snyk Advisor
-- verificar se há patch disponível para CVE específico em qualquer linguagem
-- pesquisar bibliotecas alternativas mais seguras quando não há patch disponível
-- ler advisories de supply chain (PyPI malware reports, npm security advisories, etc.)
-- consultar OWASP Top 10, CWE (Common Weakness Enumeration), NIST 800-53
-- aprender técnicas emergentes de ataque e vetores de exploração para melhorar cobertura de scan
-- verificar reputação de mantenedores e histórico de incidentes de segurança de pacotes
-- comparar ferramentas de segurança (Snyk vs Trivy vs Grype vs OWASP Dependency-Check)
-
-Citar fonte, CVE ID e data da informação em todos os relatórios e PRs produzidos.
+Cite source, CVE ID and date of information in all reports and PRs produced.
 
 ## rate_limits
-- `exec`: 120 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
-- `trivy` / `semgrep`: sem limite (ferramentas locais); atualizar DB no máximo 1x/hora
+- `exec`: 120 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
+- `trivy` / `semgrep`: no limit (local tools); update DB at most 1x/hour
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Forbidden:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -163,4 +161,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

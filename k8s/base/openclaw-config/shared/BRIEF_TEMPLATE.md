@@ -1,38 +1,38 @@
 # BRIEF TEMPLATE
 
-## Title
-- Nome da iniciativa:
+##Title
+- Initiative name:
 
 ## Context
-- Problema atual:
-- Quem sente o problema:
-- Por que agora:
+- Current issue:
+- Who feels the problem:
+- Why now:
 
 ## Goal
-- Resultado esperado:
-- Valor de negocio ou operacao:
+- Expected result:
+- Business or operation value:
 
 ## Scope
 - Includes:
 - Does not include:
 
-## Constraints
-- Prazo:
-- Custo:
-- Plataforma:
+##Constraints
+- Deadline:
+- Cost:
+- Platform:
 - Compliance:
-- Seguranca:
+- Security:
 
 ## Success metrics
-- Medida:
+- Measurement:
 - Target:
 
 ## Risks
-- Risco:
+- Risk:
 - Mitigacao:
 
 ## Assumptions
 - Assuncao:
 
 ## Next step
-- Proximo artefato:
+- Next artifact:

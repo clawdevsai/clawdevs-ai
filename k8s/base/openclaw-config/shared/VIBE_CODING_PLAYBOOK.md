@@ -1,49 +1,49 @@
 # VIBE CODING PLAYBOOK
 
-ClawDevs AI deve otimizar para velocidade com qualidade observavel.
-O objetivo e entregar um slice pequeno, demonstravel e reversivel rapidamente, depois endurecer com testes, contratos e observabilidade.
+ClawDevs AI should optimize for speed with observable quality.
+The goal is to deliver a small, demonstrable and reversible slice quickly, then harden it with testing, contracts and observability.
 
-## Principios
-- Priorizar um fluxo curto: ideia -> spec -> slice vertical -> demo -> refinamento.
-- Sempre manter o usuario vendo progresso real a cada ciclo.
-- Preferir mudancas pequenas, reversiveis e com escopo claro.
-- Evitar overengineering, mas nao abrir mao de testes, seguranca e rastreabilidade.
-- Tudo que vai para producao precisa ter criterio de aceite, rollback e validacao.
+## Principles
+- Prioritize a short flow: idea -> spec -> vertical slice -> demo -> refinement.
+- Always keep the user seeing real progress with each cycle.
+- Prefer small, reversible changes with a clear scope.
+- Avoid overengineering, but do not compromise on testing, security and traceability.
+- Everything that goes into production needs to have acceptance, rollback and validation criteria.
 
-## Loop recomendado
-1. Definir o resultado visivel em uma frase.
-2. Escrever a SPEC minima com comportamento observavel.
-3. Entregar um slice vertical funcional.
-4. Validar com demo e feedback humano.
-5. Adicionar testes, logs, metricas e hardening.
-6. Repetir ate fechar o fluxo.
+## Recommended loop
+1. Define the visible result in a sentence.
+2. Write the minimum SPEC with observable behavior.
+3. Deliver a functional vertical slice.
+4. Validate with demo and human feedback.
+5. Add tests, logs, metrics and hardening.
+6. Repeat until the flow closes.
 
-## O que caracteriza uma boa iteracao
-- Mostra valor de negocio ou operacao rapidamente.
-- Pode ser testada em minutos, nao em dias.
-- Tem caminho claro de entrada, saida e erro.
-- Nao bloqueia evolucao posterior.
-- Deixa rastreabilidade para a proxima pessoa ou agente.
+## What characterizes a good iteration
+- Shows business or operation value quickly.
+- Can be tested in minutes, not days.
+- There is a clear path to entry, exit and error.
+- Does not block further evolution.
+- Leaves traceability to the next person or agent.
 
-## Regras para evitar vibecoding ruim
-- Nao substituir especificacao por improviso.
-- Nao acumular refatoracao invisivel sem entrega demonstravel.
-- Nao deixar contrato de integracao implcito.
-- Nao adicionar abstracoes sem necessidade real.
-- Nao promover para "pronto" sem testes minimos e checagem de NFRs.
+## Rules to avoid bad vibecoding
+- Do not replace specifications with improvisation.
+- Do not accumulate invisible refactoring without demonstrable delivery.
+- Do not leave an implicit integration contract.
+- Do not add abstractions without real need.
+- Do not promote to "ready" without minimal testing and checking NFRs.
 
-## Artefatos esperados
+## Expected artifacts
 - BRIEF
 - SPEC
 - US
 - TASK
 - demo notes
-- testes
-- observabilidade
+- tests
+- observability
 
-## Qualidade minima por iteracao
-- Comportamento demonstravel.
-- Criterio de aceite objetivo.
-- Evidencia de teste.
-- Risco conhecido e mitigacao.
-- Caminho de rollback ou reversao.
+## Minimum quality per iteration
+- Demonstrable behavior.
+- Objective acceptance criteria.
+- Testing evidence.
+- Known risk and mitigation.
+- Rollback or reversal path.

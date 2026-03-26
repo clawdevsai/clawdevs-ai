@@ -7,25 +7,23 @@
 - Plan:
 
 ## Objective
-- O que esta task entrega:
+- What this task delivers:
 
 ## Scope
 - Includes:
 - Does not include:
 
 ## Acceptance criteria
-1. Dado:
-   Quando:
-   Entao:
-
-2. Dado:
-   Quando:
-   Entao:
-
+1. Given:
+   When:
+   Then:
+2. Given:
+   When:
+   Then:
 ## Implementation steps
-1. Passo:
-2. Passo:
-3. Passo:
+1. Step:
+2. Step:
+3. Step:
 
 ## Tests
 - Unit:
@@ -39,4 +37,4 @@
 - Observability:
 
 ## Done when
-- Critério:
+- Criteria:

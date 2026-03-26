@@ -1,18 +1,18 @@
 # PROMPT CHANGELOG
 
-Historico de mudancas relevantes nos prompts operacionais e templates SDD.
+History of relevant changes to operational prompts and SDD templates.
 
 ## 2026-03-25
 
 ### Added
-- Gates operacionais e saida minima para auditoria em `SDD_OPERATIONAL_PROMPTS.md`.
-- Blocos few-shot (`entrada -> saida`) por papel em `SDD_OPERATIONAL_PROMPTS.md`.
-- Secao de reverse prompting operacional em `SDD_OPERATIONAL_PROMPTS.md`.
-- Campos de gate e rastreabilidade em `VALIDATE_TEMPLATE.md`.
+- Operational gates and minimum output for auditing at `SDD_OPERATIONAL_PROMPTS.md`.
+- Blocos few-shot (`entrada -> output`) for role in `SDD_OPERATIONAL_PROMPTS.md`.
+- Operational reverse prompting section in `SDD_OPERATIONAL_PROMPTS.md`.
+- Gate and traceability fields in `VALIDATE_TEMPLATE.md`.
 
 ### Changed
-- Regras dos agentes (`ceo`, `po`, `arquiteto`, `dev_backend`) para hard gate SDD e evidencia obrigatoria antes de `DONE`.
+- Agent rules (`ceo`, `po`, `arquiteto`, `dev_backend`) for hard gate SDD and mandatory evidence before `DONE`.
 
-## Convencao de registro
-- Sempre registrar: data, tipo (`Added|Changed|Removed`), arquivo e impacto esperado.
-- Em mudancas que alteram comportamento, incluir exemplo curto de antes/depois no PR.
+## Registration convention
+- Always record: date, type (`Added|Changed|Removed`), file and expected impact.
+- In changes that alter behavior, include a short before/after example in the PR.

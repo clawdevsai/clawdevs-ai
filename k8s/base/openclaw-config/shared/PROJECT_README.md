@@ -2,24 +2,24 @@
 
 Mirror of the repository README for agent boot context.
 
-## Projeto
+## Project
 
-`clawdevs-ai` e o repositorio da plataforma ClawDevs AI para subir Kubernetes local com Minikube no Docker Desktop, expor GPU real e rodar o stack `ollama` + `openclaw`.
+`clawdevs-ai` and the ClawDevs AI platform repository to upload local Kubernetes with Minikube on Docker Desktop, expose real GPU and run the `ollama` + `openclaw` stack.
 
-## Fluxo de spec
+## Spec flow
 
-Antes de implementar uma mudanca, o fluxo recomendado e:
+Before implementing a change, the recommended flow is:
 
-0. `CONSTITUTION` com principios e guardrails
-1. `BRIEF` com contexto e objetivo executivo
-2. `SPEC` com comportamento observavel, contratos e criterios de aceite
-3. `CLARIFY` quando houver ambiguidade
-4. `PLAN` tecnico e arquitetura
-5. `TASK` tecnica e issues
-6. `FEATURE` e `USER STORY` quando fizer sentido para o fluxo de produto
-7. implementacao e validacao
+0. `CONSTITUTION` with principles and guardrails
+1. `BRIEF` with context and executive objective
+2. `SPEC` with observable behavior, contracts and acceptance criteria
+3. `CLARIFY` when there is ambiguity
+4. `PLAN` technical and architecture
+5. `TASK` techniques and issues
+6. `FEATURE` and `USER STORY` when it makes sense for the product flow
+7. implementation and validation
 
-## Templates e artefatos
+## Templates and artifacts
 
 - `k8s/base/openclaw-config/shared/BRIEF_TEMPLATE.md`
 - `k8s/base/openclaw-config/shared/CLARIFY_TEMPLATE.md`
@@ -38,34 +38,34 @@ Antes de implementar uma mudanca, o fluxo recomendado e:
 - `/data/openclaw/backlog/user_story/`
 - `/data/openclaw/backlog/tasks/`
 
-## Regras principais
+## Main rules
 
-- A SPEC e a fonte de verdade do comportamento pretendido.
-- O mesmo contrato vale para a plataforma interna e para projetos entregues.
-- Quando houver ambiguidade, use `clarify` antes de `plan` e `tasks`.
-- Use o `SDD_CHECKLIST.md` como gate de prontidao.
-- Use `SDD_OPERATIONAL_PROMPTS.md` para iniciar conversas e execucoes com os agentes.
-- Use `SDD_FULL_CYCLE_EXAMPLE.md` como molde de referencia.
+- SPEC is the source of truth for intended behavior.
+- The same contract applies to the internal platform and to delivered projects.
+- When there is ambiguity, use `clarify` before `plan` and `tasks`.
+- Use `SDD_CHECKLIST.md` as a standby gate.
+- Use `SDD_OPERATIONAL_PROMPTS.md` to start conversations and executions with agents.
+- Use `SDD_FULL_CYCLE_EXAMPLE.md` as a reference template.
 
 ## Vibe Coding
 
-ClawDevs AI deve operar em ciclos curtos e demonstraveis:
+ClawDevs AI must operate in short, demonstrable cycles:
 
-1. definir um resultado visivel
-2. escrever a spec minima
-3. entregar um slice vertical funcional
-4. validar com demo
-5. endurecer com testes, logs e observabilidade
+1. define a visible result
+2. write the minimum spec
+3. deliver a functional vertical slice
+4. validate with demo
+5. harden with tests, logs and observability
 
-## Requisitos
+## Requirements
 
 - Windows 11
-- Docker Desktop com suporte a GPU
-- Driver NVIDIA atualizado
-- `minikube`, `kubectl` e `make` no PATH
-- Docker Desktop rodando, com GPU exposta aos containers
+- Docker Desktop with GPU support
+- NVIDIA driver updated
+- `minikube`, `kubectl` and `make` in PATH
+- Docker Desktop running, with GPU exposed to containers
 
-## Comandos principais
+## Main commands
 
 ```bash
 make preflight
@@ -75,13 +75,13 @@ make clawdevs-up
 
 ## GitHub
 
-- A organização padrão para ações GitHub dos agentes vem de `GITHUB_ORG`.
-- Opcionalmente, `GITHUB_DEFAULT_REPOSITORY` define o primeiro repositorio ativo no bootstrap.
-- O token vem de `GITHUB_TOKEN`.
-- O repositorio ativo da sessao fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GITHUB_REPOSITORY`).
-- Para comandos `gh` fora de checkout local, usar `--repo "$ACTIVE_GITHUB_REPOSITORY"` (ou `"$GITHUB_REPOSITORY"` para compatibilidade).
+- The default organization for agents' GitHub shares comes from `GITHUB_ORG`.
+- Optionally, `GITHUB_DEFAULT_REPOSITORY` defines the first active repository in bootstrap.
+- The token comes from `GITHUB_TOKEN`.
+- The active session repository is at `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GITHUB_REPOSITORY`).
+- For `gh` commands outside of local checkout, use `--repo "$ACTIVE_GITHUB_REPOSITORY"` (or `"$GITHUB_REPOSITORY"` for compatibility).
 
-## Estrutura K8s
+## K8s Structure
 
 ```text
 k8s/
@@ -107,7 +107,7 @@ k8s/
       nvidia-runtimeclass.yaml
 ```
 
-O comando padrao de deploy continua sendo:
+The default deploy command continues to be:
 
 ```bash
 kubectl apply -k k8s

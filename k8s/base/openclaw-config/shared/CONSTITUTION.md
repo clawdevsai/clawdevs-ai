@@ -1,10 +1,10 @@
 # CONSTITUTION
 
 ## Purpose
-ClawDevs AI aplica Spec-Driven Development internamente e em projetos entregues.
-As regras abaixo valem para a plataforma, para os agentes e para qualquer entrega executada por eles.
+ClawDevs AI applies Spec-Driven Development internally and in delivered projects.
+The rules below apply to the platform, agents and any delivery carried out by them.
 
-## Principles
+##Principles
 - Specification comes before implementation.
 - The SPEC is the source of truth for intended behavior.
 - Each change must be small, reversible and demonstrable.

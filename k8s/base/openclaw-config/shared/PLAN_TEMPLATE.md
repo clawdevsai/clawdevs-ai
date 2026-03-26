@@ -1,7 +1,7 @@
 # PLAN TEMPLATE
 
 ## Goal
-- O que o plano vai entregar:
+- What the plan will deliver:
 
 ## Inputs
 - BRIEF:
@@ -9,13 +9,13 @@
 - Clarify:
 - Constraints:
 
-## Architecture
-- Opcao selecionada:
-- Componentes:
-- Integracoes:
+##Architecture
+- Option selected:
+- Components:
+- Integrations:
 
 ## Alternatives considered
-- Opcao:
+- Option:
 - Tradeoff:
 - Rejected because:
 
@@ -25,12 +25,12 @@
 3. Fase:
 
 ## Risks
-- Risco:
+- Risk:
 - Mitigacao:
 
 ## Validation
-- Como validar:
-- Evidencia esperada:
+- How to validate:
+- Expected evidence:
 
 ## Rollback
-- Plano de reversao:
+- Reversal plan:

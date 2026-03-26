@@ -37,19 +37,37 @@
         },
         "issue_label": {
           "type": "string",
-          "enum": ["devops"]
+          "enum": [
+            "devops"
+          ]
         },
         "severity": {
           "type": "string",
-          "enum": ["P0", "P1", "P2"]
+          "enum": [
+            "P0",
+            "P1",
+            "P2"
+          ]
         },
         "infra_type": {
           "type": "string",
-          "enum": ["kubernetes", "terraform", "helm", "github_actions", "docker", "cloud"]
+          "enum": [
+            "kubernetes",
+            "terraform",
+            "helm",
+            "github_actions",
+            "docker",
+            "cloud"
+          ]
         },
         "cloud_provider": {
           "type": "string",
-          "enum": ["aws", "gcp", "azure", "other"]
+          "enum": [
+            "aws",
+            "gcp",
+            "azure",
+            "other"
+          ]
         },
         "incident_description": {
           "type": "string",
@@ -58,5 +76,8 @@
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

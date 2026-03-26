@@ -46,17 +46,26 @@
         },
         "issue_label": {
           "type": "string",
-          "enum": ["dba"]
+          "enum": [
+            "dba"
+          ]
         },
         "target_table": {
           "type": "string"
         },
         "migration_type": {
           "type": "string",
-          "enum": ["up", "down", "squash"]
+          "enum": [
+            "up",
+            "down",
+            "squash"
+          ]
         }
       }
     }
   },
-  "required": ["intent", "source"]
+  "required": [
+    "intent",
+    "source"
+  ]
 }

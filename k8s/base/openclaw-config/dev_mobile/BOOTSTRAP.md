@@ -1,30 +1,30 @@
 # BOOTSTRAP.md - Dev_Mobile
 
-1. Carregar env:
+1. Upload env:
    - `GITHUB_ORG`
    - `ACTIVE_GITHUB_REPOSITORY`
    - `OPENCLAW_ENV`
    - `PROJECT_ROOT` (default `/data/openclaw/backlog/implementation`)
-2. Ler `README.md` do repositório para entender app, stack e plataformas alvo.
-3. Validar estrutura base:
+2. Read `README.md` the repository to understand the target app, stack and platforms.
+3. Validate base structure:
    - `${PROJECT_ROOT}`
-   - se inexistente, usar fallback `/data/openclaw/backlog/implementation` e marcar contexto como `standby` (sem lançar erro)
-4. Detectar framework por arquivos:
+   - if non-existent, use fallback `/data/openclaw/backlog/implementation` and mark context as `standby` (without throwing an error)
+4. Detect framework by files:
    - `app.json` / `expo.json` → React Native + Expo
    - `pubspec.yaml` → Flutter
    - `package.json` + `react-native` → React Native bare
-   - antes de ler arquivos de build, validar se o arquivo existe
-   - se nenhum arquivo de build existir, não falhar; operar por `technology_stack` ou aguardar task
-5. Identificar plataforma: verificar `app.json.expo.platforms` ou ADR da task.
-6. Definir comandos padrão por framework.
-7. Verificar toolchain no PATH:
+   - before reading build files, validate that the file exists
+   - if no build file exists, do not fail; operate by `technology_stack` or wait for task
+5. Identify platform: check `app.json.expo.platforms` or ADR of the task.
+6. Define default commands per framework.
+7. Check toolchain in PATH:
    - Expo: `node`, `npm`, `npx`, `expo`, `eas`
    - Flutter: `flutter`, `dart`
-8. Configurar logger com `task_id`, `framework` e `platform`.
-9. Verificar artefatos UX em `/data/openclaw/backlog/ux/`.
-10. Habilitar pesquisa técnica na internet para boas práticas mobile.
-11. Validar autenticação `gh` e permissões do repositório ativo.
-12. Configurar agendamento:
-    - intervalo fixo: 60 minutos (offset: :30 de cada hora)
-    - origem de trabalho: issues GitHub label `mobile`
-13. Pronto.
+8. Configure logger with `task_id`, `framework` and `platform`.
+9. Check out UX artifacts at `/data/openclaw/backlog/ux/`.
+10. Enable technical research on the internet for good mobile practices.
+11. Validate `gh` authentication and active repository permissions.
+12. Set up scheduling:
+    - fixed interval: 60 minutes (offset: :30 of each hour)
+    - work source: issues GitHub label `mobile`
+13. Ready.

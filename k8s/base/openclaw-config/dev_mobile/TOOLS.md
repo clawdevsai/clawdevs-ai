@@ -1,39 +1,39 @@
 # TOOLS.md - Dev_Mobile
 
-## tools_disponíveis
-- `read(path)`: ler arquivos da task/projeto e artefatos UX.
-- `write(path, content)`: escrever screens/componentes/testes/docs.
-- `exec(command)`: executar build/test/lint mobile.
-- `exec("gh <args>")`: atualizar issues/PRs e consultar workflows.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=mobile&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: commit/branch/merge sem comandos destrutivos.
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto ou QA_Engineer.
-- `sessions_send(session_id, message)`: enviar update ou delegar ao QA_Engineer.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "react native performance optimization 2025"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://reactnative.dev/docs/performance"`
+## available_tools
+- `read(path)`: read task/project files and UX artifacts.
+- `write(path, content)`: write screens/components/tests/docs.
+- `exec(command)`: run build/test/lint mobile.
+- `exec("gh <args>")`: update issues/PRs and consult workflows.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=mobile&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: commit/branch/merge without destructive commands.
+- `sessions_spawn(agentId, mode, label)`: create session with Architect or QA_Engineer.
+- `sessions_send(session_id, message)`: send update or delegate to QA_Engineer.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "react native performance optimization 2025"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://reactnative.dev/docs/performance"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**`.
-- Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- Validar `active_repository.env` antes de qualquer ação gh/git.
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=mobile&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `mobile`. TASK_GITHUB_REPO = campo `github_repo` da task.
-- `sessions_spawn` permitido para: `arquiteto`, `qa_engineer`.
+## usage_rules
+- `read/write` only on `/data/openclaw/**`.
+- Block destructive commands (`rm -rf`, `git push -f`, etc.).
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- Validate `active_repository.env` before any gh/git action.
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=mobile&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process `mobile` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- `sessions_spawn` allowed for: `arquiteto`, `qa_engineer`.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `mobile` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `mobile` — automatically created at boot if it does not exist:
   `gh label create "mobile" --color "#e4e669" --description "Mobile tasks — routed to Dev_Mobile" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_adicionais_mobile
 - `expo`: `npx expo start`, `npx expo lint`, `eas build`, `eas submit`
@@ -42,35 +42,33 @@
 - `maestro`: `maestro test` (e2e cross-platform)
 
 ## autonomia_de_pesquisa_e_aprendizado
-- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas mobile.
-- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-  - descobrir SDKs, bibliotecas e ferramentas de build mais eficientes para o problema
-  - verificar CVEs e vulnerabilidades em dependências nativas e JS mobile
-  - comparar benchmarks de startup time, bundle size e performance entre alternativas
-  - ler documentação oficial de iOS, Android, Expo, Flutter e React Native
-  - aprender padrões emergentes de performance mobile e app store compliance
-- Citar fonte e data da informação nos artefatos produzidos.
+- Full internet access permission for research, updating skills and discovering better mobile alternatives.
+- Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+  - discover more efficient SDKs, libraries and build tools for the problem
+  - check CVEs and vulnerabilities in native dependencies and mobile JS
+  - compare startup time, bundle size and performance benchmarks between alternatives
+  - read official documentation for iOS, Android, Expo, Flutter and React Native
+  - learn emerging standards for mobile performance and app store compliance
+- Cite source and date of information in the artifacts produced.
 
 ## rate_limits
-- `exec`: 120 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
+- `exec`: 120 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
 
-## inter_agent_sessions
-
-Comunicacao entre agentes via sessao persistente:
+## inter_agent_sessionsCommunication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Prohibited:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -79,4 +77,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

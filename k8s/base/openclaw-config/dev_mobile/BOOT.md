@@ -1,28 +1,28 @@
 # BOOT.md - Dev_Mobile
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md`.
-3. Ler `README.md` do repositório para entender a aplicação, stack e plataformas alvo.
-4. Carregar `SOUL.md`.
-5. Carregar `INPUT_SCHEMA.json`.
-6. Ler `/data/openclaw/memory/shared/SHARED_MEMORY.md` — aplicar padrões globais do time como contexto base.
-7. Ler `/data/openclaw/memory/dev_mobile/MEMORY.md` — resgatar aprendizados próprios de mobile relevantes.
-8. Validar `/data/openclaw/` e workspace de implementação.
-9. Detectar framework mobile pelo `technology_stack` da task ou por arquivos (`app.json`, `expo.json`, `pubspec.yaml`).
-10. Identificar plataforma alvo: iOS, Android ou ambas.
-11. Carregar comandos padrão por framework (Expo/EAS ou Flutter).
-12. Validar ferramentas no PATH: `node`, `npm`, `npx`, `expo`, `eas-cli` (ou `flutter`, `dart`).
-13. Verificar ferramentas: `read`, `write`, `exec`, `git`, `sessions_send`.
-14. Verificar presença de artefatos UX em `/data/openclaw/backlog/ux/` para tasks com escopo de tela.
-15. Ao concluir a sessão: registrar até 3 aprendizados em `/data/openclaw/memory/dev_mobile/MEMORY.md`.
-16. Pronto para receber task do Arquiteto.
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md`.
+3. Read `README.md` the repository to understand the application, stack and target platforms.
+4. Load `SOUL.md`.
+5. Load `INPUT_SCHEMA.json`.
+6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
+7. Read `/data/openclaw/memory/dev_mobile/MEMORY.md` — retrieve your own relevant mobile learning.
+8. Validate `/data/openclaw/` and implementation workspace.
+9. Detect mobile framework by task's `technology_stack` or by files (`app.json`, `expo.json`, `pubspec.yaml`).
+10. Identify target platform: iOS, Android or both.
+11. Load standard commands per framework (Expo/EAS or Flutter).
+12. Validate tools in PATH: `node`, `npm`, `npx`, `expo`, `eas-cli` (or `flutter`, `dart`).
+13. Check tools: `read`, `write`, `exec`, `git`, `sessions_send`.
+14. Check presence of UX artifacts in `/data/openclaw/backlog/ux/` for screen-scoped tasks.
+15. When completing the session: register up to 3 learnings in `/data/openclaw/memory/dev_mobile/MEMORY.md`.
+16. Ready to receive task from the Architect.
 
-## healthcheck
-- `/data/openclaw/` acessível? ✅
-- INPUT_SCHEMA.json carregado? ✅
-- Framework mobile detectado? ✅
-- Plataforma alvo identificada? ✅
-- SHARED_MEMORY.md e MEMORY.md (dev_mobile) lidos? ✅
-- `ACTIVE_GITHUB_REPOSITORY` definido? ✅
+##healthcheck
+- `/data/openclaw/` accessible? ✅
+- INPUT_SCHEMA.json loaded? ✅
+- Mobile framework detected? ✅
+- Target platform identified? ✅
+- SHARED_MEMORY.md and MEMORY.md (dev_mobile) read? ✅
+- `ACTIVE_GITHUB_REPOSITORY` defined? ✅

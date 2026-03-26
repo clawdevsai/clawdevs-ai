@@ -1,9 +1,9 @@
 # BOOTSTRAP.md - DBA_DataEngineer
 
-## Inicialização de Ambiente
+## Environment Initialization
 
-1. Carregar variáveis de ambiente.
-2. Inicializar diretório `/data/openclaw/backlog/database/`.
-3. Configurar cron de 4h (offset :30) para poll de issues com label `dba`.
-4. Verificar conectividade com banco de desenvolvimento se disponível.
-5. Registrar estado: `dba_data_engineer ready`.
+1. Load environment variables.
+2. Initialize `/data/openclaw/backlog/database/` directory.
+3. Configure 4h cron (offset :30) to poll issues with label `dba`.
+4. Check connectivity with development bank if available.
+5. Register status: `dba_data_engineer ready`.

@@ -27,55 +27,55 @@ Use this skill when:
 
 ## Core Workflow (PT-BR + EN)
 
-### 1) Reproduction / Reprodução
+### 1) Reproduction
 
 **PT-BR**
-- Defina pré-condições (ambiente, dados, versão/commit)
-- Documente passo a passo mínimo para reproduzir
-- Capture esperado vs observado
+- Define preconditions (environment, data, version/commit)
+- Document minimal step-by-step instructions to reproduce
+- Capture expected vs observed
 
 **EN**
 - Capture environment, seed/state, and commit/version
 - Produce minimal, deterministic reproduction steps
 - Record expected vs actual behavior
 
-### 2) Isolation / Isolamento
+### 2) Isolation
 
 **PT-BR**
-- Reduza o caso até o menor cenário que falha
-- Faça busca binária no fluxo (entrada -> transformação -> saída)
-- Elimine variáveis não determinísticas
+- Reduce the case to the smallest failing scenario
+- Perform binary search in the stream (input -> transformation -> output)
+- Eliminate non-deterministic variables
 
 **EN**
 - Build a minimal failing case
 - Narrow down the failure path with binary-search style checks
 - Remove unrelated dependencies/noise
 
-### 3) Root Cause / Causa Raiz
+### 3) Root Cause
 
 **PT-BR**
-- Valide hipóteses com evidência (log, assert, diff, teste)
-- Relacione sinal -> causa, não só sintoma -> workaround
-- Registre por que hipóteses alternativas foram descartadas
+- Validate hypotheses with evidence (log, assert, diff, test)
+- Relate signal -> cause, not just symptom -> workaround
+- Record why alternative hypotheses were discarded
 
 **EN**
 - Confirm the root cause with direct evidence
 - Link symptom -> mechanism -> failure point
 - Document rejected hypotheses and why
 
-### 4) Fix Validation / Validação da Correção
+### 4) Fix Validation
 
 **PT-BR**
-- Crie/rode teste que falha antes da correção
-- Aplique fix e confirme teste verde
-- Verifique cenários adjacentes para evitar regressão
+- Create/run test that fails before fix
+- Apply fix and confirm green test
+- Check adjacent scenarios to avoid regression
 
 **EN**
 - Ensure a failing test exists before the fix
 - Confirm it passes after the fix
 - Validate neighboring edge cases and regression paths
 
-### 5) Final QA Output / Saída Final
+### 5) Final QA Output
 
 Return this compact structure:
 
@@ -115,9 +115,7 @@ If failure is intermittent:
 - Log timing/state dependencies
 - Treat timing-sensitive pass as inconclusive until stabilized
 
-## Integration with Self-Improving
-
-When `skill-self-improving` is active:
+## Integration with Self-ImprovingWhen `skill-self-improving` is active:
 - After each confirmed bug class, log one reusable lesson
 - Promote only after repeated evidence (3x) or explicit user confirmation
 - Keep entries factual, non-imperative, and scoped (global/domain/project)

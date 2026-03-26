@@ -1,19 +1,19 @@
 # MEMORY — UX_Designer
 
-> Aprendizados acumulados pelo agente UX_Designer entre sessões.
-> Leia este arquivo ao iniciar cada tarefa. Escreva ao concluir.
+> Learning accumulated by the UX_Designer agent between sessions.
+> Read this file when starting each task. Write when finished.
 
 ## Active Patterns
 
-<!-- Padrões verificados e ativos para este agente -->
-<!-- Formato: - [PATTERN] <descrição concisa> | Descoberto: YYYY-MM-DD | Fonte: TASK-XXX -->
+<!-- Defaults checked and active for this agent -->
+<!-- Format: - [PATTERN] <concise description> | Discovered: YYYY-MM-DD | Source: TASK-XXX -->
 
 ## Promotion Candidates
 
-<!-- Padrões candidatos à promoção (identificados em outros agentes também) -->
-<!-- Formato: - [CANDIDATE] <descrição> | Agentes: <lista> | Contagem: N -->
+<!-- Patterns candidates for promotion (identified in other agents as well) -->
+<!-- Format: - [CANDIDATE] <description> | Agents: <list> | Count: N -->
 
 ## Archived
 
-<!-- Padrões superados ou irrelevantes -->
-<!-- Formato: - [ARCHIVED] <descrição> | Arquivado: YYYY-MM-DD | Motivo: <razão> -->
+<!-- Outdated or irrelevant standards -->
+<!-- Format: - [ARCHIVED] <description> | Filed: YYYY-MM-DD | Reason: <reason> -->

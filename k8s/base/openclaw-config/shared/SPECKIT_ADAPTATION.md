@@ -1,24 +1,24 @@
 # SPECKIT ADAPTATION
 
-Este repositorio nao usa o Spec Kit oficial como dependencia obrigatoria.
-Em vez disso, adota o mesmo modelo mental e o adapta aos artefatos da ClawDevs AI.
+This repository does not use the official Spec Kit as a required dependency.
+Instead, it takes the same mental model and adapts it to ClawDevs AI artifacts.
 
-## Correspondencia entre Spec Kit e ClawDevs AI
+## Correspondence between Spec Kit and ClawDevs AI
 - `constitution` -> `CONSTITUTION.md`
-- `specify` -> `SPEC_TEMPLATE.md` e `backlog/specs/`
-- `clarify` -> registro de ambiguidades, assumptions e revisoes da SPEC
-- `plan` -> `ADR`, `TASK` e plano tecnico do Arquiteto
+- `specify` -> `SPEC_TEMPLATE.md` and `backlog/specs/`
+- `clarify` -> record of ambiguities, assumptions and SPEC revisions
+- `plan` -> `ADR`, `TASK` and the Architect's technical plan
 - `tasks` -> `TASK-XXX-<slug>.md`
-- `analyze` -> validacao de NFRs, riscos, seguranca e custo
-- `implement` -> Dev_Backend executando a task
+- `analyze` -> validation of NFRs, risks, security and cost
+- `implement` -> Dev_Backend executing the task
 
-## Objetivo operacional
-- Manter o fluxo espec-driven tanto para a plataforma ClawDevs AI quanto para entregas de projetos.
-- Preservar rastreabilidade de ponta a ponta.
-- Evitar codigo "solto" sem contrato claro.
+## Operational objective
+- Maintain the spec-driven flow for both the ClawDevs AI platform and project deliveries.
+- Preserve end-to-end traceability.
+- Avoid "loose" code without a clear contract.
 
-## Como usar
-- O CEO consolida a demanda em Brief + SPEC.
-- O PO refina a SPEC e cria User Stories.
-- O Arquiteto converte SPEC/US em plano tecnico e tasks.
-- O Dev_Backend implementa estritamente o que foi especificado.
+## How to use
+- The CEO consolidates the demand in Brief + SPEC.
+- PO refines the SPEC and creates User Stories.
+- The Architect converts SPEC/US into a technical plan and tasks.
+- Dev_Backend strictly implements what is specified.

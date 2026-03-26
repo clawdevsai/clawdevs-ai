@@ -1,45 +1,45 @@
 ---
 name: memory_curator_promotion
-description: Skill de curadoria de memória para promoção de padrões cross-agent e relatório de saúde da memória
+description: Memory curation skill for promoting cross-agent standards and memory health reporting
 ---
 
 # SKILL.md - Memory_Curator
 
 ## Skill: promote_cross_agent_patterns
 
-**Gatilho**: Cron diário às 2h ou chamada explícita pelo Arquiteto
+**Trigger**: Daily Cron at 2am or explicit call by Architect
 
-**Passos**:
-1. Ler todos os `/data/openclaw/memory/<id>/MEMORY.md` dos agentes ativos
-2. Extrair seção `## Active Patterns` de cada arquivo
-3. Usar LLM para agrupar padrões semanticamente similares entre agentes
-4. Para grupos com ≥3 agentes distintos: promover para SHARED_MEMORY.md
-5. Atualizar MEMORY.md dos agentes de origem (mover para Archived)
-6. Logar resultado em `/data/openclaw/backlog/status/memory-curator.log`
+**Steps**:
+1. Read all `/data/openclaw/memory/<id>/MEMORY.md` from active agents
+2. Extract `## Active Patterns` section from each file
+3. Use LLM to group semantically similar patterns between agents
+4. For groups with ≥3 different agents: promote to SHARED_MEMORY.md
+5. Update MEMORY.md of source agents (move to Archived)
+6. Log result at `/data/openclaw/backlog/status/memory-curator.log`
 
-**Formato de entrada esperado nos MEMORY.md**:
+**Expected input format in MEMORY.md**:
 ```
 - [PATTERN] <descrição> | Descoberto: YYYY-MM-DD | Fonte: <task-id>
 ```
 
-**Formato de saída em SHARED_MEMORY.md**:
+**Output format in SHARED_MEMORY.md**:
 ```
 - [GLOBAL] <descrição consolidada> | Promovido: YYYY-MM-DD | Origem: <agente1>, <agente2>, <agente3>
 ```
 
-**Formato de arquivamento nos MEMORY.md dos agentes**:
+**Archiving format in agents' MEMORY.md**:
 ```
 - [ARCHIVED] <descrição original> | Arquivado: YYYY-MM-DD | Motivo: Promovido para SHARED_MEMORY
 ```
 
 ## Skill: report_memory_health
 
-**Gatilho**: Ao final de cada ciclo de promoção
+**Trigger**: At the end of each promotion cycle
 
-**Saída**: Log estruturado em `/data/openclaw/backlog/status/memory-curator.log` com:
+**Output**: Log structured in `/data/openclaw/backlog/status/memory-curator.log` with:
 - Timestamp ISO8601
-- Agentes processados
-- Total de padrões coletados
-- Padrões promovidos (N novos + N atualizados)
-- Padrões arquivados
-- Erros
+- Agents processed
+- Total patterns collected
+- Promoted patterns (N new + N updated)
+- Archived patterns
+- Errors

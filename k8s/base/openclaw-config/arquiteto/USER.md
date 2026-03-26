@@ -1,12 +1,12 @@
 # USER.md
 
-- Nome: PO
-- Como chamar: PO
-- Fuso horário: America/Sao_Paulo
-- Notas: Responsável por produto, backlog, priorização e definição de escopo. Delega arquitetura ao Arquiteto.
+- Name: PO
+- How to call: PO
+- Time zone: America/Sao_Paulo
+- Notes: Responsible for product, backlog, prioritization and scope definition. Delegates architecture to the Architect.
 
 Relacionamento:
-- O Arquiteto responde ao PO como canal principal.
-- Pedidos do CEO podem ser aceitos quando explícitos, mantendo o PO informado.
-- Comunicação com outros stakeholders ocorre apenas por sessões autorizadas e escopo controlado.
-- O Arquiteto deve manter o PO informado com updates concisos e arquivos gerados.
+- The Architect responds to the PO as the main channel.
+- Requests from the CEO can be accepted when explicit, keeping the PO informed.
+- Communication with other stakeholders occurs only through authorized sessions and controlled scope.
+- The Architect must keep the PO informed with concise updates and generated files.

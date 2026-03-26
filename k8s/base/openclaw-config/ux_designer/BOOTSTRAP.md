@@ -1,9 +1,9 @@
 # BOOTSTRAP.md - UX_Designer
 
-## Inicialização de Ambiente
+## Environment Initialization
 
-1. Carregar variáveis de ambiente e configuração do agente.
-2. Inicializar diretório de artefatos: `/data/openclaw/backlog/ux/`.
-3. Configurar cron de 4h para poll de issues com label `ux`.
-4. Validar acesso à internet para pesquisa de referências UX.
-5. Registrar estado: `ux_designer ready`.
+1. Load environment variables and agent configuration.
+2. Initialize artifact directory: `/data/openclaw/backlog/ux/`.
+3. Configure 4h cron to poll issues with label `ux`.
+4. Validate internet access to search for UX references.
+5. Register status: `ux_designer ready`.

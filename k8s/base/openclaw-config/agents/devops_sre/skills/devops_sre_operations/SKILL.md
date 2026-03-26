@@ -1,31 +1,31 @@
 ---
 name: devops_sre_operations
-description: Skill DevOps/SRE para pipelines, infra Kubernetes, SLOs e resposta a incidentes de produção
+description: Skill DevOps/SRE for pipelines, Kubernetes infrastructure, SLOs and production incident response
 ---
 
-# Skills do DevOps_SRE
+# DevOps_SRE Skills
 
 ---
 
-## Gerenciar Pipeline CI/CD (GitHub Actions)
+## Manage CI/CD Pipeline (GitHub Actions)
 
 Workflow:
-1. Ler TASK e entender o tipo de mudança de pipeline.
-2. Verificar workflows existentes em `.github/workflows/`.
-3. Implementar ou corrigir workflow.
-4. Testar via `gh workflow run` ou push em branch de teste.
-5. Validar stages: lint → test → build → security scan → deploy.
-6. Atualizar issue e reportar ao Arquiteto.
+1. Read TASK and understand the type of pipeline change.
+2. Check existing workflows in `.github/workflows/`.
+3. Implement or correct workflow.
+4. Test via `gh workflow run` or push to test branch.
+5. Validate stages: lint → test → build → security scan → deploy.
+6. Update issue and report to the Architect.
 
-Boas práticas:
-- Usar actions com versões fixas (SHA ou tag) para reprodutibilidade.
-- Cache de dependências (`actions/cache`) para reduzir tempo e custo.
-- Secrets via GitHub Secrets, nunca hardcoded.
-- Aprovar deploys de produção com `environment: production` e reviewers.
+Good practices:
+- Use actions with fixed versions (SHA or tag) for reproducibility.
+- Dependency caching (`actions/cache`) to reduce time and cost.
+- Secrets via GitHub Secrets, never hardcoded.
+- Approve production deployments with `environment: production` and reviewers.
 
 ---
 
-## Infraestrutura como Código
+## Infrastructure as Code
 
 ### Terraform
 ```bash
@@ -52,48 +52,48 @@ kubectl top pod                          # monitoramento de recursos
 
 ---
 
-## Redução de Custo Cloud (AWS / GCP / Azure)
+## Cloud Cost Reduction (AWS / GCP / Azure)
 
-Análise de custo:
+Cost Analysis:
 - AWS: `aws ce get-cost-and-usage`, Cost Explorer, Compute Optimizer
 - GCP: `gcloud billing budgets list`, Recommender API
 - Azure: Azure Cost Management
 
-Otimizações prioritárias:
-1. **Right-sizing**: ajustar instâncias para o mínimo necessário (CPU/RAM reais vs alocados)
-2. **Spot/Preemptible instances**: para workloads tolerantes a interrupção (CI, jobs batch)
-3. **Reserved instances**: para workloads estáveis > 1 ano
-4. **Auto-scaling**: HPA/VPA no Kubernetes, ASG na AWS
-5. **CDN para assets estáticos**: CloudFront, Cloud CDN — reduz tráfego de origem
-6. **Object storage para logs/backups**: S3/GCS em vez de disco provisionado
-7. **Revisão de storage classes**: Infrequent Access para dados raramente acessados
+Priority optimizations:
+1. **Right-sizing**: adjust instances to the minimum required (real vs allocated CPU/RAM)
+2. **Spot/Preemptible instances**: for interruption-tolerant workloads (CI, batch jobs)
+3. **Reserved instances**: for stable workloads > 1 year
+4. **Auto-scaling**: HPA/VPA on Kubernetes, ASG on AWS
+5. **CDN for static assets**: CloudFront, Cloud CDN — reduces origin traffic
+6. **Object storage for logs/backups**: S3/GCS instead of provisioned disk
+7. **Revision of storage classes**: Infrequent Access for rarely accessed data
 
 ---
 
-## Monitoramento e SLOs
+## Monitoring and SLOs
 
-SLOs padrão (quando SPEC não definir):
-- Disponibilidade: 99.9% (8.7h downtime/ano)
-- Latência p95: < 300ms
-- Latência p99: < 500ms
-- Taxa de erro: < 0.1%
+Default SLOs (when SPEC not defined):
+- Availability: 99.9% (8.7h downtime/year)
+- Latency p95: < 300ms
+- Latency p99: < 500ms
+- Error rate: < 0.1%
 
 Ferramentas:
 ```bash
-# Verificar health check
+# Check health check
 kubectl get pods -A | grep -v Running
 curl -s http://service/health | jq .
 
-# Verificar métricas (se Prometheus/Grafana disponível)
+# Check métricas (se Prometheus/Grafana disponível)
 kubectl port-forward svc/prometheus 9090:9090
 kubectl port-forward svc/grafana 3000:3000
 ```
 
 ---
 
-## Relatório Semanal de Métricas (Segunda-feira)
+## Weekly Metrics Report (Monday)
 
-Formato de `PROD_METRICS-YYYY-WXX.md`:
+`PROD_METRICS-YYYY-WXX.md` Format:
 ```markdown
 # PROD_METRICS-2025-W12
 
@@ -126,9 +126,9 @@ Formato de `PROD_METRICS-YYYY-WXX.md`:
 
 ---
 
-## Resposta a Incidentes
+## Incident Response
 
-### P0 — Crítico (impacto total de produção)
+### P0 — Critical (total production impact)
 ```
 1. Notificar CEO via sessions_send IMEDIATAMENTE
 2. Avaliar rollback como primeira opção (rápido e seguro)
@@ -137,7 +137,7 @@ Formato de `PROD_METRICS-YYYY-WXX.md`:
 5. Post-mortem em /data/openclaw/backlog/incidents/
 ```
 
-### P1 — Alto (impacto parcial de produção)
+### P1 — High (partial production impact)
 ```
 1. Notificar Arquiteto e PO
 2. Criar issue `devops` prioridade alta
@@ -149,7 +149,7 @@ Formato de `PROD_METRICS-YYYY-WXX.md`:
 
 ## Guardrails
 
-- Nunca modificar produção sem TASK ou P0 documentado.
-- Nunca commitar secrets.
-- Sempre `terraform plan` antes de `apply`.
-- Sempre escalar P0 ao CEO imediatamente.
+- Never modify production without documented TASK or P0.
+- Never commit secrets.
+- Always `terraform plan` before `apply`.
+- Always escalate P0 to CEO immediately.

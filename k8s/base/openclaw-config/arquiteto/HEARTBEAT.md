@@ -1,27 +1,27 @@
-# HEARTBEAT.md - Arquiteto
+# HEARTBEAT.md - Architect
 
-A cada 5 minutos (ou conforme configurado):
-1. Sessões ativas (`sessions_list`):
-   - Se sessões com PO > 2: alertar PO.
-   - Se sessão inativa > 1h: fechar automaticamente.
-2. Tarefas pendentes:
-   - Tasks sem NFR ou Security/Observabilidade: escalar ao PO.
-   - ADR pendente de aprovação > 48h: notificar PO.
+Every 5 minutes (or as configured):
+1. Active sessions (`sessions_list`):
+   - If sessions with PO > 2: alert PO.
+   - If session inactive > 1h: close automatically.
+2. Pending tasks:
+   - Tasks without NFR or Security/Observability: escalate to PO.
+   - ADR pending approval > 48h: notify PO.
 3. Research monitor:
-   - Se timer > 2h: abortar research, aplicar `Default/Proven`, logar `research_timeout`.
-   - Se `web-search` > 30 queries/hora: aplicar throttle.
+   - If timer > 2h: abort research, apply `Default/Proven`, log in `research_timeout`.
+   - If `web-search` > 30 queries/hour: apply throttle.
 4. GitHub health:
-   - Se falhas > 5% nas últimas 10 operações: alertar PO e usar fallback por arquivo.
-5. Pipeline docs/task:
-   - Se existir documento novo de CEO/PO/Arquiteto sem commit em `implementation/docs`: alertar PO.
-   - Se panel task criada sem commit prévio de docs: marcar não-conforme e escalar PO.
-   - Se sessão finalizada sem pasta `session_finished/<session_id>`: marcar não-conforme e corrigir.
-6. Anomalias de arquivo:
-   - Leitura/escrita fora de `/data/openclaw/backlog`: bloquear, logar, notificar PO.
-7. Monitoramento do ciclo Dev-QA:
-   - Tasks do panel com label `tests` e status `inbox` > 2h sem mudança: notificar QA_Engineer.
-   - Tasks do panel com label `devops` e status `inbox` > 1h sem mudança: notificar DevOps_SRE.
-   - QA_Engineer reportou 3 retries em alguma task: escalar ao PO com histórico.
-8. Monitoramento de pipelines CI/CD:
-   - Falhas repetidas de CI/CD (> 3x no mesmo PR): delegar ao DevOps_SRE.
-9. Se ocioso > 20 minutos: reportar `standby` (sem fechar sessão).
+   - If failures > 5% in last 10 operations: alert PO and use per-file fallback.
+5. Docs/task pipeline:
+   - If there is a new CEO/PO/Architect document without commit in `implementation/docs`: alert PO.
+   - If panel task created without prior commit of docs: mark non-conforming and escalate PO.
+   - If session ended without folder `session_finished/<session_id>`: mark non-compliant and correct.
+6. File anomalies:
+   - Reading/writing outside `/data/openclaw/backlog`: block, log in, notify PO.
+7. Dev-QA cycle monitoring:
+   - Tasks from the panel with label `tests` and status `inbox` > 2h without change: notify QA_Engineer.
+   - Tasks from the panel with label `devops` and status `inbox` > 1h without change: notify DevOps_SRE.
+   - QA_Engineer reported 3 retries in some task: escalate to PO with history.
+8. CI/CD pipeline monitoring:
+   - Repeated CI/CD failures (> 3x in the same PR): delegate to DevOps_SRE.
+9. If idle > 20 minutes: report `standby` (without closing session).

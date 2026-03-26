@@ -1,24 +1,24 @@
 # BOOT.md - Memory_Curator
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md` (regras e capabilities).
-3. Carregar `SOUL.md` (postura e limites rígidos).
-4. Validar que `/data/openclaw/memory/` está acessível e contém subpastas dos agentes.
-5. Verificar que `/data/openclaw/memory/shared/` existe; criar se ausente.
-6. Verificar que `/data/openclaw/backlog/status/` existe para escrita de log.
-7. Carregar `MEMORY.md` próprio: `/data/openclaw/memory/memory_curator/MEMORY.md`.
-8. Pronto para executar ciclo de curadoria.
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md` (rules and capabilities).
+3. Load `SOUL.md` (strict posture and limits).
+4. Validate that `/data/openclaw/memory/` is accessible and contains agent subfolders.
+5. Check that `/data/openclaw/memory/shared/` exists; create if absent.
+6. Check that `/data/openclaw/backlog/status/` exists for log writing.
+7. Upload `MEMORY.md` own: `/data/openclaw/memory/memory_curator/MEMORY.md`.
+8. Ready to run curation cycle.
 
-## healthcheck
-- `/data/openclaw/memory/` acessível? ✅
-- `/data/openclaw/memory/shared/SHARED_MEMORY.md` existe? ✅ (criar se não existir)
-- `/data/openclaw/backlog/status/` gravável? ✅
-- MEMORY.md (memory_curator) carregado? ✅
+##healthcheck
+- `/data/openclaw/memory/` accessible? ✅
+Does - `/data/openclaw/memory/shared/SHARED_MEMORY.md` exist? ✅ (create if doesn't exist)
+- `/data/openclaw/backlog/status/` writable? ✅
+- MEMORY.md (memory_curator) loaded? ✅
 
-## Regras operacionais
-- Nunca interagir com GitHub.
-- Nunca se comunicar com outros agentes proativamente.
-- Nunca deletar — apenas mover entre seções de MEMORY.md.
-- Idempotência obrigatória: múltiplas execuções não duplicam padrões.
+## Operating rules
+- Never interact with GitHub.
+- Never communicate with other agents proactively.
+- Never delete — only move between sections of MEMORY.md.
+- Mandatory idempotence: multiple executions do not duplicate patterns.

@@ -1,34 +1,34 @@
-# BOOT.md - Arquiteto
+# BOOT.md - Architect
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md` (regras, capabilities e validações).
-3. Ler `README.md` do repositório para entender estrutura, stack e contratos antes de planejar.
-4. Carregar `SOUL.md` (postura e limites rígidos).
-5. Carregar `INPUT_SCHEMA.json`.
-6. Ler `/data/openclaw/memory/shared/SHARED_MEMORY.md` — aplicar padrões globais do time como contexto base.
-7. Ler `/data/openclaw/memory/arquiteto/MEMORY.md` — resgatar aprendizados próprios de arquitetura relevantes.
-8. Validar acesso a `/data/openclaw/backlog` e subpastas: `idea/`, `user_story/`, `tasks/`, `architecture/`, `briefs/`, `implementation/docs/`, `session_finished/`, `specs/`, `ux/`.
-9. Verificar ferramentas disponíveis: `read`, `write`, `exec`, `sessions_spawn`, `sessions_send`, `sessions_list`.
-10. Verificar comandos via `exec`: `gh`, `web-search`, `web-read`.
-11. Validar variáveis via `/data/openclaw/contexts/active_repository.env`: `GITHUB_ORG`, `ACTIVE_GITHUB_REPOSITORY`.
-12. Inicializar diretórios operacionais se ausentes: `/data/openclaw/backlog/status/`, `/data/openclaw/backlog/audit/`, `/data/openclaw/backlog/session_finished/`.
-13. Carregar allowlists e limites de segurança (labels permitidas, rate limits, path whitelist).
-14. Ao concluir a sessão: registrar até 3 aprendizados em `/data/openclaw/memory/arquiteto/MEMORY.md`.
-15. Pronto para receber input do PO.
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md` (rules, capabilities and validations).
+3. Read `README.md` the repository to understand structure, stack and contracts before planning.
+4. Load `SOUL.md` (strict posture and limits).
+5. Load `INPUT_SCHEMA.json`.
+6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
+7. Read `/data/openclaw/memory/arquiteto/MEMORY.md` — recover your own relevant architectural learnings.
+8. Validate access to `/data/openclaw/backlog` and subfolders: `idea/`, `user_story/`, `tasks/`, `architecture/`, `briefs/`, `implementation/docs/`, `session_finished/`, `specs/`, `ux/`.
+9. Check available tools: `read`, `write`, `exec`, `sessions_spawn`, `sessions_send`, `sessions_list`.
+10. Check commands via `exec`: `gh`, `web-search`, `web-read`.
+11. Validate variables via `/data/openclaw/contexts/active_repository.env`: `GITHUB_ORG`, `ACTIVE_GITHUB_REPOSITORY`.
+12. Initialize operational directories if missing: `/data/openclaw/backlog/status/`, `/data/openclaw/backlog/audit/`, `/data/openclaw/backlog/session_finished/`.
+13. Load allowlists and security limits (allowed labels, rate limits, path whitelist).
+14. When completing the session: register up to 3 learnings in `/data/openclaw/memory/arquiteto/MEMORY.md`.
+15. Ready to receive input from PO.
 
-## healthcheck
-- `/data/openclaw/backlog/` existe e é gravável? ✅
-- `implementation/docs/` e `session_finished/` disponíveis? ✅
-- Ferramentas `read`, `write`, `exec`, `sessions_spawn` disponíveis? ✅
-- INPUT_SCHEMA.json carregado? ✅
-- `GITHUB_ORG` definido? ✅
-- `ACTIVE_GITHUB_REPOSITORY` definido? ✅
-- SHARED_MEMORY.md e MEMORY.md (arquiteto) lidos? ✅
-- Allowlists e rate limits carregados? ✅
+##healthcheck
+Does - `/data/openclaw/backlog/` exist and is it writable? ✅
+- `implementation/docs/` and `session_finished/` available? ✅
+- Tools `read`, `write`, `exec`, `sessions_spawn` available? ✅
+- INPUT_SCHEMA.json loaded? ✅
+- `GITHUB_ORG` defined? ✅
+- `ACTIVE_GITHUB_REPOSITORY` defined? ✅
+- SHARED_MEMORY.md and MEMORY.md (architect) read? ✅
+- Allowlists and rate limits loaded? ✅
 
-## Preparação de labels GitHub (boot único)
+## GitHub label preparation (single boot)
 ```bash
 gh label create "task"      --color "#0075ca" --description "Technical tasks — owned by Arquiteto"    --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true
 gh label create "ADR"       --color "#e4e669" --description "Architecture Decision Record"             --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true

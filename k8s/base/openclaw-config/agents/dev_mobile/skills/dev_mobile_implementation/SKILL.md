@@ -1,46 +1,46 @@
 ---
 name: dev_mobile_implementation
-description: Skill de implementação mobile para tasks, testes e atualização de status
+description: Mobile implementation skills for tasks, tests and status updates
 ---
 
-# Skills do Dev_Mobile
+# Dev_Mobile Skills
 
 ---
 
-## Implementar Task Mobile
+## Implement Task Mobile
 
-Use quando o ciclo agendado de 1h encontrar issue com label `mobile` ou quando delegado pelo Arquiteto.
+Use when the scheduled 1h cycle encounters an issue with label `mobile` or when delegated by the Architect.
 
 Workflow:
-1. Ler `TASK-XXX`, `US-XXX`, `UX-XXX` (se existir) e `ADR`.
-2. Identificar framework (`app.json` = Expo; `pubspec.yaml` = Flutter) e plataforma alvo.
-3. Implementar screens e componentes mobile no escopo da task.
-4. Executar lint/test/build/e2e.
-5. Atualizar issue/PR com resumo técnico + métricas de performance.
-6. Reportar ao Arquiteto com evidências.
+1. Read `TASK-XXX`, `US-XXX`, `UX-XXX` (if exists) and `ADR`.
+2. Identify framework (`app.json` = Expo; `pubspec.yaml` = Flutter) and target platform.
+3. Implement screens and mobile components within the scope of the task.
+4. Run lint/test/build/e2e.
+5. Update issue/PR with technical summary + performance metrics.
+6. Report to Architect with evidence.
 
 ---
 
-## Agendamento de 1h (Obrigatório)
+## Appointment of 1 hour (Required)
 
-- A cada 60 minutos (offset :30), consultar GitHub por issues com label `mobile`.
-- Processar apenas: `mobile`
-- Ignorar: `back_end`, `front_end`, `tests`, `dba`, `devops`, `documentacao`
-
----
-
-## Roteamento para QA (Dev-QA Loop)
-
-Após implementação e abertura de PR:
-1. Delegar ao QA_Engineer via `sessions_spawn` / `sessions_send`.
-2. Aguardar relatório do QA.
-3. PASS → fechar ciclo e reportar ao Arquiteto.
-4. FAIL → corrigir e re-delegar (retry, max 3x).
-5. 3º FAIL → escalar ao Arquiteto com histórico.
+- Every 60 minutes (offset :30), query GitHub for issues with label `mobile`.
+- Process only: `mobile`
+- Ignore: `back_end`, `front_end`, `tests`, `dba`, `devops`, `documentacao`
 
 ---
 
-## Stack React Native + Expo (Padrão)
+## Routing for QA (Dev-QA Loop)
+
+After implementation and opening of PR:
+1. Delegate to QA_Engineer via `sessions_spawn` / `sessions_send`.
+2. Wait for QA report.
+3. PASS → close the cycle and report to the Architect.
+4. FAIL → fix and re-delegate (retry, max 3x).
+5. 3rd FAIL → escalate to Architect with history.
+
+---
+
+## Stack React Native + Expo (Default)
 
 ```bash
 npm ci
@@ -51,7 +51,7 @@ npx detox test                     # e2e (quando configurado)
 eas build --platform all --profile preview  # build pipeline
 ```
 
-## Stack Flutter (Alternativa)
+## Stack Flutter (Alternative)
 
 ```bash
 flutter pub get
@@ -63,20 +63,20 @@ flutter build ios --release        # requer macOS host
 
 ---
 
-## Guardrails de Segurança Mobile
+## Mobile Security Guardrails
 
-- Nunca hardcodar secrets: usar `EAS Secrets`, `react-native-config`, ou `flutter_dotenv`.
-- Implementar certificate pinning quando a SPEC exigir.
-- Seguir OWASP Mobile Top 10.
-- Não expor dados do usuário em logs de produção.
+- Never hardcode secrets: use `EAS Secrets`, `react-native-config`, or `flutter_dotenv`.
+- Implement certificate pinning when SPEC requires it.
+- Follow OWASP Mobile Top 10.
+- Do not expose user data in production logs.
 
 ---
 
-## Multi-Agent Routing de Labels
+## Multi-Agent Label Routing
 
-| Label | Agente responsável |
+| Label | Responsible agent |
 |-------|-------------------|
-| `mobile` | Dev_Mobile (este agente) |
+| `mobile` | Dev_Mobile (this agent) |
 | `front_end` | Dev_Frontend |
 | `back_end` | Dev_Backend |
 | `tests` | QA_Engineer |

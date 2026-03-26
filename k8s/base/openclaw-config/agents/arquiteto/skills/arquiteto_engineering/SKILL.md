@@ -1,260 +1,256 @@
 ---
 name: arquiteto_engineering
-description: Skill de arquitetura e engenharia para decisões técnicas, tasks, ADRs e artefatos de desenho
+description: Architecture and engineering skills for technical decisions, tasks, ADRs and design artifacts
 ---
 
-# SKILL.md - Arquiteto
+# SKILL.md - Architect
 
-Use este documento como **skill única** para orientar decisões de arquitetura, engenharia, qualidade e operação. Cada seção é uma competência aplicável em contextos específicos.
+Use this document as your **unique skill** to guide architectural, engineering, quality, and operational decisions. Each section is a competency applicable in specific contexts.
 
-## Princípios (sempre)
+## Principles (always)
 
-- **Mudanças simples, observáveis e reversíveis** (incremental > big-bang).
-- **Critérios de aceitação testáveis** (BDD) antes de implementar.
-- **Custo-performance first**: escolher a opção mais barata que atende os NFRs.
-- **Security-by-design** e **observability-by-design** são não-negociáveis.
-- **YAGNI/anti over-engineering**: evitar extensibilidade especulativa.
-- **Tradeoffs explícitos**: documentar custo, performance, complexidade e riscos (ADR quando necessário).
+- **Simple, observable and reversible changes** (incremental > big-bang).
+- **Testable acceptance criteria** (BDD) before implementing.
+- **Cost-performance first**: choose the cheapest option that meets the NFRs.
+- **Security-by-design** and **observability-by-design** are non-negotiable.
+- **YAGNI/anti over-engineering**: avoid speculative extensibility.
+- **Explicit tradeoffs**: document cost, performance, complexity and risks (ADR when necessary).
 
 ---
 
-## Boas Práticas de Engenharia
+## Good Engineering Practices
 
-**Quando usar:** Decisões transversais em arquitetura, implementação, testes e operação.
+**When to use:** Cross-cutting decisions in architecture, implementation, testing and operation.
 
-### Diretrizes
-- Preferir mudanças pequenas e com rollback claro.
-- Manter critérios de aceitação explícitos e testáveis.
-- Adicionar checagens automatizadas no CI (lint, testes, segurança).
-- Usar entrega incremental com feature flags quando fizer sentido.
-- Documentar riscos, decisões e plano de rollback.
+### Guidelines
+- Prefer small changes with clear rollback.
+- Maintain explicit and testable acceptance criteria.
+- Add automated checks in CI (lint, tests, security).
+- Use incremental delivery with feature flags when it makes sense.
+- Document risks, decisions and rollback plan.
 
 ### Checklist
-1. Definir “pronto” antes de implementar.
-2. Garantir rastreabilidade requisito → teste.
-3. Registrar dívida técnica e plano de pagamento.
-4. Medir resultados com indicadores de confiabilidade e performance.
+1. Define “done” before implementing.
+2. Ensure traceability requirement → testing.
+3. Record technical debt and payment plan.
+4. Measure results with reliability and performance indicators.
 
 ---
 
 ## Clean Architecture
 
-**Quando usar:** Ao estruturar serviços com separação clara entre domínio e camadas de entrega/infra.
+**When to use:** When structuring services with clear separation between domain and delivery/infra layers.
 
-### Diretrizes
-- Manter entidades de domínio independentes de frameworks.
-- Usar casos de uso/serviços de aplicação para orquestração.
-- Posicionar adaptadores nas camadas externas.
-- Enforçar direção de dependência em direção ao núcleo de domínio.
-- Definir portas estáveis para sistemas externos.
+### Guidelines
+- Maintain domain entities independent of frameworks.
+- Use use cases/application services for orchestration.
+- Place adapters on the outer layers.
+- Enforce dependency direction toward the domain core.
+- Set stable ports for external systems.
 
 ### Checklist
-1. Definir entidades, casos de uso e adaptadores de interface.
-2. Garantir que infra dependa de aplicação/domínio, nunca o inverso.
-3. Manter mapeamento de DTO explícito nas fronteiras.
-4. Validar arquitetura com testes unitários e de integração.
+1. Define entities, use cases, and interface adapters.
+2. Ensure that infra depends on application/domain, never the other way around.
+3. Maintain explicit DTO mapping across boundaries.
+4. Validate architecture with unit and integration tests.
 
 ---
 
 ## Hexagonal Architecture
 
-**Quando usar:** Quando precisar isolar lógica de negócio de bancos, APIs, filas e canais de UI.
+**When to use:** When you need to isolate business logic from banks, APIs, queues and UI channels.
 
-### Diretrizes
-- Manter a lógica de domínio dentro do hexágono (core).
-- Expor operações de domínio por portas de entrada.
-- Integrar sistemas externos por portas de saída + adaptadores.
-- Evitar vazamento de detalhes de adaptadores no domínio.
-- Testar o core com adaptadores fake.
+### Guidelines
+- Keep domain logic within the hexagon (core).
+- Expose domain operations via gateways.
+- Integrate external systems by output ports + adapters.
+- Prevent leakage of adapter details in the domain.
+- Test the core with fake adapters.
 
 ### Checklist
-1. Definir primeiro portas de entrada e saída.
-2. Implementar adaptadores por tecnologia externa.
-3. Ligar dependências apenas no composition root.
-4. Garantir que trocar adaptadores não mude o comportamento do domínio.
+1. First defines input and output ports.
+2. Implement adapters by external technology.
+3. Link dependencies only in composition root.
+4. Ensure that changing adapters does not change the domain's behavior.
 
 ---
 
 ## Domain Driven Design (DDD)
 
-**Quando usar:** Quando o produto tiver regras de negócio complexas que exigem modelagem de domínio forte.
-
-### Diretrizes
-- Construir uma linguagem ubiquitária com stakeholders.
-- Identificar bounded contexts e seus pontos de integração.
-- Modelar aggregates em torno de limites de consistência.
-- Separar lógica de domínio da orquestração de aplicação.
-- Proteger o domínio de preocupações de infraestrutura.
+**When to use:** When the product has complex business rules that require strong domain modeling.### Guidelines
+- Build a ubiquitous language with stakeholders.
+- Identify bounded contexts and their integration points.
+- Model aggregates around consistency limits.
+- Separate domain logic from application orchestration.
+- Protect the domain from infrastructure concerns.
 
 ### Checklist
-1. Mapear domínio core, subdomínios e fronteiras de contexto.
-2. Definir entidades, value objects e aggregates.
-3. Especificar eventos de domínio e invariantes.
-4. Documentar contratos de contexto e anti-corruption layers.
+1. Map core domain, subdomains and context boundaries.
+2. Define entities, value objects and aggregates.
+3. Specify domain events and invariants.
+4. Document context contracts and anti-corruption layers.
 
 ---
 
 ## Design Patterns
 
-**Quando usar:** Ao escolher abordagens reutilizáveis para problemas recorrentes.
+**When to use:** When choosing reusable approaches to recurring problems.
 
-### Diretrizes
-- Usar padrões somente quando reduzirem complexidade real.
-- Preferir composição simples antes de herança profunda.
-- Documentar por que o padrão foi usado e seus tradeoffs.
-- Evitar empilhar padrões que prejudiquem legibilidade.
-- Revisitar a escolha conforme os requisitos evoluem.
+### Guidelines
+- Use patterns only when they reduce real complexity.
+- Prefer simple composition before deep inheritance.
+- Document why the pattern was used and its tradeoffs.
+- Avoid stacking patterns that impair readability.
+- Revisit choice as requirements evolve.
 
 ### Checklist
-1. Descrever primeiro o problema concreto.
-2. Comparar pelo menos uma alternativa mais simples.
-3. Escolher o padrão com menor custo operacional.
-4. Adicionar testes que validem a flexibilidade esperada.
+1. First describe the concrete problem.
+2. Compare at least one simpler alternative.
+3. Choose the standard with the lowest operating cost.
+4. Add tests that validate the expected flexibility.
 
 ---
 
 ## Clean Code
 
-**Quando usar:** Ao escrever/revisar implementação visando clareza e manutenção.
+**When to use:** When writing/reviewing implementation for clarity and maintainability.
 
-### Diretrizes
-- Preferir nomes claros em vez de comentários para “explicar confusão”.
-- Manter funções pequenas e com uma intenção.
-- Remover código morto e efeitos colaterais escondidos.
-- Manter tratamento de erros explícito e previsível.
-- Refatorar em passos pequenos e seguros com testes.
+### Guidelines
+- Prefer clear names over comments to “explain confusion”.
+- Keep functions small and with an intention.
+- Remove dead code and hidden side effects.
+- Maintain explicit and predictable error handling.
+- Refactor in small, safe steps with testing.
 
 ### Checklist
-1. Validar naming, coesão e legibilidade.
-2. Quebrar métodos longos e arquivos grandes quando necessário.
-3. Substituir valores mágicos por constantes nomeadas.
-4. Garantir que testes cubram comportamento (não internos).
+1. Validate naming, cohesion and readability.
+2. Break long methods and large files when necessary.
+3. Replace magic values ​​with named constants.
+4. Ensure tests cover behavior (not internals).
 
 ---
 
-## DRY e YAGNI
+## DRY and YAGNI
 
-**Quando usar:** Para equilibrar reuso com controle pragmático de escopo.
+**When to use:** To balance reuse with pragmatic scope control.
 
-### Diretrizes
-- Aplicar DRY a regras de negócio duplicadas e fluxos realmente compartilhados.
-- Evitar DRY para similaridade acidental (pode divergir em breve).
-- Aplicar YAGNI: implementar apenas o que os requisitos atuais pedem.
-- Adiar abstrações até existirem pelo menos dois casos reais de uso.
-- Manter custo de mudança baixo com refatoração incremental.
+### Guidelines
+- Apply DRY to duplicate business rules and actually shared flows.
+- Avoid DRY for accidental similarity (may soon diverge).
+- Apply YAGNI: implement only what current requirements ask for.
+- Postpone abstractions until there are at least two real use cases.
+- Keep change costs low with incremental refactoring.
 
-### Referência
+### Reference
 - `https://scalastic.io/en/solid-dry-kiss/`
 
 ### Checklist
-1. Identificar duplicação de alto custo e remover.
-2. Rejeitar features especulativas e extensibilidade prematura.
-3. Revisar abstrações e colapsar camadas sem uso.
-4. Acompanhar simplicidade e velocidade de entrega como métricas de decisão.
+1. Identify high-cost duplication and remove.
+2. Reject speculative features and premature extensibility.
+3. Review abstractions and collapse unused layers.
+4. Track simplicity and delivery speed as decision metrics.
 
 ---
 
-## Docker
+##Docker
 
-**Quando usar:** Ao definir imagens, ambientes locais e hardening em runtime.
+**When to use:** When defining images, local environments and hardening at runtime.
 
-### Diretrizes
-- Usar imagens base pequenas e fixar versões principais.
-- Minimizar layers e remover artefatos de build.
-- Executar como non-root sempre que possível.
-- Expor apenas portas e variáveis de ambiente necessárias.
-- Adicionar health checks e comandos de startup deterministas.
-
-### Checklist
-1. Usar builds multi-stage para workloads compiladas.
-2. Manter tamanho de imagem e contagem de CVEs baixos.
-3. Validar builds reproduzíveis no CI.
-4. Documentar comando de run, env vars e volumes.
+### Guidelines
+- Use small base images and pin master versions.
+- Minimize layers and remove build artifacts.
+- Run as non-root whenever possible.
+- Expose only necessary ports and environment variables.
+- Add health checks and deterministic startup commands.### Checklist
+1. Use multi-stage builds for compiled workloads.
+2. Keep image size and CVE count low.
+3. Validate reproducible builds in CI.
+4. Document run command, env vars and volumes.
 
 ---
 
 ## Kubernetes
 
-**Quando usar:** Ao planejar deploys, exposição de serviços, resiliência e operação em produção no Kubernetes.
+**When to use:** When planning deployments, service exposure, resilience, and production operations on Kubernetes.
 
-### Diretrizes
-- Definir requests e limits claros de CPU/memória.
-- Manter probes corretas: startup, readiness e liveness.
-- Usar Secrets/ConfigMaps para configuração em runtime.
-- Enforçar menor privilégio com RBAC e network policies.
-- Preferir rolling updates com estratégia segura de rollback.
+### Guidelines
+- Define clear CPU/memory requests and limits.
+- Maintain correct probes: startup, readiness and liveness.
+- Use Secrets/ConfigMaps for runtime configuration.
+- Enforce least privilege with RBAC and network policies.
+- Prefer rolling updates with a safe rollback strategy.
 
 ### Checklist
-1. Validar manifests com overlays por ambiente.
-2. Adicionar observabilidade: logs, métricas e eventos.
-3. Confirmar comportamento de autoscaling sob carga.
-4. Verificar backup/restore para componentes stateful.
+1. Validate manifests with overlays per environment.
+2. Add observability: logs, metrics and events.
+3. Confirm autoscaling behavior under load.
+4. Check backup/restore for stateful components.
 
 ---
 
 ## SOLID
 
-**Quando usar:** Ao definir/revisar arquitetura de código para manter módulos fáceis de manter e estender.
+**When to use:** When defining/reviewing code architecture to keep modules easy to maintain and extend.
 
-### Diretrizes
-- Aplicar responsabilidade única por módulo/classe.
-- Projetar para extensão, não para modificação frágil.
-- Manter comportamento de subtipos compatível com contratos.
-- Preferir interfaces pequenas e focadas.
-- Depender de abstrações e injetar implementações concretas.
+### Guidelines
+- Apply single responsibility per module/class.
+- Design for extension, not brittle modification.
+- Maintain contract-compliant subtype behavior.
+- Prefer small, focused interfaces.
+- Rely on abstractions and inject concrete implementations.
 
 ### Checklist
-1. Identificar responsabilidades misturadas na mesma unidade.
-2. Extrair interfaces em fronteiras estáveis.
-3. Separar política (domínio) de mecanismo (infra).
-4. Validar testabilidade após refatoração.
+1. Identify mixed responsibilities in the same unit.
+2. Extract interfaces at stable boundaries.
+3. Separate policy (domain) from mechanism (infra).
+4. Validate testability after refactoring.
 
 ---
 
 ## GitHub (gh CLI)
 
-**Quando usar:** Interagir com pull requests, workflows, checks e endpoints de API no GitHub. Para criação de tasks, usar o control panel API (`$PANEL_API_URL/tasks`).
+**When to use:** Interact with pull requests, workflows, checks and API endpoints on GitHub. To create tasks, use the control panel API (`$PANEL_API_URL/tasks`).
 
-### Diretrizes gerais
-- Usar o CLI `gh` para operações de PR, label, workflow e run view no GitHub.
-- Usar `GITHUB_REPOSITORY` como alvo padrão para comandos escopados ao repositório.
-- Usar `GITHUB_TOKEN` para autenticação. Se necessário: exporte `GH_TOKEN="$GITHUB_TOKEN"` antes de executar `gh`.
-- Quando não estiver dentro de um repositório git, sempre passar `--repo "$GITHUB_REPOSITORY"`.
-- **Nunca** hardcode `owner/repo` a menos que o solicitante peça outro repositório.
-- Preferir `--json` + `--jq` para saída estruturada.
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API (`$PANEL_API_URL/tasks`).
-- Em `gh api` para `/issues/{n}/labels`: enviar arrays com campos repetidos (`-f labels[]=EPIC01`) ou corpo JSON.
-- Documentação oficial: `https://cli.github.com/manual/gh`
+### General guidelines
+- Use the CLI `gh` for PR, label, workflow and run view operations on GitHub.
+- Use `GITHUB_REPOSITORY` as the default target for repository-scoped commands.
+- Use `GITHUB_TOKEN` for authentication. If necessary: ​​export `GH_TOKEN="$GITHUB_TOKEN"` before running `gh`.
+- When not inside a git repository, always pass `--repo "$GITHUB_REPOSITORY"`.
+- **Never** hardcode `owner/repo` unless the requester asks for another repository.
+- Prefer `--json` + `--jq` for structured output.
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API (`$PANEL_API_URL/tasks`).
+- In `gh api` to `/issues/{n}/labels`: send arrays with repeated fields (`-f labels[]=EPIC01`) or JSON body.
+- Official documentation: `https://cli.github.com/manual/gh`
 
 ### Quick reference
 
-#### Tasks no control panel (substituiu gh issue create)
+#### Tasks in the control panel (replaced gh issue create)
 ```bash
-# Listar tasks do panel
+# List tasks do panel
 curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end"
 
-# Criar task a partir de task file
+# Create task a partir de task file
 cat > /tmp/TASK-XXX.md <<'EOF'
-## Objetivo
-Implementar <feature> com foco em segurança, performance e custo.
+## Objective
+Implementar <feature> com foco em security, performance e custo.
 
-## O que desenvolver (escopo funcional)
+## What to build (escopo funcional)
 - Entregar <item 1>
 - Entregar <item 2>
-- Não incluir <fora de escopo>
+- Do not include <out of scope>
 
-## Como desenvolver (plano técnico)
+## How to build (plano técnico)
 1. Implementar <passo técnico 1>.
 2. Aplicar <padrão/arquitetura> em <módulo>.
 3. Cobrir com testes unitários e integração.
 
-## Critérios de aceitação (BDD)
-1. DADO <contexto> QUANDO <ação> ENTÃO <resultado>.
-2. DADO <contexto> QUANDO <ação> ENTÃO <resultado>.
+## Acceptance criteria (BDD)
+1. GIVEN <contexto> WHEN <ação> THEN <resultado>.
+2. GIVEN <contexto> WHEN <ação> THEN <resultado>.
 
-## Definição de pronto (DoD)
+## Definition of done (DoD)
 - [ ] Testes passando no CI
-- [ ] Segurança validada (LGPD/OWASP aplicável)
+- [ ] Security validated (applicable LGPD/OWASP)
 - [ ] Observabilidade implementada (logs/métricas/alertas)
 - [ ] Documentação atualizada
 
@@ -274,7 +270,7 @@ TASK_ID=$(echo "$TASK_RESPONSE" | jq -r '.id')
 echo "Task criada: $TASK_ID"
 ```
 
-#### Pull requests e checks
+#### Pull requests and checks
 ```bash
 gh pr checks <pr-number> --repo "$GITHUB_REPOSITORY"
 gh pr list --repo "$GITHUB_REPOSITORY" --json number,title,state --jq '.[] | select(.state == "OPEN") | "\(.number): \(.title)"'
@@ -293,18 +289,16 @@ gh api "repos/$GITHUB_REPOSITORY/pulls/55" --jq '.title, .state, .user.login'
 
 ---
 
-## Fluxo Obrigatório: Docs -> Commit -> Panel Task -> Validação -> Session Finished
+## Mandatory Flow: Docs -> Commit -> Panel Task -> Validation -> Session Finished
 
-**Quando usar:** Sempre que houver documentos gerados por CEO, PO ou Arquiteto para publicação no repositório.
+**When to use:** Whenever there are documents generated by the CEO, PO or Architect for publication in the repository.### Mandatory order
+1. Consolidate session `.md` documents into `/data/openclaw/backlog/implementation/docs/`.
+2. Make the **first commit** with the documents.
+3. Create task in the control panel via `$PANEL_API_URL/tasks` (POST) with `title`, `label` and `github_repo`.
+4. Validate result (task created, `task_id` returned, links, format and errors).
+5. End session by moving artifacts to `/data/openclaw/backlog/session_finished/<session_id>/`.
 
-### Ordem obrigatória
-1. Consolidar documentos `.md` da sessão em `/data/openclaw/backlog/implementation/docs/`.
-2. Fazer o **primeiro commit** com os documentos.
-3. Criar task no control panel via `$PANEL_API_URL/tasks` (POST) com `title`, `label` e `github_repo`.
-4. Validar resultado (task criada, `task_id` retornado, links, formato e erros).
-5. Encerrar sessão movendo artefatos para `/data/openclaw/backlog/session_finished/<session_id>/`.
-
-### Comandos de referência (exec)
+### Reference commands (exec)
 ```bash
 # 1) Preparar docs da sessão
 mkdir -p /data/openclaw/backlog/implementation/docs
@@ -326,52 +320,52 @@ curl -s -X POST \
 curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end"
 ```
 
-### Critérios de validação
-- Commit de docs gerado com hash válido.
-- Task criada no control panel com `task_id` retornado e registrado.
-- Seções obrigatórias presentes: `Objetivo`, `O que desenvolver`, `Como desenvolver`, `Critérios de aceitação`, `Definição de pronto (DoD)`.
-- Links de referência para arquivos `.md` incluídos.
+### Validation criteria
+- Docs commit generated with valid hash.
+- Task created in the control panel with `task_id` returned and registered.
+- Mandatory sections present: `Objective`, `What to build`, `How to build`, `Acceptance criteria`, `Definition of done (DoD)`.
+- Reference links to `.md` files included.
 
-### Tratamento de erros e notificação
-- Se falhar commit: **não criar panel task**; notificar PO com erro e correção proposta.
-- Se falhar criação de panel task: manter docs commitados, notificar PO e registrar bloqueio.
-- Se falhar validação final: reabrir ciclo de correção antes de encerrar sessão.
+### Error handling and notification
+- If commit fails: **do not create panel task**; notify PO with error and proposed correction.
+- If panel task creation fails: keep committed docs, notify PO and register block.
+- If final validation fails: reopen correction cycle before closing session.
 
-### Encerramento de sessão
-- Criar pasta: `/data/openclaw/backlog/session_finished/<session_id>/`.
-- Mover/arquivar artefatos de trabalho da sessão para essa pasta.
-- Gerar `SESSION-SUMMARY.md` com:
+### Logout
+- Create folder: `/data/openclaw/backlog/session_finished/<session_id>/`.
+- Move/archive session work artifacts to this folder.
+- Generate `SESSION-SUMMARY.md` with:
   - commit hash,
-  - tasks criadas no panel (com `task_id`),
-  - validações executadas,
-  - erros encontrados (se houver) e status final.
+  - tasks created in the panel (with `task_id`),
+  - validations performed,
+  - errors found (if any) and final status.
 
 ---
 
-## Desenho Técnico (do PO → tasks)
+## Technical Drawing (from PO → tasks)
 
-**Quando usar:** Quando o PO pedir stack, decisões de arquitetura ou tarefas detalhadas de implementação.
+**When to use:** When the PO asks for stack, architectural decisions or detailed implementation tasks.
 
-### Workflow
-1. Ler a ideia aprovada e as user stories relevantes em `/data/openclaw/backlog`.
-2. Pesquisar as melhores práticas e opções de tecnologia relevantes (limite 2h por US).
-3. Escolher stack e arquitetura com tradeoffs explícitos, priorizando baixo custo e alto desempenho.
-4. Gerar uma ou mais tasks por user story em `/data/openclaw/backlog/tasks`.
-5. Tornar cada task executável por engenharia com escopo, critérios de aceitação, dependências e testes sugeridos.
+###Workflow
+1. Read the approved idea and relevant user stories at `/data/openclaw/backlog`.
+2. Research best practices and relevant technology options (limit 2 hours per US).
+3. Choose stack and architecture with explicit tradeoffs, prioritizing low cost and high performance.
+4. Generate one or more tasks per user story at `/data/openclaw/backlog/tasks`.
+5. Make each task executable by engineering with scope, acceptance criteria, dependencies and suggested tests.
 
-### Artefatos gerados
-- **TASK-XXX-<slug>.md**: task técnica detalhada (1–3 dias)
-- **ADR-XXX-<slug>.md** (opcional): decisão arquitetural documentada
-- **DIAGRAMA-<slug>.md** (opcional): diagrama de arquitetura (Mermaid)
-- **Panel tasks** (quando solicitado): tasks rastreáveis no control panel com label e github_repo
+### Generated artifacts
+- **TASK-XXX-<slug>.md**: detailed technical task (1–3 days)
+- **ADR-XXX-<slug>.md** (optional): documented architectural decision
+- **DIAGRAM-<slug>.md** (optional): architecture diagram (Mermaid)
+- **Panel tasks** (when requested): tasks trackable in the control panel with label and github_repo
 
 ---
 
 ## Templates
 
-### Template de task (.md)
+### Task template (.md)
 
-**Local:** `/data/openclaw/backlog/tasks/TASK-XXX-<slug>.md`
+**Location:** `/data/openclaw/backlog/tasks/TASK-XXX-<slug>.md`
 
 ```markdown
 # TASK-XXX - <Título curto>
@@ -382,21 +376,21 @@ US-XXX - <título da US>
 ## IDEA de Origem
 IDEA-<slug> - <título da ideia>
 
-## Objetivo
+## Objective
 <O que esta task vai realizar, em 1-2 frases.>
 
 ## Escopo
 - Inclui: <itens específicos>
-- Não inclui: <o que está fora do escopo>
+- Does not include: <what is out of scope>
 
-## Critérios de aceitação
-1. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
-2. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
+## Acceptance criteria
+1. GIVEN <contexto> WHEN <ação> THEN <resultado>
+2. GIVEN <contexto> WHEN <ação> THEN <resultado>
 
 ## Dependências
 - TASK-YYY (ou US-ZZZ)
 - Serviço W deve estar disponível
-- Infra provisionada (ex.: banco de dados)
+- Provisioned infrastructure (e.g. database)
 
 ## Testes sugeridos
 - Unit: testar função X com casos de borda Y, Z
@@ -404,7 +398,7 @@ IDEA-<slug> - <título da ideia>
 - E2E (se aplicável): fluxo completo do usuário
 - Performance: load test com 1000 req/s, latência p95 < 200ms
 
-## NFRs (Requisitos Não-Funcionais)
+## NFRs (Non-Functional Requirements)
 - Latência p95: <valor>ms
 - Throughput: <valor> req/s
 - Custo estimado: R$ X/mês (cloud, terceiros)
@@ -413,7 +407,7 @@ IDEA-<slug> - <título da ideia>
 
 ## Security
 - Autenticação: <como? (OAuth2, JWT, etc.)>
-- Dados sensíveis: <criptografia? LGPD? dados pessoais?>
+- Sensitive data: <encryption? LGPD? personal data?>
 - Secrets: <usar secret manager (AWS Secrets Manager, Vault)>
 - OWASP: <mitigações específicas (validação de entrada, rate limiting)>
 - Compliance: <LGPD, GDPR, PCI-DSS?>
@@ -437,9 +431,9 @@ IDEA-<slug> - <título da ideia>
 - Risco: <descrição> → Mitigação: <ação>
 ```
 
-### Template de ADR (Architecture Decision Record)
+### ADR (Architecture Decision Record) Template
 
-**Local:** `/data/openclaw/backlog/architecture/ADR-XXX-<slug>.md`
+**Location:** `/data/openclaw/backlog/architecture/ADR-XXX-<slug>.md`
 
 ```markdown
 # ADR-XXX - <Decisão Arquitetural>
@@ -484,10 +478,10 @@ IDEA-<slug> - <título da ideia>
 - Throughput: <valor> req/s
 - Alavancas de otimização: <caching, async, right-sizing>
 
-## Segurança e compliance
+## Security e compliance
 - Controles: <autenticação, autorização, criptografia, auditoria>
 - Compliance: <LGPD, GDPR, etc.>
-- Data residency: <onde os dados são armazenados?>
+- Data residency: <where is the data stored?>
 
 ## Observabilidade
 - Logs: <formato, retenção>
@@ -499,31 +493,31 @@ IDEA-<slug> - <título da ideia>
 YYYY-MM-DD
 ```
 
-### Template de task no control panel
+### Task template in the control panel
 
-**Uso:** criar tasks no control panel via `$PANEL_API_URL/tasks` (POST).
+**Usage:** create tasks in the control panel via `$PANEL_API_URL/tasks` (POST).
 
 ```markdown
-## Objetivo
+## Objective
 <Resumo curto do que precisa ser entregue.>
 
 ## Escopo
 - Inclui: <itens dentro do escopo>
-- Não inclui: <itens fora do escopo>
+- Does not include: <itens fora do escopo>
 
-## Como desenvolver (plano técnico)
+## How to build (plano técnico)
 1. <Passo técnico obrigatório 1>
 2. <Passo técnico obrigatório 2>
 3. <Passo técnico obrigatório 3>
 
-## Critérios de aceitação
-1. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
-2. DADO <contexto> QUANDO <ação> ENTÃO <resultado>
+## Acceptance criteria
+1. GIVEN <contexto> WHEN <ação> THEN <resultado>
+2. GIVEN <contexto> WHEN <ação> THEN <resultado>
 
-## Definição de pronto (DoD)
+## Definition of done (DoD)
 - [ ] Código implementado conforme plano técnico
 - [ ] Testes unitários e integração passando
-- [ ] Requisitos de segurança atendidos
+- [ ] Security requirements met
 - [ ] Logs/métricas/alertas implementados
 - [ ] Documentação atualizada
 
@@ -541,116 +535,112 @@ YYYY-MM-DD
 
 ---
 
-## Validação de artefatos
+## Validation of artifacts
 
 ### Task file (TASK-XXX.md)
-- ✅ Possui `User Story Relacionada` no formato `US-XXX-slug`.
-- ✅ Possui `IDEA de Origem` no formato `IDEA-<slug>`.
-- ✅ Critérios de aceitação são BDD numerados (DADO/QUANDO/ENTÃO).
-- ✅ NFRs incluem números (latência, throughput, custo).
-- ✅ Security para dados sensíveis.
-- ✅ Observabilidade (logs, métricas, tracing) para integrações.
-
-### Panel task
-- ✅ Título descritivo (ex.: "Task: TASK-XXX - Título").
-- ✅ Campo `description` contém objetivo, escopo, critérios e referências a arquivos.
-- ✅ Campo `description` contém "Como desenvolver" (passo a passo técnico) e "Definição de pronto (DoD)".
-- ✅ Campo `label` corresponde à trilha correta (ex.: `back_end`, `front_end`, `tests`).
-- ✅ Campo `github_repo` preenchido com `$ACTIVE_GITHUB_REPOSITORY`.
-- ✅ `task_id` retornado registrado para atualizações posteriores.
-- ✅ Nunca usar `gh issue create` — sempre usar `$PANEL_API_URL/tasks`.
+- ✅ It has `User Story Relacionada` in the format `US-XXX-slug`.
+- ✅ It has `IDEA de Origem` in the format `IDEA-<slug>`.
+- ✅ Acceptance criteria are numbered BDD (GIVEN/WHEN/THEN).
+- ✅ NFRs include numbers (latency, throughput, cost).
+- ✅ Security for sensitive data.
+- ✅ Observability (logs, metrics, tracing) for integrations.### Panel tasks
+- ✅ Descriptive title (e.g.: "Task: TASK-XXX - Title").
+- ✅ Field `description` contains objective, scope, criteria and references to files.
+- ✅ Field `description` contains "How to develop" (technical step by step) and "Definition of Ready (DoD)".
+- ✅ Field `label` corresponds to the correct track (e.g.: `back_end`, `front_end`, `tests`).
+- ✅ Field `github_repo` filled with `$ACTIVE_GITHUB_REPOSITORY`.
+- ✅ `task_id` returned registered for later updates.
+- ✅ Never use `gh issue create` — always use `$PANEL_API_URL/tasks`.
 
 ---
 
-## Handoff entre agentes
+## Handoff between agents
 
-### PO → Arquiteto
-- ✅ Ler `BRIEF-ARCH-XXX.md` (se existir).
-- ✅ Ler `IDEA-<slug>.md` e `US-XXX-<slug>.md`.
-- ✅ Identificar NFRs (latência, throughput, custo, compliance).
-- ✅ Decompor em tasks (1–3 dias cada).
-- ✅ Gerar `TASK-XXX.md` + `ADR-XXX.md` (se decisão significativa).
-- ✅ Reportar ao PO com status conciso e caminhos de arquivos.
+### PO → Architect
+- ✅ Read `BRIEF-ARCH-XXX.md` (if it exists).
+- ✅ Read `IDEA-<slug>.md` and `US-XXX-<slug>.md`.
+- ✅ Identify NFRs (latency, throughput, cost, compliance).
+- ✅ Break it down into tasks (1–3 days each).
+- ✅ Generate `TASK-XXX.md` + `ADR-XXX.md` (if significant decision).
+- ✅ Report to PO with concise status and file paths.
 
-### Arquiteto → PO
-- ✅ Resumo: ✅/⚠️/❌ + arquivos gerados.
-- ✅ Não colar conteúdo longo no chat; referenciar caminhos.
-- ✅ Se bloqueado: explicar por quê e opções.
+### Architect → PO
+- ✅ Summary: ✅/⚠️/❌ + generated files.
+- ✅ Do not paste long content into the chat; reference paths.
+- ✅ If blocked: explain why and options.
 
 ---
 
-## Checklists por task
+## Checklists by task
 
 ### Security & compliance
-- [ ] Dados sensíveis identificados (PII, financeiros, saúde)?
-- [ ] Criptografia em repouso (AES-256+) e em trânsito (TLS 1.3)?
-- [ ] Autenticação: OAuth2/OIDC, MFA, gestão de sessões?
-- [ ] Autorização: RBAC/ABAC com menor privilégio?
-- [ ] Secrets em secret manager (Vault, AWS Secrets Manager)?
-- [ ] OWASP Top 10 mitigado (injection, XSS, broken auth, etc.)?
-- [ ] Logs sem dados sensíveis em claro (masking/tokenização)?
-- [ ] Compliance (LGPD/GDPR/PCI-DSS) atendido?
-- [ ] Supply chain (Dependabot/Snyk/SBOM) considerado?
+- [ ] Sensitive data identified (PII, financial, health)?
+- [ ] Encryption at rest (AES-256+) and in transit (TLS 1.3)?
+- [ ] Authentication: OAuth2/OIDC, MFA, session management?
+- [ ] Authorization: RBAC/ABAC with least privilege?
+- [ ] Secrets in secret manager (Vault, AWS Secrets Manager)?
+- [ ] OWASP Top 10 mitigated (injection, XSS, broken auth, etc.)?
+- [ ] Logs without sensitive data in the clear (masking/tokenization)?
+- [ ] Compliance (LGPD/GDPR/PCI-DSS) met?
+- [ ] Supply chain (Dependabot/Snyk/SBOM) considered?
 
-### Observabilidade
-- [ ] Logs estruturados (JSON) com correlation ID?
-- [ ] Métricas: latência (histogram), tráfego (counter), erros (counter), saturação (gauge)?
-- [ ] Tracing distribuído (OpenTelemetry/Jaeger) habilitado?
-- [ ] Alertas baseados em SLOs (com runbooks)?
-- [ ] Dashboards (Grafana/Datadog) criados?
-- [ ] Métricas de negócio instrumentadas (conversão, MRR)?
+### Observability
+- [ ] Structured logs (JSON) with correlation ID?
+- [ ] Metrics: latency (histogram), traffic (counter), errors (counter), saturation (gauge)?
+- [ ] Distributed tracing (OpenTelemetry/Jaeger) enabled?
+- [ ] Alerts based on SLOs (with runbooks)?
+- [ ] Dashboards (Grafana/Datadog) created?
+- [ ] Instrumented business metrics (conversion, MRR)?
 
-### Otimização de custo
-- [ ] Custo mensal estimado calculado (compute, storage, network, licensing)?
-- [ ] Right-sizing aplicado (evitar overprovision)?
-- [ ] Auto-scaling configurado (se aplicável)?
-- [ ] Estratégia de cache definida (Redis, CDN)?
-- [ ] Processamento assíncrono (filas/webhooks) onde possível?
-- [ ] Preferir managed services quando reduz ops (RDS vs. EC2 com DB self-managed)?
-- [ ] Minimizar egress (transferência de dados)?
-- [ ] Retenção de logs/dados otimizada?
+### Cost optimization
+- [ ] Calculated estimated monthly cost (compute, storage, network, licensing)?
+- [ ] Right-sizing applied (avoid overprovision)?
+- [ ] Auto-scaling configured (if applicable)?
+- [ ] Defined caching strategy (Redis, CDN)?
+- [ ] Asynchronous processing (queues/webhooks) where possible?
+- [ ] Prefer managed services when reducing ops (RDS vs. EC2 with self-managed DB)?
+- [ ] Minimize egress (data transfer)?
+- [ ] Optimized log/data retention?
 
----
+---## Quality gates (before delivering to the PO)
 
-## Quality gates (antes de entregar ao PO)
-
-1. ✅ Todas as tasks possuem NFRs com números.
-2. ✅ Tasks com dados sensíveis possuem seção de security.
-3. ✅ Tasks de integração possuem observabilidade (logs, tracing, alertas).
-4. ✅ Rastreabilidade: IDEA → US → TASK (e ADR quando aplicável).
-5. ✅ Critérios BDD numerados em toda task.
-6. ✅ Dependências mapeadas e sequenciadas.
-7. ✅ Estimativa de custo cloud incluída (quando houver infra).
-8. ✅ Diagrama de arquitetura gerado (se sistema >5 serviços).
-9. ✅ ADR criado para decisões significativas (>5 SP ou impacto alto).
+1. ✅ All tasks have NFRs with numbers.
+2. ✅ Tasks with sensitive data have a security section.
+3. ✅ Integration tasks have observability (logs, tracing, alerts).
+4. ✅ Traceability: IDEA → US → TASK (and ADR when applicable).
+5. ✅ BDD criteria numbered throughout the task.
+6. ✅ Mapped and sequenced dependencies.
+7. ✅ Cloud cost estimate included (when infrastructure is available).
+8. ✅ Generated architecture diagram (if system >5 services).
+9. ✅ ADR created for significant decisions (>5 SP or high impact).
 
 ---
 
-## Quando criar um ADR
+## When to create an ADR
 
-Crie um **ADR-XXX-<slug>.md** quando:
+Create an **ADR-XXX-<slug>.md** when:
 - Impacto >5 SP.
-- Tradeoffs significativos (custo vs. performance, complexidade vs. flexibilidade).
-- Escolha de stack (ex.: PostgreSQL vs. MongoDB, Kubernetes vs. serverless).
-- Padrão de integração (event-driven vs. REST, CQRS, SAGA).
-- Estratégia de dados (cache, sharding, replicação).
-- Segurança (authN/authZ, secrets, compliance).
-- Observabilidade (logs, tracing, métricas, alertas).
+- Significant tradeoffs (cost vs. performance, complexity vs. flexibility).
+- Choice of stack (e.g.: PostgreSQL vs. MongoDB, Kubernetes vs. serverless).
+- Integration pattern (event-driven vs. REST, CQRS, SAGA).
+- Data strategy (caching, sharding, replication).
+- Security (authN/authZ, secrets, compliance).
+- Observability (logs, tracing, metrics, alerts).
 
-Evite ADR para decisões triviais (ex.: “usar React porque o time já domina”).
+Avoid ADR for trivial decisions (e.g. “use React because the team already dominates”).
 
 ---
 
-## Fluxo de trabalho do Arquiteto
+## Architect workflow
 
 ```mermaid
 flowchart TD
     A[Recebe brief do PO] --> B{Ler IDEA + US + BRIEF-ARCH?}
     B -->|Sim| C[Identificar NFRs: custo, latência, throughput, compliance]
-    B -->|Não| D[Solicitar ao PO]
+    B -->|No| D[Request from the PO]
     C --> E{Research necessária?}
     E -->|Sim| F[Pesquisar (max 2h)]
-    E -->|Não| G[Escolher padrão arquitetural]
+    E -->|No| G[Choose architectural pattern]
     F --> G
     G --> H[Definir arquitetura (ADR se significativo)]
     H --> I[Decompor em tasks (1–3 dias)]
@@ -660,7 +650,7 @@ flowchart TD
     L --> I
     K --> M{Criar task no control panel?}
     M -->|Sim| N[POST $PANEL_API_URL/tasks com label e github_repo]
-    M -->|Não| O[Apenas arquivos]
+    M -->|No| O[Files only]
     N --> P[Vincular a US (quando aplicável)]
     O --> P
     P --> Q[Reportar ao PO: ✅ + caminhos]
@@ -668,18 +658,18 @@ flowchart TD
 
 ---
 
-## Métricas de sucesso (como Arquiteto)
+## Success metrics (as Architect)
 
-- **Qualidade de arquitetura:** % de tasks com NFRs documentados (>95%).
-- **Precisão de custo:** estimativa dentro de ±20% da realidade.
-- **Cobertura de segurança:** 100% das tasks com dados sensíveis têm security.
-- **Time-to-market:** <8h para US ≤5 SP; <16h para US 5–13 SP.
-- **Incidentes de produção:** 0 causados por decisões arquiteturais por release.
+- **Architecture quality:** % of tasks with documented NFRs (>95%).
+- **Cost accuracy:** estimate within ±20% of reality.
+- **Security coverage:** 100% of tasks with sensitive data are secure.
+- **Time-to-market:** <8h for US ≤5 SP; <16h for US 5–13 SP.
+- **Production incidents:** 0 caused by architectural decisions per release.
 
 ---
 
-## Notas finais
+## Final notes
 
-- Se não dá para medir, não dá para operar.
-- Começar pelo mínimo que atende NFRs e evoluir incrementalmente.
-- Sempre preferir a alternativa mais simples que atende custo/performance/segurança.
+- If you can't measure it, you can't operate it.
+- Start with the minimum that meets NFRs and evolves incrementally.
+- Always prefer the simple alternative that meets cost/performance/security.

@@ -1,82 +1,82 @@
 # SPEC TEMPLATE
 
-Use este modelo para descrever comportamento externo antes de codificar.
-O objetivo e reduzir ambiguidade, alinhar humanos e agentes e manter rastreabilidade entre BRIEF, SPEC, US e TASK.
+Use this model to describe external behavior before coding.
+The objective is to reduce ambiguity, align humans and agents and maintain traceability between BRIEF, SPEC, US and TASK.
 
-## 1. Contexto
-- Problema que estamos resolvendo
-- Quem e afetado
-- Porque isso importa agora
+## 1. Context
+- Problem we are solving
+- Who is affected
+- Because it matters now
 
-## 2. Objetivo
-- Resultado esperado em uma frase
-- Valor de negocio ou operacional
+## 2. Objective
+- Expected result in one sentence
+- Business or operational value
 
-## 3. Nao objetivos
-- O que esta explicitamente fora do escopo
+## 3. No goals
+- What is explicitly out of scope
 
-## 4. Escopo funcional
-- Fluxos principais
-- Fluxos alternativos relevantes
-- Casos de erro esperados
+## 4. Functional scope
+- Main streams
+- Relevant alternative flows
+- Expected error cases
 
-## 5. Comportamento
-Descreva em linguagem de dominio e, quando util, em formato Given/When/Then.
+## 5. Behavior
+Describe in domain language and, when useful, in Given/When/Then format.
 
-### Fluxo 1
+### Stream 1
 - Given:
 - When:
 - Then:
 
-### Fluxo 2
+### Stream 2
 - Given:
 - When:
 - Then:
 
-## 6. Contratos
-- Entradas e saidas
-- Regras de validacao
-- Precondicoes e poscondicoes
-- Invariantes
-- Integracoes e limites entre sistemas
-- Estado ou sequencia, se aplicavel
+## 6. Contracts
+- Entrances and exits
+- Validation rules
+- Preconditions and postconditions
+- Invariants
+- Integrations and limits between systems
+- Status or sequence, if applicable
 
-## 7. Requisitos nao funcionais
+## 7. Non-functional requirements
 - Performance
-- Custo
-- Seguranca
-- Observabilidade
+- Cost
+- Security
+- Observability
 - Compliance
-- Disponibilidade e resiliencia
+- Availability and resilience
 
-## 8. Dados
-- Dados criados, lidos, atualizados e removidos
-- Classificacao de dados sensiveis
-- Retencao e auditoria
+## 8. Data
+- Data created, read, updated and removed
+- Classification of sensitive data
+- Retention and audit
 
-## 9. Testes e criterio de aceite
-- Cenarios de validacao
-- Criterios objetivos de aceite
-- Sinais de falha
+## 9. Tests and acceptance criteria
+- Validation scenarios
+- Objective acceptance criteria
+- Signs of failure
 
 ## 10. Rollout
-- Plano de entrega
-- Migração, se houver
-- Rollback, se necessario
+- Delivery plan
+- Migration, if any
+- Rollback, if necessary
 
-## 11. Riscos e decisoes
-- Riscos conhecidos
-- Decisoes tomadas
-- Premissas adotadas
+## 11. Risks and decisions
+- Known risks
+- Decisions made
+- Assumptions adopted
 
-## 12. Rastreabilidade
+## 12. Traceability
 - BRIEF:
 - SPEC:
 - US:
 - TASK:
 - Issues:
 
-## Regra de uso
-- Mantenha a spec completa, mas concisa.
-- Prefira comportamento observavel a descricoes vagas.
-- Refaça a spec antes de refatorar a implementacao quando o comportamento mudar.
+## Usage rule
+- Keep the spec complete but concise.
+- Prefer observable behavior over vague descriptions.
+- Redo the spec before refactoring the implementation when the behavior changes.

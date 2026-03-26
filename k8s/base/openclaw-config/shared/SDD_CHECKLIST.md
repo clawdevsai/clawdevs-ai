@@ -1,42 +1,42 @@
 # SDD CHECKLIST
 
-Use este checklist antes de passar uma mudanca adiante.
+Use this checklist before passing on a change.
 
-## Constitution
-- [ ] A mudanca esta alinhada com a constitution do repositorio.
-- [ ] O objetivo foi escrito de forma curta e observavel.
+##Constitution
+- [ ] The change is in line with the constitution of the repository.
+- [ ] The objective was written in a short and observable way.
 
 ## Brief
-- [ ] O problema e o valor esperado estao claros.
-- [ ] O escopo e o nao-escopo estao definidos.
-- [ ] Os riscos principais foram identificados.
+- [ ] The problem and the expected value are clear.
+- [ ] The scope and non-scope are defined.
+- [ ] The main risks have been identified.
 
 ## Spec
-- [ ] A SPEC descreve comportamento observavel.
-- [ ] Contratos, invariantes e NFRs estao explicitos.
-- [ ] Criterios de aceite sao testaveis.
+- [ ] SPEC describes observable behavior.
+- [ ] Contracts, invariants and NFRs are explicit.
+- [ ] Acceptance criteria are testable.
 
 ## Clarify
-- [ ] As ambiguidades foram resolvidas.
-- [ ] As suposicoes foram registradas.
-- [ ] O que ficou em aberto foi declarado.
+- [ ] Ambiguities have been resolved.
+- [ ] The assumptions were recorded.
+- [ ] What was left open was declared.
 
 ## Plan
-- [ ] Existe um plano tecnico coerente com a SPEC.
-- [ ] As decisoes arquiteturais estao justificadas.
-- [ ] O impacto em custo, seguranca e operacao foi considerado.
+- [ ] There is a technical plan consistent with SPEC.
+- [ ] The architectural decisions are justified.
+- [ ] The impact on cost, safety and operation was considered.
 
-## Tasks
-- [ ] As tasks sao pequenas e executaveis.
-- [ ] A rastreabilidade para SPEC e BRIEF esta mantida.
-- [ ] A ordem de implementacao reduz risco.
+##Tasks
+- [ ] Tasks are small and executable.
+- [ ] Traceability to SPEC and BRIEF is maintained.
+- [ ] The implementation order reduces risk.
 
 ## Implement
-- [ ] O slice funcional minimo e demonstravel existe.
-- [ ] Testes cobrem os cenarios da SPEC.
-- [ ] Logs, metricas e rollback foram considerados.
+- [ ] The minimum demonstrable functional slice exists.
+- [ ] Tests cover SPEC scenarios.
+- [ ] Logs, metrics and rollback were considered.
 
 ## Validate
-- [ ] CI ou validacao local passou.
-- [ ] A demo confirmou o comportamento esperado.
-- [ ] O artefato pode seguir para a proxima etapa sem ambiguidade.
+- [ ] CI or local validation passed.
+- [ ] The demo confirmed the expected behavior.
+- [ ] The artifact can proceed to the next step without ambiguity.

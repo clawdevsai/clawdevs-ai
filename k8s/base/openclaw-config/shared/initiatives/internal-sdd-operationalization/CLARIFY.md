@@ -1,27 +1,27 @@
 # CLARIFY
 
 ## Context
-- BRIEF: Operacionalizar SDD como padrao da ClawDevs AI
-- SPEC: fluxo operacional entre CEO, PO, Arquiteto e Dev_Backend
+- BRIEF: Operationalize SDD as ClawDevs AI standard
+- SPEC: operational flow between CEO, PO, Architect and Dev_Backend
 
 ## Ambiguities
-- O fluxo deve ser gate duro ou guia forte?
-- Onde os artefatos devem ficar visiveis para os agentes?
+- Should the flow be hard gate or strong guide?
+- Where should artifacts be visible to agents?
 
-## Questions
-- Precisamos de um pacote de prompts operacional separado?
-- O checklist deve ser usado como gate de prontidao?
+##Questions
+- Do we need a separate operational prompt package?
+- Should the checklist be used as a readiness gate?
 
 ## Decisions
-- O checklist sera gate de prontidao.
-- Os prompts operacionais serao publicados como documento compartilhado.
-- Os templates ficam no mesmo conjunto de artefatos compartilhados.
+- The checklist will be ready.
+- Operational prompts will be published as a shared document.
+- Templates are in the same set of shared artifacts.
 
 ## Assumptions
-- O time prefere markdown e comandos curtos para trabalhar com o fluxo.
+- The team prefers markdown and short commands to work with the flow.
 
 ## Open items
-- Definir um exemplo completo de ciclo para novas iniciativas.
+- Define a complete cycle example for new initiatives.
 
 ## Impact on plan
-- O plano deve incluir configMap, bootstrap, README e atalhos de comando.
+- The plan must include configMap, bootstrap, README and command shortcuts.

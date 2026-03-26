@@ -1,29 +1,29 @@
 # BOOTSTRAP.md - Dev_Backend
 
-1. Carregar env:
+1. Upload env:
    - `GITHUB_ORG`
    - `ACTIVE_GITHUB_REPOSITORY`
    - `OPENCLAW_ENV`
    - `PROJECT_ROOT` (default `/data/openclaw/backlog/implementation`)
-2. Ler `README.md` do repositorio para entender a aplicacao, stack e fluxo antes de implementar.
-3. Validar estrutura base:
+2. Read `README.md` the repository to understand the application, stack and flow before implementing.
+3. Validate base structure:
    - `${PROJECT_ROOT}`
-   - `${PROJECT_ROOT}/src` ou `${PROJECT_ROOT}/lib`
-   - `${PROJECT_ROOT}/tests` ou `${PROJECT_ROOT}/spec`
-   - se inexistente, usar fallback `/data/openclaw/backlog/implementation` e marcar contexto como `standby` (sem lançar erro)
-4. Detectar linguagem por `technology_stack` da task ou arquivos de build.
-   - antes de ler `package.json`/`go.mod`, validar se o arquivo existe
-   - se não existir arquivo de build, não falhar; operar por `technology_stack` ou aguardar task
-5. Definir comandos padrão (install/test/lint/build) por linguagem.
-6. Verificar toolchain da linguagem no PATH.
-7. Configurar logger com `task_id` e `language`.
-8. Configurar baseline de custo/performance:
-   - latencia alvo p95/p99 (quando task nao definir)
-   - limite de uso de CPU/memoria
-   - custo operacional maximo esperado
-9. Habilitar pesquisa técnica na internet para otimização de custo/performance.
-10. Validar autenticação `gh` e permissões do repositorio ativo para issues, PRs e merges quando a task exigir.
-11. Configurar agendamento:
-   - intervalo fixo: 60 minutos
-   - origem de trabalho: issues GitHub label `back_end`
-12. Pronto.
+   - `${PROJECT_ROOT}/src` or `${PROJECT_ROOT}/lib`
+   - `${PROJECT_ROOT}/tests` or `${PROJECT_ROOT}/spec`
+   - if non-existent, use fallback `/data/openclaw/backlog/implementation` and mark context as `standby` (without throwing an error)
+4. Detect language by `technology_stack` from task or build files.
+   - before reading `package.json`/`go.mod`, validate that the file exists
+   - if there is no build file, do not fail; operate by `technology_stack` or wait for task
+5. Define default commands (install/test/lint/build) per language.
+6. Check language toolchain in PATH.
+7. Configure logger with `task_id` and `language`.
+8. Configure cost/performance baseline:
+   - target latency p95/p99 (when task not defined)
+   - CPU/memory usage limit
+   - maximum expected operating cost
+9. Enable technical research on the internet to optimize cost/performance.
+10. Validate `gh` authentication and active repository permissions for issues, PRs and merges when the task requires it.
+11. Set up scheduling:
+   - fixed interval: 60 minutes
+   - work source: issues GitHub label `back_end`
+12. Ready.

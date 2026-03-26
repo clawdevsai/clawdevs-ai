@@ -1,81 +1,79 @@
 # TOOLS.md - Dev_Frontend
 
-## tools_disponíveis
-- `read(path)`: ler arquivos da task/projeto e artefatos UX (com validação de path).
-- `write(path, content)`: escrever componentes/testes/docs (com validação).
-- `exec(command)`: executar comandos de build/test/lint/a11y.
-- `exec("gh <args>")`: atualizar issues/PRs e consultar execuções de workflow, checks, labels e run logs.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: operações de commit/branch/merge sem comandos destrutivos.
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto ou QA_Engineer.
-- `sessions_send(session_id, message)`: enviar update ou delegar ao QA_Engineer.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "next.js 15 performance optimization"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://nextjs.org/docs/app/building-your-application/optimizing"`
+## available_tools
+- `read(path)`: read task/project files and UX artifacts (with path validation).
+- `write(path, content)`: write components/tests/docs (with validation).
+- `exec(command)`: Run commands from build/test/lint/a11y.
+- `exec("gh <args>")`: update issues/PRs and consult workflow executions, checks, labels and run logs.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: commit/branch/merge operations without destructive commands.
+- `sessions_spawn(agentId, mode, label)`: create session with Architect or QA_Engineer.
+- `sessions_send(session_id, message)`: send update or delegate to QA_Engineer.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "next.js 15 performance optimization"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://nextjs.org/docs/app/building-your-application/optimizing"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**`.
-- Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- Validar `/data/openclaw/contexts/active_repository.env` antes de qualquer ação gh/git.
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `front_end`. TASK_GITHUB_REPO = campo `github_repo` da task.
-- Sempre executar testes antes de reportar conclusão.
-- Sempre documentar Core Web Vitals e bundle size no comentário do PR.
-- Se task trouxer `## Comandos`, usar esses comandos em vez dos defaults.
-- Internet: acesso total liberado para pesquisa técnica, descoberta de frameworks, CVEs, benchmarks de performance e atualização de habilidades — sem restrição de fonte.
-- `sessions_spawn` permitido para: `arquiteto`, `qa_engineer`.
+## usage_rules
+- `read/write` only on `/data/openclaw/**`.
+- Block destructive commands (`rm -rf`, `git push -f`, etc.).
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- Validate `/data/openclaw/contexts/active_repository.env` before any gh/git action.
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process `front_end` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Always run tests before reporting completion.
+- Always document Core Web Vitals and bundle size in the PR comment.
+- If task brings `## Comandos`, use these commands instead of the defaults.
+- Internet: full access allowed for technical research, framework discovery, CVEs, performance benchmarks and skills updating — without source restrictions.
+- `sessions_spawn` allowed for: `arquiteto`, `qa_engineer`.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `front_end` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `front_end` — automatically created at boot if it does not exist:
   `gh label create "front_end" --color "#0e8a16" --description "Frontend tasks — routed to Dev_Frontend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_adicionais_frontend
-- `npx next build`: build Next.js com análise de bundle
-- `npx playwright test`: testes e2e Playwright
-- `npx cypress run`: testes e2e Cypress
-- `npx storybook build`: build do Storybook para review
-- `npx axe <url>`: scan de acessibilidade
-
-## autonomia_de_pesquisa_e_aprendizado
-- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
-- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-  - descobrir frameworks, bibliotecas e ferramentas mais eficientes para o problema
-  - verificar CVEs, vulnerabilidades e security advisories em dependências frontend
-  - comparar benchmarks de bundle size, performance e Core Web Vitals entre alternativas
-  - ler documentação oficial, changelogs e release notes das tecnologias usadas
-  - aprender padrões emergentes de acessibilidade, performance e segurança web
-- Citar fonte e data da informação nos artefatos produzidos.
+- `npx next build`: Next.js build with bundle analysis
+- `npx playwright test`: e2e Playwright tests
+- `npx cypress run`: e2e Cypress tests
+- `npx storybook build`: Storybook build for review
+- `npx axe <url>`: accessibility scan## autonomia_de_pesquisa_e_aprendizado
+- Full internet access permission for research, updating skills and discovering better alternatives.
+- Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+  - discover more efficient frameworks, libraries and tools for the problem
+  - check CVEs, vulnerabilities and security advisories in frontend dependencies
+  - compare bundle size, performance and Core Web Vitals benchmarks between alternatives
+  - read official documentation, changelogs and release notes of the technologies used
+  - learn emerging accessibility, performance and web security standards
+- Cite source and date of information in the artifacts produced.
 
 ## rate_limits
-- `exec`: 120 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
+- `exec`: 120 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Forbidden:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -84,4 +82,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

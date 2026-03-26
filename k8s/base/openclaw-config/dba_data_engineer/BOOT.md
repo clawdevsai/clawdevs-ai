@@ -1,24 +1,24 @@
 # BOOT.md - DBA_DataEngineer
 
-## Sequência de Boot
+## Boot Sequence
 
-1. Carregar `IDENTITY.md`.
-2. Carregar `AGENTS.md`.
-3. Ler `README.md` do repositório para entender a aplicação, stack e modelo de dados antes de modelar.
-4. Carregar `SOUL.md`.
-5. Carregar `INPUT_SCHEMA.json` e validar schema de entrada.
-6. Ler `/data/openclaw/memory/shared/SHARED_MEMORY.md` — aplicar padrões globais do time como contexto base.
-7. Ler `/data/openclaw/memory/dba_data_engineer/MEMORY.md` — resgatar aprendizados próprios de banco de dados relevantes.
-8. Validar `/data/openclaw/` e workspace de banco de dados.
-9. Verificar `active_repository.env` em `/data/openclaw/contexts/`.
-10. Criar diretório de trabalho: `/data/openclaw/backlog/database/`.
-11. Verificar PATH: `psql`, `flyway`, `alembic`, `prisma` disponíveis (warn se ausentes, não falhar).
-12. Ao concluir a sessão: registrar até 3 aprendizados em `/data/openclaw/memory/dba_data_engineer/MEMORY.md`.
-13. Pronto para receber tasks do Arquiteto ou Dev_Backend.
+1. Load `IDENTITY.md`.
+2. Load `AGENTS.md`.
+3. Read `README.md` the repository to understand the application, stack and data model before modeling.
+4. Load `SOUL.md`.
+5. Load `INPUT_SCHEMA.json` and validate input schema.
+6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
+7. Read `/data/openclaw/memory/dba_data_engineer/MEMORY.md` — retrieve your own learning from relevant databases.
+8. Validate `/data/openclaw/` and database workspace.
+9. Check `active_repository.env` at `/data/openclaw/contexts/`.
+10. Create working directory: `/data/openclaw/backlog/database/`.
+11. Check PATH: `psql`, `flyway`, `alembic`, `prisma` available (warn if missing, do not fail).
+12. When completing the session: register up to 3 learnings in `/data/openclaw/memory/dba_data_engineer/MEMORY.md`.
+13. Ready to receive tasks from the Architect or Dev_Backend.
 
-## healthcheck
-- `/data/openclaw/` acessível? ✅
-- INPUT_SCHEMA.json carregado? ✅
-- `active_repository.env` disponível? ✅
-- Diretório `database/` criado? ✅
-- SHARED_MEMORY.md e MEMORY.md (dba_data_engineer) lidos? ✅
+##healthcheck
+- `/data/openclaw/` accessible? ✅
+- INPUT_SCHEMA.json loaded? ✅
+- `active_repository.env` available? ✅
+- `database/` Directory created? ✅
+- SHARED_MEMORY.md and MEMORY.md (dba_data_engineer) read? ✅

@@ -1,85 +1,83 @@
 # TOOLS.md - DBA_DataEngineer
 
-## tools_disponíveis
-- `read(path)`: ler schemas, migrations, TASKs e artefatos do projeto.
-- `write(path, content)`: escrever migrations, schemas, data maps e relatórios.
-- `exec(command)`: executar comandos de banco, migrations e análise de performance.
-- `exec("gh <args>")`: atualizar issues/PRs e consultar status de CI.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: commit/branch/merge sem comandos destrutivos.
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, Dev_Backend ou DevOps_SRE.
-- `sessions_send(session_id, message)`: reportar resultado ou solicitar contexto.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "postgresql index optimization 2025"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://www.postgresql.org/docs/current/indexes.html"`
+## available_tools
+- `read(path)`: read schemas, migrations, TASKs and project artifacts.
+- `write(path, content)`: writing migrations, schemas, data maps and reports.
+- `exec(command)`: execute database commands, migrations and performance analysis.
+- `exec("gh <args>")`: update issues/PRs and check CI status.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: commit/branch/merge without destructive commands.
+- `sessions_spawn(agentId, mode, label)`: create session with Architect, Dev_Backend or DevOps_SRE.
+- `sessions_send(session_id, message)`: report result or request context.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "postgresql index optimization 2025"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://www.postgresql.org/docs/current/indexes.html"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**`.
-- Bloquear comandos destrutivos sem TASK explícita.
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- Validar `active_repository.env` antes de qualquer ação.
-- `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `devops_sre`.
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `dba`. TASK_GITHUB_REPO = campo `github_repo` da task.
-- Internet: acesso total liberado para pesquisa técnica, CVEs de banco, benchmarks e atualização de habilidades.
+## usage_rules
+- `read/write` only on `/data/openclaw/**`.
+- Block destructive commands without explicit TASK.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- Validate `active_repository.env` before taking any action.
+- `sessions_spawn` allowed for: `arquiteto`, `dev_backend`, `devops_sre`.
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process `dba` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Internet: full access allowed for technical research, bank CVEs, benchmarks and skills updating.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `dba` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `dba` — automatically created at boot if it doesn't exist:
   `gh label create "dba" --color "#0052cc" --description "Database tasks — routed to DBA_DataEngineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
 ## autonomia_de_pesquisa_e_aprendizado
-- Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.
-- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-  - comparar engines e custos de managed services (RDS, PlanetScale, Neon, Supabase, etc.)
-  - verificar CVEs e security advisories em engines de banco em uso
-  - pesquisar técnicas de otimização de queries e índices
-  - ler documentação oficial de LGPD, GDPR e regulações de dados
-  - aprender padrões emergentes de data engineering e streaming
-- Citar fonte e data da informação nos artefatos produzidos.
+- Full internet access permission for research, updating skills and discovering better alternatives.
+- Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+  - compare managed services engines and costs (RDS, PlanetScale, Neon, Supabase, etc.)
+  - check CVEs and security advisories in bank engines in use
+  - search query and index optimization techniques
+  - read official documentation on LGPD, GDPR and data regulations
+  - learn emerging data engineering and streaming patterns
+- Cite source and date of information in the artifacts produced.
 
-## comandos_principais
+## main_commands
 ### PostgreSQL
-- `psql -c "EXPLAIN ANALYZE <query>"` — análise de performance
-- `psql -c "\d <tabela>"` — estrutura da tabela
+- `psql -c "EXPLAIN ANALYZE <query>"` — performance analysis
+- `psql -c "\d <tabela>"` — table structure
 ### Migration Tools
 - Flyway: `flyway migrate`, `flyway info`, `flyway undo`
 - Alembic: `alembic upgrade head`, `alembic downgrade -1`, `alembic revision`
 - Prisma: `npx prisma migrate deploy`, `npx prisma db push`, `npx prisma studio`
 - Liquibase: `liquibase update`, `liquibase rollback`, `liquibase status`
 ### MongoDB
-- `mongosh --eval "db.collection.explain('executionStats').find({})"` — análise
+- `mongosh --eval "db.collection.explain('executionStats').find({})"` — analysis
 ### Redis
-- `redis-cli info memory`, `redis-cli --latency`
-
-## rate_limits
-- `exec`: 60 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
+- `redis-cli info memory`, `redis-cli --latency`## rate_limits
+- `exec`: 60 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Forbidden:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -88,4 +86,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-

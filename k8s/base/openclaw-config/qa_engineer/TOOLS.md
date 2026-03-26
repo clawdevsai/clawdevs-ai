@@ -1,40 +1,40 @@
 # TOOLS.md - QA_Engineer
 
-## tools_disponíveis
-- `read(path)`: ler SPEC, TASK, artefatos de teste e código do projeto.
-- `write(path, content)`: escrever testes automatizados e relatórios QA.
-- `exec(command)`: executar testes, scans e validações.
-- `exec("gh <args>")`: comentar em PRs, atualizar issues, consultar status de CI.
-- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20'")`: Poll de fila de tasks no control panel.
-- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
-- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
-- `git(args...)`: checkout de branches para executar testes (sem commits destrutivos).
-- `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto para escalação.
-- `sessions_send(session_id, message)`: reportar PASS/FAIL ao dev agent delegante ou ao Arquiteto.
-- `sessions_list()`: listar sessões ativas.
-- `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "playwright vs cypress 2025 benchmark"`
-- `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://playwright.dev/docs/test-assertions"`
+## available_tools
+- `read(path)`: read SPEC, TASK, test artifacts and project code.
+- `write(path, content)`: Write automated tests and QA reports.
+- `exec(command)`: perform tests, scans and validations.
+- `exec("gh <args>")`: comment on PRs, update issues, check CI status.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20'")`: Task queue poll in the control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Create new task (sub-tasks, bugs found, etc.).
+- `git(args...)`: checkout branches to run tests (no destructive commits).
+- `sessions_spawn(agentId, mode, label)`: create session with Architect for escalation.
+- `sessions_send(session_id, message)`: report PASS/FAIL to the delegating dev agent or the Architect.
+- `sessions_list()`: list active sessions.
+- `exec("web-search '<query>'")`: search the internet via SearxNG (aggregates Google, Bing, DuckDuckGo). Returns up to 10 results. Example: `web-search "playwright vs cypress 2025 benchmark"`
+- `exec("web-read '<url>'")`: read any web page as clean markdown via Jina Reader. Example: `web-read "https://playwright.dev/docs/test-assertions"`
 
-## regras_de_uso
-- `read/write` somente em `/data/openclaw/**` e workspace de testes do projeto.
-- Bloquear comandos destrutivos.
-- Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
-- `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`.
-- NÃO commitar código de produção — apenas testes e scripts de validação.
-- Poll de fila control panel 1x por hora:
-  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20"`
-- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
-- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `tests`. TASK_GITHUB_REPO = campo `github_repo` da task.
-- Armazenar retry_count em `/data/openclaw/backlog/qa/retries/{task_id}.json`.
+## usage_rules
+- `read/write` only in `/data/openclaw/**` and project testing workspace.
+- Block destructive commands.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- `sessions_spawn` allowed for: `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`.
+- DO NOT commit production code — only tests and validation scripts.
+- Control panel queue poll 1x per hour:
+  - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20"`
+- When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
+- At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
+- Process `tests` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Store retry_count in `/data/openclaw/backlog/qa/retries/{task_id}.json`.
 
 ## github_permissions
-- **Tipo:** `read+write`
-- **Label própria:** `tests` — criar automaticamente no boot se não existir:
+- **Type:** `read+write`
+- **Own label:** `tests` — automatically created at boot if it doesn't exist:
   `gh label create "tests" --color "#fbca04" --description "QA/test tasks — routed to QA_Engineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
-- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
+- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_de_teste
 - Playwright: `npx playwright test`, `npx playwright show-report`
@@ -46,35 +46,33 @@
 - Security: `npm audit`, `npx secretlint`
 
 ## autonomia_de_pesquisa_e_aprendizado
-- Permissão total de acesso à internet para pesquisa, atualização de ferramentas de teste e descoberta de melhores práticas.
-- Usar `exec("web-search '...'")` e `exec("web-read '...'")` livremente para:
-  - descobrir frameworks e ferramentas de teste mais eficientes para o stack do projeto
-  - verificar CVEs e vulnerabilidades nas dependências do projeto sendo testado
-  - comparar benchmarks de velocidade e confiabilidade entre ferramentas de teste
-  - ler documentação oficial de Playwright, Detox, Pact, k6 e outras ferramentas
-  - aprender padrões emergentes de BDD, contract testing e load testing
-- Citar fonte e data da informação nos artefatos produzidos.
-
-## rate_limits
-- `exec`: 120 comandos/hora
-- `gh`: 50 req/hora
-- `sessions_spawn`: 10/hora
-- `web-search`: 60 queries/hora
+- Full internet access permission for research, updating testing tools, and discovering best practices.
+- Use `exec("web-search '...'")` and `exec("web-read '...'")` freely to:
+  - discover more efficient frameworks and testing tools for the project stack
+  - check CVEs and vulnerabilities in the dependencies of the project being tested
+  - compare speed and reliability benchmarks between testing tools
+  - read official documentation for Playwright, Detox, Pact, k6 and other tools
+  - learn emerging standards for BDD, contract testing and load testing
+- Cite source and date of information in the artifacts produced.## rate_limits
+- `exec`: 120 commands/hour
+- `gh`: 50 req/hour
+- `sessions_spawn`: 10/hour
+- `web-search`: 60 queries/hour
 
 ## inter_agent_sessions
 
-Comunicacao entre agentes via sessao persistente:
+Communication between agents via persistent session:
 
 - **Session key format:** `agent:<id>:main` (ex: `agent:arquiteto:main`, `agent:ceo:main`)
-- **Descoberta:** `sessions_list()` filtrando `kind: main` para obter session keys ativas
-- **`sessions_spawn`:** delegacao hierarquica background - orquestrador delega task a subagente; resultado volta via announce chain
-- **`sessions_send`:** peer-to-peer sincrono - reportar status, escalar incidente, enviar resultado; ping-pong ate 5 turnos
-- **Proibido:** usar `message` com `agent:<id>:main` (use `sessions_send`; `message` e apenas para canal/chatId)
+- **Discovery:** `sessions_list()` filtering `kind: main` for active session keys
+- **`sessions_spawn`:** hierarchical delegation background - orchestrator delegates task to subagent; result comes back via announce chain
+- **`sessions_send`:** synchronous peer-to-peer - report status, escalate incident, send result; ping-pong up to 5 turns
+- **Forbidden:** use `message` with `agent:<id>:main` (use `sessions_send`; `message` and only for channel/chatId)
 
-Agentes disponiveis e suas keys:
+Available agents and their keys:
 - CEO: `agent:ceo:main`
 - PO: `agent:po:main`
-- Arquiteto: `agent:arquiteto:main`
+- Architect: `agent:arquiteto:main`
 - Dev_Backend: `agent:dev_backend:main`
 - Dev_Frontend: `agent:dev_frontend:main`
 - Dev_Mobile: `agent:dev_mobile:main`
@@ -83,4 +81,3 @@ Agentes disponiveis e suas keys:
 - Security_Engineer: `agent:security_engineer:main`
 - UX_Designer: `agent:ux_designer:main`
 - DBA_DataEngineer: `agent:dba_data_engineer:main`
-
