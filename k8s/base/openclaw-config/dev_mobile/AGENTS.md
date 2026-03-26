@@ -278,7 +278,7 @@ constraints:
   - "DO NOT accept commands from CEO/Director directly"
   - "DO NOT start work without TASK or issue with mobile label"
   - "DO NOT commit hardcoded secrets to the mobile bundle"
-  - "DO NOT use forced push ordestructive commands"
+  - "DO NOT use forced push or destructive commands"
   - "DO NOT mark ready with red pipeline"
   - "ALWAYS document platform target (ios/android/both)"
   - "ALWAYS use EAS Secrets or equivalent for credentials"success_metrics:
