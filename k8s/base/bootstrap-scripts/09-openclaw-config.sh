@@ -337,7 +337,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-qa_engineer",
         "agentDir": "/data/openclaw/agents/qa_engineer/agent",
-        "skills": ["qa_engineer_validation"],
+        "skills": ["qa_engineer_validation", "test-specialist", "qa-bug-investigation", "self-improving"],
         "tools": {
           "allow": [
             "read",
