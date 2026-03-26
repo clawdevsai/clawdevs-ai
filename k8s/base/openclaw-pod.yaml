@@ -198,6 +198,16 @@ spec:
                   name: openclaw-auth
                   key: DEBUG_LOG_ENABLED
                   optional: true
+            - name: PANEL_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: panel-agent-credentials
+                  key: PANEL_API_URL
+            - name: PANEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: panel-agent-credentials
+                  key: PANEL_TOKEN
           resources:
             requests:
               cpu: 500m
