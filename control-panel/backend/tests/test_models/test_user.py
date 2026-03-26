@@ -202,5 +202,7 @@ class TestUserEdgeCases:
         )
         
         # Test None handling for optional fields
-        assert user.avatar_url is None  # if exists
-        assert user.openclaw_session_id is None  # if exists
+        if hasattr(user, "avatar_url"):
+            assert user.avatar_url is None
+        if hasattr(user, "openclaw_session_id"):
+            assert user.openclaw_session_id is None

@@ -169,20 +169,17 @@ class TestBootstrap:
         from app.main import bootstrap_admin
         
         mock_session = AsyncMock()
-        mock_result = AsyncMock()
+        mock_result = MagicMock()
         mock_result.first.return_value = None
-        mock_session.exec.return_value = mock_result
+        mock_session.exec = AsyncMock(return_value=mock_result)
         
         with patch('app.main.AsyncSessionLocal') as mock_session_local:
             mock_session_local.return_value.__aenter__.return_value = mock_session
             
-            with patch('app.main.User') as mock_user:
-                mock_admin = MagicMock()
-                mock_user.return_value = mock_admin
-                
-                with patch('app.main.get_password_hash', return_value="hashed"):
-                    await bootstrap_admin()
-                    pass
+            with patch('app.main.get_password_hash', return_value="hashed"):
+                await bootstrap_admin()
+                mock_session.add.assert_called_once()
+                mock_session.commit.assert_awaited()
 
     @pytest.mark.asyncio
     async def test_bootstrap_admin_doesnt_duplicate(self):
@@ -211,11 +208,9 @@ class TestBootstrap:
         with patch('app.main.AsyncSessionLocal') as mock_session_local:
             mock_session_local.return_value.__aenter__.return_value = mock_session
             
-            with patch('app.main.sync_agents') as mock_sync:
-                mock_sync.return_value = AsyncMock()
-                
+            with patch('app.services.agent_sync.sync_agents', new=AsyncMock()) as mock_sync:
                 await bootstrap_agents()
-                pass
+                mock_sync.assert_awaited()
 
 
 class TestLifespan:

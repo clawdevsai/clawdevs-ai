@@ -40,11 +40,12 @@ class TestDatabaseEngine:
         assert engine.echo is False
 
     def test_engine_future_is_true(self):
-        """Test that engine future flag is enabled."""
+        """Test that engine uses SQLAlchemy 2.0 async engine."""
         from app.core.database import engine
+        from sqlalchemy.ext.asyncio import AsyncEngine
         
-        # Engine should use future behavior
-        assert engine._should_start_with_context() is True
+        assert isinstance(engine, AsyncEngine)
+        assert engine.sync_engine is not None
 
 
 class TestAsyncSessionLocal:
@@ -201,7 +202,7 @@ class TestDatabaseConfiguration:
         # Check configuration
         assert engine.url is not None
         assert engine.echo is False
-        assert engine.future is True
+        # SQLAlchemy 2.0: AsyncEngine always uses 2.0 style; no `future` flag.
 
     def test_sessionmaker_configuration(self):
         """Test sessionmaker configuration."""

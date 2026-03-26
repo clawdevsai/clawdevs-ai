@@ -148,7 +148,9 @@ async def sync_agents(session) -> None:
     await session.commit()
 
 
-def _pick_latest_runtime_entry(payload: dict) -> tuple[dict | None, datetime | None]:
+def _pick_latest_runtime_entry(payload: dict | None) -> tuple[dict | None, datetime | None]:
+    if not isinstance(payload, dict):
+        return None, None
     latest_item: dict | None = None
     latest_ts: int | None = None
 
@@ -213,8 +215,10 @@ def _has_active_session(payload: dict | None) -> bool:
         if not isinstance(session_data, dict):
             continue
             
-        # Check explicit status
+        # Check explicit status (but aborted sessions are not active)
         if session_data.get("status") == "active":
+            if session_data.get("abortedLastRun", False) is True:
+                continue
             return True
         
         # Check if session is running (not aborted and recent)

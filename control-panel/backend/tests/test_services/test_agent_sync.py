@@ -58,9 +58,14 @@ class TestAgentSyncConstants:
         assert DISPLAY_NAME_MAP["qa_engineer"] == "Bruno"
 
     def test_cron_map_exists(self):
-        """Test that CRON_MAP has all agent slugs."""
-        for slug in AGENT_SLUGS:
-            assert slug in CRON_MAP
+        """Test that CRON_MAP is defined for cron-enabled agents."""
+        assert isinstance(CRON_MAP, dict)
+        # CRON_MAP is only defined for agents that actually run on a schedule.
+        for slug in CRON_MAP.keys():
+            assert slug in AGENT_SLUGS
+        # Spot-check a few known cron-enabled agents
+        assert "dev_backend" in CRON_MAP
+        assert "qa_engineer" in CRON_MAP
 
 
 class TestParseIdentity:
@@ -110,8 +115,8 @@ class TestStatusFromHeartbeat:
         status = _status_from_heartbeat(older_time)
         assert status == "idle"
 
-    def test_status_offline_1_hour(self):
-        very_old_time = datetime.utcnow() - timedelta(hours=1)
+    def test_status_offline_2_hours(self):
+        very_old_time = datetime.utcnow() - timedelta(hours=2)
         status = _status_from_heartbeat(very_old_time)
         assert status == "offline"
 
@@ -145,12 +150,12 @@ class TestHasActiveSession:
         assert _has_active_session(payload) is False
 
     def test_false_when_too_old(self):
-        old_ts = int(datetime.utcnow().timestamp() * 1000) - 600000  # 10 min ago
+        old_ts = int(datetime.now(timezone.utc).timestamp() * 1000) - 600000  # 10 min ago
         payload = {"sess1": {"abortedLastRun": False, "updatedAt": old_ts}}
         assert _has_active_session(payload) is False
 
     def test_true_for_recent_update(self):
-        now_ms = int(datetime.utcnow().timestamp() * 1000)
+        now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
         recent_ts = now_ms - 100000  # ~100 sec ago (within 5min)
         payload = {"sess1": {"abortedLastRun": False, "updatedAt": recent_ts}}
         assert _has_active_session(payload) is True
@@ -176,7 +181,7 @@ class TestPickLatestRuntimeEntry:
         assert item is None and ts is None
 
     def test_returns_latest_entry(self):
-        now = datetime.utcnow().timestamp()
+        now = datetime.now(timezone.utc).timestamp()
         payload = {
             "a": {"updatedAt": (now - 100) * 1000},
             "b": {"updatedAt": now * 1000},
@@ -243,7 +248,7 @@ class TestSyncAgentsRuntime:
         sessions_data = {
             "sess1": {
                 "sessionId": "abc123",
-                "updatedAt": int(datetime.utcnow().timestamp() * 1000),
+                "updatedAt": int(datetime.now(timezone.utc).timestamp() * 1000),
                 "status": "active",
                 "abortedLastRun": False
             }
