@@ -5,6 +5,9 @@
 - `write(path, content)`: escrever código/testes/docs (com validação).
 - `exec(command)`: executar comandos de build/test/lint.
 - `exec("gh <args>")`: atualizar issues/PRs e consultar execuções de workflow, checks, labels e run logs (gh run view/rerun/list).
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=back_end&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 - `git(args...)`: operações de commit/branch/merge sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto.
 - `sessions_send(session_id, message)`: enviar update.
@@ -22,10 +25,11 @@
 - Antes de ler arquivos de stack (`package.json`, `go.mod`, etc.), validar existência com `read` no diretório alvo.
 - Se `PROJECT_ROOT` não tiver código-fonte, usar `/data/openclaw/backlog/implementation` como fallback e registrar `standby` sem erro.
 - `gh` com paridade operacional ao Arquiteto para leitura/atualização de CI, issues e PRs (sem operações destrutivas).
-- Poll de fila GitHub 1x por hora:
-  - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
-- Processar somente label `back_end`.
-- Ignorar labels: `front_end`, `tests`, `dba`, `devops`, `documentacao`.
+- Poll de fila control panel 1x por hora:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `back_end`. TASK_GITHUB_REPO = campo `github_repo` da task.
 - Sempre executar testes antes de reportar conclusão.
 - Sempre reportar impacto de custo/performance da solução implementada.
 - Se task trouxer `## Comandos`, usar esses comandos em vez de defaults.
@@ -35,8 +39,9 @@
 - **Tipo:** `read+write`
 - **Label própria:** `back_end` — criar automaticamente no boot se não existir:
   `gh label create "back_end" --color "#1d76db" --description "Backend tasks — routed to Dev_Backend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.

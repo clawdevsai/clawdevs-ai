@@ -5,6 +5,9 @@
 - `write(path, content)`: escrever componentes/testes/docs (com validação).
 - `exec(command)`: executar comandos de build/test/lint/a11y.
 - `exec("gh <args>")`: atualizar issues/PRs e consultar execuções de workflow, checks, labels e run logs.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 - `git(args...)`: operações de commit/branch/merge sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto ou QA_Engineer.
 - `sessions_send(session_id, message)`: enviar update ou delegar ao QA_Engineer.
@@ -17,10 +20,11 @@
 - Bloquear comandos destrutivos (`rm -rf`, `git push -f`, etc.).
 - Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `/data/openclaw/contexts/active_repository.env` antes de qualquer ação gh/git.
-- Poll de fila GitHub 1x por hora (offset :15):
-  - exemplo: `gh issue list --state open --label front_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
-- Processar somente label `front_end`.
-- Ignorar labels: `back_end`, `mobile`, `tests`, `dba`, `devops`, `documentacao`.
+- Poll de fila control panel 1x por hora:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `front_end`. TASK_GITHUB_REPO = campo `github_repo` da task.
 - Sempre executar testes antes de reportar conclusão.
 - Sempre documentar Core Web Vitals e bundle size no comentário do PR.
 - Se task trouxer `## Comandos`, usar esses comandos em vez dos defaults.
@@ -31,8 +35,9 @@
 - **Tipo:** `read+write`
 - **Label própria:** `front_end` — criar automaticamente no boot se não existir:
   `gh label create "front_end" --color "#0e8a16" --description "Frontend tasks — routed to Dev_Frontend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_adicionais_frontend
 - `npx next build`: build Next.js com análise de bundle

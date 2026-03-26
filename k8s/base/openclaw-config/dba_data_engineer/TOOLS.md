@@ -5,6 +5,9 @@
 - `write(path, content)`: escrever migrations, schemas, data maps e relatórios.
 - `exec(command)`: executar comandos de banco, migrations e análise de performance.
 - `exec("gh <args>")`: atualizar issues/PRs e consultar status de CI.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 - `git(args...)`: commit/branch/merge sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, Dev_Backend ou DevOps_SRE.
 - `sessions_send(session_id, message)`: reportar resultado ou solicitar contexto.
@@ -18,14 +21,20 @@
 - Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - Validar `active_repository.env` antes de qualquer ação.
 - `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `devops_sre`.
+- Poll de fila control panel 1x por hora:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `dba`. TASK_GITHUB_REPO = campo `github_repo` da task.
 - Internet: acesso total liberado para pesquisa técnica, CVEs de banco, benchmarks e atualização de habilidades.
 
 ## github_permissions
 - **Tipo:** `read+write`
 - **Label própria:** `dba` — criar automaticamente no boot se não existir:
   `gh label create "dba" --color "#0052cc" --description "Database tasks — routed to DBA_DataEngineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de habilidades e descoberta de melhores alternativas.

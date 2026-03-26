@@ -5,6 +5,9 @@
 - `write(path, content)`: escrever testes automatizados e relatórios QA.
 - `exec(command)`: executar testes, scans e validações.
 - `exec("gh <args>")`: comentar em PRs, atualizar issues, consultar status de CI.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 - `git(args...)`: checkout de branches para executar testes (sem commits destrutivos).
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto para escalação.
 - `sessions_send(session_id, message)`: reportar PASS/FAIL ao dev agent delegante ou ao Arquiteto.
@@ -18,17 +21,20 @@
 - Comandos GitHub devem usar `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
 - `sessions_spawn` permitido para: `arquiteto`, `dev_backend`, `dev_frontend`, `dev_mobile`.
 - NÃO commitar código de produção — apenas testes e scripts de validação.
-- Poll de fila GitHub 1x por hora (offset :45):
-  - `gh issue list --state open --label tests --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
-- Processar somente label `tests`.
-- Armazenar retry_count em `/data/openclaw/backlog/qa/retries/{issue_id}.json`.
+- Poll de fila control panel 1x por hora:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=tests&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `tests`. TASK_GITHUB_REPO = campo `github_repo` da task.
+- Armazenar retry_count em `/data/openclaw/backlog/qa/retries/{task_id}.json`.
 
 ## github_permissions
 - **Tipo:** `read+write`
 - **Label própria:** `tests` — criar automaticamente no boot se não existir:
   `gh label create "tests" --color "#fbca04" --description "QA/test tasks — routed to QA_Engineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_de_teste
 - Playwright: `npx playwright test`, `npx playwright show-report`

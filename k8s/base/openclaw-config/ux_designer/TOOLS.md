@@ -9,6 +9,9 @@
 - `exec("web-search '<query>'")`: pesquisar na internet via SearxNG (agrega Google, Bing, DuckDuckGo). Retorna até 10 resultados. Exemplo: `web-search "WCAG 2.2 contrast ratio guidelines"`
 - `exec("web-read '<url>'")`: ler qualquer página web como markdown limpo via Jina Reader. Exemplo: `web-read "https://m3.material.io/components/buttons/guidelines"`
 - `exec("gh <args>")`: consultar issues e PRs para contexto de produto; sem commit ou push.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=ux&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 
 ## regras_de_uso
 - `read/write` somente em `/data/openclaw/backlog/**`.
@@ -16,14 +19,19 @@
 - Validar `active_repository.env` antes de consultas GitHub.
 - `sessions_spawn` permitido para: `po`, `arquiteto`, `dev_frontend`, `dev_mobile`.
 - NÃO criar issues ou PRs — apenas artefatos UX.
-- Poll de fila GitHub a cada 4h: `gh issue list --state open --label ux --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`.
+- Poll de fila control panel a cada 4h:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=ux&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `ux`. TASK_GITHUB_REPO = campo `github_repo` da task.
 
 ## github_permissions
 - **Tipo:** `read+write`
 - **Label própria:** `ux` — criar automaticamente no boot se não existir:
   `gh label create "ux" --color "#5319e7" --description "UX design tasks — routed to UX_Designer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Permissão total de acesso à internet para pesquisa, atualização de padrões UX e descoberta de melhores práticas.

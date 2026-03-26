@@ -5,6 +5,9 @@
 - `write(path, content)`: escrever workflows CI/CD, manifests IaC, relatórios de métricas.
 - `exec(command)`: executar kubectl, terraform, helm, docker, cloud CLIs.
 - `exec("gh <args>")`: gerenciar workflows, issues, PRs e consultar status de CI.
+- `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20'")`: Poll de fila de tasks no control panel.
+- `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Atualizar status da task.
+- `exec("curl -s -X POST -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks")`: Criar nova task (sub-tasks, bugs encontrados, etc.).
 - `git(args...)`: commit/branch/merge de configs de infra sem comandos destrutivos.
 - `sessions_spawn(agentId, mode, label)`: criar sessão com Arquiteto, PO ou CEO (P0).
 - `sessions_send(session_id, message)`: reportar incidentes ou status.
@@ -20,13 +23,19 @@
 - `sessions_spawn` permitido para: `arquiteto`, `po`, `ceo`.
 - Nunca commitar secrets ou credenciais.
 - `terraform destroy` somente com TASK explícita e aprovação.
+- Poll de fila control panel 1x por hora:
+  - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20"`
+- Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
+- Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
+- Processar somente label `devops`. TASK_GITHUB_REPO = campo `github_repo` da task.
 
 ## github_permissions
 - **Tipo:** `read+write`
 - **Label própria:** `devops` — criar automaticamente no boot se não existir:
   `gh label create "devops" --color "#b60205" --description "DevOps/SRE tasks — routed to DevOps_SRE" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
-- **Proibido:** override de repositório, operações fora do `ACTIVE_GITHUB_REPOSITORY`
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
+- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
 
 ## comandos_principais
 ### Kubernetes
