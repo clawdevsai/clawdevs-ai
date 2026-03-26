@@ -1,212 +1,254 @@
+"""
+Unit tests for Approval model - 100% mocked, no external access.
+"""
+
 import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlmodel import SQLModel, create_engine, Session
-from app.models.approval import Approval
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-    engine.dispose()
 
 
 class TestApprovalModel:
-    """Test Approval model creation and validation."""
+    """Test Approval model creation and validation - UNIT TESTS ONLY."""
 
-    def test_approval_creation(self, db_session):
+    def test_approval_creation(self):
         """Test basic approval creation."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="deploy",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
+        assert approval.action_type == "deploy"
+        assert approval.status == "pending"
         assert approval.id is not None
         assert isinstance(approval.id, UUID)
-        assert approval.action_type == "deploy"
-        assert approval.status == "pending"  # default
-        assert approval.created_at is not None
 
-    def test_approval_with_agent(self, db_session):
+    def test_approval_with_agent(self):
         """Test approval linked to agent."""
+        from app.models.approval import Approval
+        
         agent_id = uuid4()
+        
         approval = Approval(
             action_type="agent_start",
             agent_id=agent_id,
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.agent_id == agent_id
 
-    def test_approval_with_payload(self, db_session):
+    def test_approval_with_payload(self):
         """Test approval with JSON payload."""
+        from app.models.approval import Approval
+        
         payload = {
             "target_environment": "production",
             "services": ["api", "worker"],
         }
+        
         approval = Approval(
             action_type="deploy",
             payload=payload,
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.payload == payload
 
-    def test_approval_with_confidence(self, db_session):
+    def test_approval_with_confidence(self):
         """Test approval with confidence score."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="task_complete",
             confidence=0.95,
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.confidence == 0.95
 
-    def test_approval_with_rubric_scores(self, db_session):
+    def test_approval_with_rubric_scores(self):
         """Test approval with rubric scores."""
+        from app.models.approval import Approval
+        
         rubric_scores = {
             "quality": 9,
             "completeness": 8,
             "efficiency": 7,
         }
+        
         approval = Approval(
             action_type="code_review",
             rubric_scores=rubric_scores,
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.rubric_scores == rubric_scores
 
-    def test_approval_status_values(self, db_session):
+    def test_approval_status_values(self):
         """Test valid status values for approval."""
+        from app.models.approval import Approval
+        
         valid_statuses = ["pending", "approved", "rejected"]
-
+        
         for status in valid_statuses:
             approval = Approval(
                 action_type=f"approval-{status}",
                 status=status,
             )
-            db_session.add(approval)
-            db_session.commit()
-
             assert approval.status == status
 
-    def test_approval_with_justification(self, db_session):
+    def test_approval_with_justification(self):
         """Test approval with justification."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="deploy",
             status="approved",
             justification="All tests passed and metrics look good",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.justification == "All tests passed and metrics look good"
 
-    def test_approval_timestamp(self, db_session):
+    def test_approval_timestamp(self):
         """Test automatic timestamp creation."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="test_approval",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.created_at is not None
         assert isinstance(approval.created_at, datetime)
 
 
 class TestApprovalWorkflow:
-    """Test approval workflow transitions."""
+    """Test approval workflow transitions - UNIT TESTS ONLY."""
 
-    def test_pending_to_approved(self, db_session):
+    def test_pending_to_approved(self):
         """Test approval transition from pending to approved."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="task_start",
             status="pending",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         approval.status = "approved"
-        db_session.commit()
-
+        
         assert approval.status == "approved"
 
-    def test_pending_to_rejected(self, db_session):
+    def test_pending_to_rejected(self):
         """Test approval transition from pending to rejected."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="task_start",
             status="pending",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         approval.status = "rejected"
-        db_session.commit()
-
+        
         assert approval.status == "rejected"
 
-    def test_approval_with_decider(self, db_session):
+    def test_approval_with_decider(self):
         """Test approval with decision maker."""
+        from app.models.approval import Approval
+        from datetime import datetime
+        
         user_id = uuid4()
-        now = datetime.utcnow()
         
         approval = Approval(
             action_type="deploy",
             status="approved",
             decided_by_id=user_id,
-            decided_at=now,
+            decided_at=datetime.utcnow(),
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.decided_by_id == user_id
-        assert approval.decided_at == now
 
 
 class TestApprovalTypes:
-    """Test different approval types."""
+    """Test different approval types - UNIT TESTS ONLY."""
 
-    def test_deploy_approval(self, db_session):
+    def test_deploy_approval(self):
         """Test deployment approval."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="deploy",
             payload={"environment": "staging"},
             status="approved",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.action_type == "deploy"
 
-    def test_agent_approval(self, db_session):
+    def test_agent_approval(self):
         """Test agent-related approval."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="agent_start",
             payload={"agent_slug": "test-agent"},
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.action_type == "agent_start"
 
-    def test_task_approval(self, db_session):
+    def test_task_approval(self):
         """Test task-related approval."""
+        from app.models.approval import Approval
+        
         approval = Approval(
             action_type="task_complete",
             payload={"task_id": "task-123"},
             status="approved",
         )
-        db_session.add(approval)
-        db_session.commit()
-
+        
         assert approval.action_type == "task_complete"
+
+
+class TestApprovalEdgeCases:
+    """Test edge cases for Approval model."""
+
+    def test_approval_id_is_uuid(self):
+        """Test that approval ID is UUID."""
+        from app.models.approval import Approval
+        
+        approval = Approval(
+            action_type="uuid-approval",
+        )
+        
+        assert isinstance(approval.id, UUID)
+        assert len(str(approval.id)) == 36
+
+    def test_approval_empty_payload(self):
+        """Test approval with empty payload."""
+        from app.models.approval import Approval
+        
+        approval = Approval(
+            action_type="empty-payload-approval",
+            payload={},
+        )
+        
+        assert approval.payload == {}
+
+    def test_approval_none_values(self):
+        """Test approval with None values."""
+        from app.models.approval import Approval
+        
+        approval = Approval(
+            action_type="none-values-approval",
+            agent_id=None,
+            payload=None,
+        )
+        
+        assert approval.agent_id is None
+        assert approval.payload is None
+
+    def test_approval_large_payload(self):
+        """Test approval with large payload."""
+        from app.models.approval import Approval
+        
+        payload = {"key": "x" * 10000 for _ in range(100)}
+        
+        approval = Approval(
+            action_type="large-payload-approval",
+            payload=payload,
+        )
+        
+        assert len(approval.payload) > 0

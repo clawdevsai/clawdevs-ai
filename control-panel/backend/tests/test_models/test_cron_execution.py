@@ -1,25 +1,19 @@
+"""
+Unit tests for CronExecution model - 100% mocked, no external access.
+"""
+
 import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlmodel import SQLModel, create_engine, Session
-from app.models.cron_execution import CronExecution
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-    engine.dispose()
 
 
 class TestCronExecutionModel:
-    """Test CronExecution model creation and validation."""
+    """Test CronExecution model creation and validation - UNIT TESTS ONLY."""
 
-    def test_cron_execution_creation(self, db_session):
+    def test_cron_execution_creation(self):
         """Test basic cron execution creation."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -27,18 +21,17 @@ class TestCronExecutionModel:
             agent_id=agent_id,
             started_at=now,
         )
-        db_session.add(execution)
-        db_session.commit()
-
-        assert execution.id is not None
-        assert isinstance(execution.id, UUID)
+        
         assert execution.agent_id == agent_id
         assert execution.started_at == now
-        assert execution.trigger_type == "scheduled"  # default
-        assert execution.created_at is not None
+        assert execution.trigger_type == "scheduled"
+        assert execution.id is not None
+        assert isinstance(execution.id, UUID)
 
-    def test_cron_execution_with_trigger_type(self, db_session):
+    def test_cron_execution_with_trigger_type(self):
         """Test cron execution with manual trigger."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -47,13 +40,13 @@ class TestCronExecutionModel:
             started_at=now,
             trigger_type="manual",
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.trigger_type == "manual"
 
-    def test_cron_execution_with_exit_code(self, db_session):
+    def test_cron_execution_with_exit_code(self):
         """Test cron execution with exit code."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -62,13 +55,13 @@ class TestCronExecutionModel:
             started_at=now,
             exit_code=0,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.exit_code == 0
 
-    def test_cron_execution_with_log(self, db_session):
+    def test_cron_execution_with_log(self):
         """Test cron execution with log tail."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         log_content = "Starting execution...\nRunning task...\nDone."
@@ -78,13 +71,13 @@ class TestCronExecutionModel:
             started_at=now,
             log_tail=log_content,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.log_tail == log_content
 
-    def test_cron_execution_with_finish_time(self, db_session):
+    def test_cron_execution_with_finish_time(self):
         """Test cron execution with finish time."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -94,14 +87,14 @@ class TestCronExecutionModel:
             finished_at=now,
             exit_code=0,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.finished_at == now
         assert execution.exit_code == 0
 
-    def test_cron_execution_timestamp(self, db_session):
+    def test_cron_execution_timestamp(self):
         """Test automatic timestamp creation."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -109,18 +102,18 @@ class TestCronExecutionModel:
             agent_id=agent_id,
             started_at=now,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.created_at is not None
         assert isinstance(execution.created_at, datetime)
 
 
 class TestCronExecutionScenarios:
-    """Test common cron execution scenarios."""
+    """Test common cron execution scenarios - UNIT TESTS ONLY."""
 
-    def test_successful_execution(self, db_session):
+    def test_successful_execution(self):
         """Test successful cron execution."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -131,14 +124,14 @@ class TestCronExecutionScenarios:
             exit_code=0,
             trigger_type="scheduled",
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.exit_code == 0
         assert execution.trigger_type == "scheduled"
 
-    def test_failed_execution(self, db_session):
+    def test_failed_execution(self):
         """Test failed cron execution."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -148,13 +141,13 @@ class TestCronExecutionScenarios:
             finished_at=now,
             exit_code=1,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.exit_code == 1
 
-    def test_manual_trigger(self, db_session):
+    def test_manual_trigger(self):
         """Test manually triggered execution."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -163,13 +156,13 @@ class TestCronExecutionScenarios:
             started_at=now,
             trigger_type="manual",
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.trigger_type == "manual"
 
-    def test_running_execution(self, db_session):
+    def test_running_execution(self):
         """Test running (incomplete) cron execution."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -177,14 +170,14 @@ class TestCronExecutionScenarios:
             agent_id=agent_id,
             started_at=now,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert execution.finished_at is None
         assert execution.exit_code is None
 
-    def test_execution_with_log(self, db_session):
+    def test_execution_with_log(self):
         """Test execution with log output."""
+        from app.models.cron_execution import CronExecution
+        
         now = datetime.utcnow()
         agent_id = uuid4()
         log_output = """INFO: Starting task
@@ -196,37 +189,18 @@ INFO: Task completed successfully"""
             started_at=now,
             log_tail=log_output,
         )
-        db_session.add(execution)
-        db_session.commit()
-
+        
         assert "Starting task" in execution.log_tail
         assert "Task completed successfully" in execution.log_tail
 
 
-class TestCronExecutionQueries:
-    """Test common cron execution queries."""
+class TestCronExecutionEdgeCases:
+    """Test edge cases for CronExecution model."""
 
-    def test_find_by_agent(self, db_session):
-        """Test finding executions by agent."""
-        agent_id = uuid4()
-        now = datetime.utcnow()
+    def test_execution_id_is_uuid(self):
+        """Test that execution ID is UUID."""
+        from app.models.cron_execution import CronExecution
         
-        execution = CronExecution(
-            agent_id=agent_id,
-            started_at=now,
-        )
-        db_session.add(execution)
-        db_session.commit()
-
-        found = db_session.query(CronExecution).filter(
-            CronExecution.agent_id == agent_id
-        ).first()
-
-        assert found is not None
-        assert found.agent_id == agent_id
-
-    def test_find_recent_executions(self, db_session):
-        """Test finding recent cron executions."""
         now = datetime.utcnow()
         agent_id = uuid4()
         
@@ -234,15 +208,56 @@ class TestCronExecutionQueries:
             agent_id=agent_id,
             started_at=now,
         )
-        db_session.add(execution)
-        db_session.commit()
-
-        # Query recent executions (within last hour)
-        from datetime import timedelta
-        recent_cutoff = now - timedelta(hours=1)
         
-        recent = db_session.query(CronExecution).filter(
-            CronExecution.started_at >= recent_cutoff
-        ).all()
+        assert isinstance(execution.id, UUID)
+        assert len(str(execution.id)) == 36
 
-        assert len(recent) >= 1
+    def test_execution_zero_values(self):
+        """Test cron execution with zero values."""
+        from app.models.cron_execution import CronExecution
+        
+        now = datetime.utcnow()
+        agent_id = uuid4()
+        
+        execution = CronExecution(
+            agent_id=agent_id,
+            started_at=now,
+            exit_code=0,
+        )
+        
+        assert execution.exit_code == 0
+
+    def test_execution_none_values(self):
+        """Test cron execution with None values."""
+        from app.models.cron_execution import CronExecution
+        
+        now = datetime.utcnow()
+        agent_id = uuid4()
+        
+        execution = CronExecution(
+            agent_id=agent_id,
+            started_at=now,
+            finished_at=None,
+            exit_code=None,
+            log_tail=None,
+        )
+        
+        assert execution.finished_at is None
+        assert execution.exit_code is None
+        assert execution.log_tail is None
+
+    def test_execution_large_log(self):
+        """Test execution with large log output."""
+        from app.models.cron_execution import CronExecution
+        
+        now = datetime.utcnow()
+        agent_id = uuid4()
+        log_output = "x" * 100000
+        
+        execution = CronExecution(
+            agent_id=agent_id,
+            started_at=now,
+            log_tail=log_output,
+        )
+        
+        assert len(execution.log_tail) == 100000

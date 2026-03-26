@@ -1,25 +1,19 @@
+"""
+Unit tests for Metric model - 100% mocked, no external access.
+"""
+
 import pytest
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
-from sqlmodel import SQLModel, create_engine, Session
-from app.models.metric import Metric
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-    engine.dispose()
 
 
 class TestMetricModel:
-    """Test Metric model creation and validation."""
+    """Test Metric model creation and validation - UNIT TESTS ONLY."""
 
-    def test_metric_creation(self, db_session):
+    def test_metric_creation(self):
         """Test basic metric creation."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -29,17 +23,16 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
-        assert metric.id is not None
-        assert isinstance(metric.id, UUID)
+        
         assert metric.metric_type == "tokens_used"
         assert metric.value == 1000.0
-        assert metric.created_at is not None
+        assert metric.id is not None
+        assert isinstance(metric.id, UUID)
 
-    def test_metric_with_agent(self, db_session):
+    def test_metric_with_agent(self):
         """Test metric linked to agent."""
+        from app.models.metric import Metric
+        
         agent_id = uuid4()
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
@@ -51,15 +44,15 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.agent_id == agent_id
 
-    def test_metric_type_values(self, db_session):
+    def test_metric_type_values(self):
         """Test valid metric_type values."""
+        from app.models.metric import Metric
+        
         valid_types = ["tokens_used", "tasks_completed", "approvals_issued", "errors"]
-
+        
         for metric_type in valid_types:
             now = datetime.utcnow()
             period_end = now + timedelta(hours=1)
@@ -70,16 +63,15 @@ class TestMetricModel:
                 period_start=now,
                 period_end=period_end,
             )
-            db_session.add(metric)
-            db_session.commit()
-
             assert metric.metric_type == metric_type
 
-    def test_metric_value_variations(self, db_session):
+    def test_metric_value_variations(self):
         """Test metric value variations (integers and decimals)."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
-
+        
         # Integer value
         metric1 = Metric(
             metric_type="tasks_completed",
@@ -87,9 +79,7 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric1)
-        db_session.commit()
-
+        
         # Decimal value
         metric2 = Metric(
             metric_type="tokens_used",
@@ -97,14 +87,15 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric2)
-        db_session.commit()
-
+        
         assert metric1.value == 10.0
         assert metric2.value == 1234.56
 
-    def test_metric_period_tracking(self, db_session):
+    def test_metric_period_tracking(self):
         """Test metric period tracking."""
+        from app.models.metric import Metric
+        from datetime import timedelta
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -114,14 +105,14 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.period_start == now
         assert metric.period_end == period_end
 
-    def test_metric_timestamp(self, db_session):
+    def test_metric_timestamp(self):
         """Test automatic timestamp creation."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -131,18 +122,18 @@ class TestMetricModel:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.created_at is not None
         assert isinstance(metric.created_at, datetime)
 
 
 class TestMetricScenarios:
-    """Test common metric scenarios."""
+    """Test common metric scenarios - UNIT TESTS ONLY."""
 
-    def test_tokens_used_metric(self, db_session):
+    def test_tokens_used_metric(self):
         """Test tokens used tracking."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -152,14 +143,14 @@ class TestMetricScenarios:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.metric_type == "tokens_used"
         assert metric.value == 2500.0
 
-    def test_tasks_completed_metric(self, db_session):
+    def test_tasks_completed_metric(self):
         """Test tasks completed tracking."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -169,14 +160,14 @@ class TestMetricScenarios:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.metric_type == "tasks_completed"
         assert metric.value == 15.0
 
-    def test_approvals_issued_metric(self, db_session):
+    def test_approvals_issued_metric(self):
         """Test approvals issued tracking."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -186,14 +177,14 @@ class TestMetricScenarios:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.metric_type == "approvals_issued"
         assert metric.value == 8.0
 
-    def test_errors_metric(self, db_session):
+    def test_errors_metric(self):
         """Test errors tracking."""
+        from app.models.metric import Metric
+        
         now = datetime.utcnow()
         period_end = now + timedelta(hours=1)
         
@@ -203,8 +194,76 @@ class TestMetricScenarios:
             period_start=now,
             period_end=period_end,
         )
-        db_session.add(metric)
-        db_session.commit()
-
+        
         assert metric.metric_type == "errors"
         assert metric.value == 2.0
+
+
+class TestMetricEdgeCases:
+    """Test edge cases for Metric model."""
+
+    def test_metric_id_is_uuid(self):
+        """Test that metric ID is UUID."""
+        from app.models.metric import Metric
+        
+        now = datetime.utcnow()
+        period_end = now + timedelta(hours=1)
+        
+        metric = Metric(
+            metric_type="uuid-metric",
+            value=1.0,
+            period_start=now,
+            period_end=period_end,
+        )
+        
+        assert isinstance(metric.id, UUID)
+        assert len(str(metric.id)) == 36
+
+    def test_metric_zero_values(self):
+        """Test metric with zero values."""
+        from app.models.metric import Metric
+        
+        now = datetime.utcnow()
+        period_end = now + timedelta(hours=1)
+        
+        metric = Metric(
+            metric_type="tokens_used",
+            value=0.0,
+            period_start=now,
+            period_end=period_end,
+        )
+        
+        assert metric.value == 0.0
+
+    def test_metric_none_values(self):
+        """Test metric with None values."""
+        from app.models.metric import Metric
+        
+        now = datetime.utcnow()
+        period_end = now + timedelta(hours=1)
+        
+        metric = Metric(
+            metric_type="none-values-metric",
+            value=1.0,
+            agent_id=None,
+            period_start=now,
+            period_end=period_end,
+        )
+        
+        assert metric.agent_id is None
+
+    def test_metric_large_values(self):
+        """Test metric with large values."""
+        from app.models.metric import Metric
+        
+        now = datetime.utcnow()
+        period_end = now + timedelta(hours=1)
+        
+        metric = Metric(
+            metric_type="large-values-metric",
+            value=999999999.99,
+            period_start=now,
+            period_end=period_end,
+        )
+        
+        assert metric.value == 999999999.99

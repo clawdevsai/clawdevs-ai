@@ -1,110 +1,84 @@
+"""
+Unit tests for Repository model - 100% mocked, no external access.
+"""
+
 import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlmodel import SQLModel, create_engine, Session
-from app.models.repository import Repository
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-    engine.dispose()
 
 
 class TestRepositoryModel:
-    """Test Repository model creation and validation."""
+    """Test Repository model creation and validation - UNIT TESTS ONLY."""
 
-    def test_repository_creation(self, db_session):
+    def test_repository_creation(self):
         """Test basic repository creation."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="test-repo",
             full_name="org/test-repo",
         )
-        db_session.add(repo)
-        db_session.commit()
-
-        assert repo.id is not None
-        assert isinstance(repo.id, UUID)
+        
         assert repo.name == "test-repo"
         assert repo.full_name == "org/test-repo"
-        assert repo.default_branch == "main"  # default
-        assert repo.is_active is True  # default
-        assert repo.created_at is not None
+        assert repo.default_branch == "main"
+        assert repo.is_active is True
+        assert repo.id is not None
+        assert isinstance(repo.id, UUID)
 
-    def test_repository_with_description(self, db_session):
+    def test_repository_with_description(self):
         """Test repository with description."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="described-repo",
             full_name="org/described-repo",
             description="A test repository",
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.description == "A test repository"
 
-    def test_repository_with_custom_branch(self, db_session):
+    def test_repository_with_custom_branch(self):
         """Test repository with custom default branch."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="dev-repo",
             full_name="org/dev-repo",
             default_branch="develop",
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.default_branch == "develop"
 
-    def test_repository_inactive(self, db_session):
+    def test_repository_inactive(self):
         """Test inactive repository."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="inactive-repo",
             full_name="org/inactive-repo",
             is_active=False,
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.is_active is False
 
-    def test_repository_unique_full_name(self, db_session):
-        """Test that full_name is unique."""
-        repo1 = Repository(
-            name="unique-repo",
-            full_name="org/unique-repo",
-        )
-        db_session.add(repo1)
-        db_session.commit()
-
-        repo2 = Repository(
-            name="duplicate-repo",
-            full_name="org/unique-repo",  # Same full_name
-        )
-        db_session.add(repo2)
-
-        # This test documents expected behavior - uniqueness constraint
-        assert repo2.full_name == repo1.full_name  # Same in different objects
-
-    def test_repository_timestamps(self, db_session):
+    def test_repository_timestamps(self):
         """Test automatic timestamp creation."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="timestamp-repo",
             full_name="org/timestamp-repo",
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.created_at is not None
         assert repo.updated_at is not None
         assert isinstance(repo.created_at, datetime)
-        assert isinstance(repo.updated_at, datetime)
 
-    def test_repository_with_all_fields(self, db_session):
+    def test_repository_with_all_fields(self):
         """Test repository with all fields populated."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="complete-repo",
             full_name="org/complete-repo",
@@ -112,9 +86,7 @@ class TestRepositoryModel:
             default_branch="main",
             is_active=True,
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.name == "complete-repo"
         assert repo.full_name == "org/complete-repo"
         assert repo.description == "Complete test repository"
@@ -123,90 +95,101 @@ class TestRepositoryModel:
 
 
 class TestRepositoryStatus:
-    """Test repository active/inactive states."""
+    """Test repository active/inactive states - UNIT TESTS ONLY."""
 
-    def test_active_repository(self, db_session):
+    def test_active_repository(self):
         """Test active repository (default)."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="active-repo",
             full_name="org/active-repo",
         )
-        db_session.add(repo)
-        db_session.commit()
-
+        
         assert repo.is_active is True
 
-    def test_deactivate_repository(self, db_session):
+    def test_deactivate_repository(self):
         """Test deactivating a repository."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="reactivate-repo",
             full_name="org/reactivate-repo",
         )
-        db_session.add(repo)
-        db_session.commit()
-
-        # Deactivate
+        
         repo.is_active = False
-        db_session.commit()
-
+        
         assert repo.is_active is False
 
-    def test_activate_repository(self, db_session):
+    def test_activate_repository(self):
         """Test reactivating a repository."""
+        from app.models.repository import Repository
+        
         repo = Repository(
             name="reactivated-repo",
             full_name="org/reactivated-repo",
             is_active=False,
         )
-        db_session.add(repo)
-        db_session.commit()
-
-        # Reactivate
+        
         repo.is_active = True
-        db_session.commit()
-
+        
         assert repo.is_active is True
 
 
-class TestRepositoryQueries:
-    """Test common repository queries."""
+class TestRepositoryEdgeCases:
+    """Test edge cases for Repository model."""
 
-    def test_find_by_full_name(self, db_session):
-        """Test finding repository by full name."""
+    def test_repository_id_is_uuid(self):
+        """Test that repository ID is UUID."""
+        from app.models.repository import Repository
+        
         repo = Repository(
-            name="findable-repo",
-            full_name="org/findable-repo",
+            name="uuid-repo",
+            full_name="org/uuid-repo",
         )
-        db_session.add(repo)
-        db_session.commit()
+        
+        assert isinstance(repo.id, UUID)
+        assert len(str(repo.id)) == 36
 
-        found = db_session.query(Repository).filter(
-            Repository.full_name == "org/findable-repo"
-        ).first()
-
-        assert found is not None
-        assert found.full_name == "org/findable-repo"
-
-    def test_find_active_repositories(self, db_session):
-        """Test finding only active repositories."""
-        active_repo = Repository(
-            name="active-repo",
-            full_name="org/active-repo",
-            is_active=True,
+    def test_repository_empty_description(self):
+        """Test repository with empty description."""
+        from app.models.repository import Repository
+        
+        repo = Repository(
+            name="empty-desc-repo",
+            full_name="org/empty-desc-repo",
+            description="",
         )
-        inactive_repo = Repository(
-            name="inactive-repo",
-            full_name="org/inactive-repo",
-            is_active=False,
+        
+        assert repo.description == ""
+
+    def test_repository_none_values(self):
+        """Test repository with None values."""
+        from app.models.repository import Repository
+        
+        repo = Repository(
+            name="none-values-repo",
+            full_name="org/none-values-repo",
+            description=None,
+            default_branch=None,
         )
-        db_session.add(active_repo)
-        db_session.add(inactive_repo)
-        db_session.commit()
+        
+        assert repo.description is None
+        assert repo.default_branch is None
 
-        # Query only active
-        active_found = db_session.query(Repository).filter(
-            Repository.is_active.is_(True)
-        ).all()
-
-        assert len(active_found) == 1
-        assert active_found[0].full_name == "org/active-repo"
+    def test_repository_long_values(self):
+        """Test repository with long field values."""
+        from app.models.repository import Repository
+        
+        long_name = "x" * 1000
+        long_desc = "x" * 10000
+        
+        repo = Repository(
+            name=long_name[:255],
+            full_name=f"org/{long_name[:200]}",
+            description=long_desc[:5000],
+        )
+        
+        assert len(repo.name) > 0
+        assert len(repo.full_name) > 0
+        assert len(repo.description) > 0

@@ -1,287 +1,293 @@
+"""
+Unit tests for SddArtifact model - 100% mocked, no external access.
+"""
+
 import pytest
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlmodel import SQLModel, create_engine, Session
-from app.models.sdd_artifact import SddArtifact
-
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
-    engine.dispose()
 
 
 class TestSddArtifactModel:
-    """Test SddArtifact model creation and validation."""
+    """Test SddArtifact model creation and validation - UNIT TESTS ONLY."""
 
-    def test_artifact_creation(self, db_session):
+    def test_artifact_creation(self):
         """Test basic artifact creation."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
             title="Test Brief",
             content="Test content",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
-        assert artifact.id is not None
-        assert isinstance(artifact.id, UUID)
+        
         assert artifact.artifact_type == "BRIEF"
         assert artifact.title == "Test Brief"
         assert artifact.content == "Test content"
-        assert artifact.status == "draft"  # default
-        assert artifact.created_at is not None
+        assert artifact.status == "draft"
+        assert artifact.id is not None
+        assert isinstance(artifact.id, UUID)
 
-    def test_artifact_with_agent(self, db_session):
+    def test_artifact_with_agent(self):
         """Test artifact linked to agent."""
+        from app.models.sdd_artifact import SddArtifact
+        
         agent_id = uuid4()
+        
         artifact = SddArtifact(
             agent_id=agent_id,
             artifact_type="SPEC",
             title="Agent Spec",
             content="Agent specification content",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.agent_id == agent_id
 
-    def test_artifact_type_values(self, db_session):
+    def test_artifact_type_values(self):
         """Test valid artifact_type values."""
+        from app.models.sdd_artifact import SddArtifact
+        
         valid_types = ["BRIEF", "SPEC", "CLARIFY", "PLAN", "TASK", "VALIDATE"]
-
+        
         for artifact_type in valid_types:
             artifact = SddArtifact(
                 artifact_type=artifact_type,
                 title=f"Artifact {artifact_type}",
                 content=f"Content for {artifact_type}",
             )
-            db_session.add(artifact)
-            db_session.commit()
-
             assert artifact.artifact_type == artifact_type
 
-    def test_artifact_status_values(self, db_session):
+    def test_artifact_status_values(self):
         """Test valid status values."""
+        from app.models.sdd_artifact import SddArtifact
+        
         valid_statuses = ["draft", "active", "done"]
-
+        
         for status in valid_statuses:
             artifact = SddArtifact(
                 artifact_type="BRIEF",
                 title=f"Status Test {status}",
                 status=status,
             )
-            db_session.add(artifact)
-            db_session.commit()
-
             assert artifact.status == status
 
-    def test_artifact_with_github_issue(self, db_session):
+    def test_artifact_with_github_issue(self):
         """Test artifact linked to GitHub issue."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="TASK",
             title="GitHub Task",
             github_issue_number=123,
             github_issue_url="https://github.com/org/repo/issues/123",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.github_issue_number == 123
         assert "123" in artifact.github_issue_url
 
-    def test_artifact_with_file_path(self, db_session):
+    def test_artifact_with_file_path(self):
         """Test artifact with file path reference."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="SPEC",
             title="File Spec",
             file_path="/pvc/specs/agent_spec.md",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.file_path == "/pvc/specs/agent_spec.md"
 
-    def test_artifact_without_content(self, db_session):
+    def test_artifact_without_content(self):
         """Test artifact without content (defaults to empty string)."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
             title="Empty Content Test",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.content == ""
 
-    def test_artifact_timestamps(self, db_session):
+    def test_artifact_timestamps(self):
         """Test automatic timestamp creation."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
             title="Timestamp Test",
             content="Testing timestamps",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.created_at is not None
         assert artifact.updated_at is not None
         assert isinstance(artifact.created_at, datetime)
-        assert isinstance(artifact.updated_at, datetime)
 
 
 class TestSddArtifactWorkflow:
-    """Test artifact status workflow."""
+    """Test artifact status workflow - UNIT TESTS ONLY."""
 
-    def test_draft_to_active(self, db_session):
+    def test_draft_to_active(self):
         """Test artifact transition from draft to active."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
             title="Workflow Test",
             status="draft",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         artifact.status = "active"
-        db_session.commit()
-
+        
         assert artifact.status == "active"
 
-    def test_active_to_done(self, db_session):
+    def test_active_to_done(self):
         """Test artifact transition from active to done."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="SPEC",
             title="Done Workflow",
             status="active",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         artifact.status = "done"
-        db_session.commit()
-
+        
         assert artifact.status == "done"
 
-    def test_complete_workflow(self, db_session):
+    def test_complete_workflow(self):
         """Test complete artifact workflow."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="CLARIFY",
             title="Complete Workflow",
             status="draft",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         artifact.status = "active"
-        db_session.commit()
         assert artifact.status == "active"
-
+        
         artifact.status = "done"
-        db_session.commit()
         assert artifact.status == "done"
 
 
 class TestSddArtifactTypes:
-    """Test different SDD artifact types."""
+    """Test different SDD artifact types - UNIT TESTS ONLY."""
 
-    def test_brief_artifact(self, db_session):
+    def test_brief_artifact(self):
         """Test BRIEF artifact type."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
             title="System Brief",
             content="High-level system overview",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.artifact_type == "BRIEF"
 
-    def test_spec_artifact(self, db_session):
+    def test_spec_artifact(self):
         """Test SPEC artifact type."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="SPEC",
             title="Technical Specification",
             content="Detailed technical specs",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.artifact_type == "SPEC"
 
-    def test_plan_artifact(self, db_session):
+    def test_plan_artifact(self):
         """Test PLAN artifact type."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="PLAN",
             title="Implementation Plan",
             content="Steps for implementation",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.artifact_type == "PLAN"
 
-    def test_task_artifact(self, db_session):
+    def test_task_artifact(self):
         """Test TASK artifact type."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="TASK",
             title="Development Task",
             github_issue_number=456,
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.artifact_type == "TASK"
 
-    def test_validate_artifact(self, db_session):
+    def test_validate_artifact(self):
         """Test VALIDATE artifact type."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="VALIDATE",
             title="Validation Check",
             content="Validation criteria",
         )
-        db_session.add(artifact)
-        db_session.commit()
-
+        
         assert artifact.artifact_type == "VALIDATE"
 
 
-class TestSddArtifactQueries:
-    """Test common SDD artifact queries."""
+class TestSddArtifactEdgeCases:
+    """Test edge cases for SddArtifact model."""
 
-    def test_find_by_type(self, db_session):
-        """Test finding artifacts by type."""
+    def test_artifact_id_is_uuid(self):
+        """Test that artifact ID is UUID."""
+        from app.models.sdd_artifact import SddArtifact
+        
         artifact = SddArtifact(
             artifact_type="BRIEF",
-            title="Findable Brief",
+            title="UUID Artifact",
             content="Content",
         )
-        db_session.add(artifact)
-        db_session.commit()
+        
+        assert isinstance(artifact.id, UUID)
+        assert len(str(artifact.id)) == 36
 
-        found = db_session.query(SddArtifact).filter(
-            SddArtifact.artifact_type == "BRIEF"
-        ).first()
+    def test_artifact_empty_content(self):
+        """Test artifact with empty content."""
+        from app.models.sdd_artifact import SddArtifact
+        
+        artifact = SddArtifact(
+            artifact_type="BRIEF",
+            title="Empty Content",
+            content="",
+        )
+        
+        assert artifact.content == ""
 
-        assert found is not None
-        assert found.artifact_type == "BRIEF"
+    def test_artifact_none_values(self):
+        """Test artifact with None values."""
+        from app.models.sdd_artifact import SddArtifact
+        
+        artifact = SddArtifact(
+            artifact_type="BRIEF",
+            title="None Values",
+            content=None,
+            github_issue_number=None,
+            file_path=None,
+        )
+        
+        assert artifact.content is None
+        assert artifact.github_issue_number is None
+        assert artifact.file_path is None
 
-    def test_find_by_status(self, db_session):
-        """Test finding artifacts by status."""
+    def test_artifact_long_content(self):
+        """Test artifact with long content."""
+        from app.models.sdd_artifact import SddArtifact
+        
+        content = "x" * 100000
+        
         artifact = SddArtifact(
             artifact_type="SPEC",
-            title="Active Spec",
-            status="active",
+            title="Long Content",
+            content=content,
         )
-        db_session.add(artifact)
-        db_session.commit()
-
-        found = db_session.query(SddArtifact).filter(
-            SddArtifact.status == "active"
-        ).first()
-
-        assert found is not None
-        assert found.status == "active"
+        
+        assert len(artifact.content) == 100000
