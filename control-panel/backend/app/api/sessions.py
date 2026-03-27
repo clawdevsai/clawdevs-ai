@@ -21,6 +21,7 @@
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import select, func
+from sqlalchemy import case
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
@@ -75,7 +76,15 @@ async def list_sessions(
     await sync_sessions(session)
 
     # Build base query
-    base_query = select(SessionModel).order_by(SessionModel.last_active_at.desc())
+    # Keep active sessions first, then order each group by most recent activity.
+    status_priority = case(
+        (SessionModel.status == "active", 0),
+        else_=1,
+    )
+    base_query = select(SessionModel).order_by(
+        status_priority.asc(),
+        SessionModel.last_active_at.desc(),
+    )
 
     # Filter by agent_slug if provided
     if agent_slug:

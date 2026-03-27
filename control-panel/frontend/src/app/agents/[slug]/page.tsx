@@ -312,6 +312,15 @@ function SessionsTab({ slug }: { slug: string }) {
   })
 
   const sessions = data?.items ?? []
+  const statusPriority = (status: string) => (status === "active" ? 0 : 1)
+  const sortedSessions = [...sessions].sort((a, b) => {
+    const byStatus = statusPriority(a.status) - statusPriority(b.status)
+    if (byStatus !== 0) return byStatus
+
+    const aTime = new Date(a.last_active_at ?? a.created_at).getTime()
+    const bTime = new Date(b.last_active_at ?? b.created_at).getTime()
+    return bTime - aTime
+  })
   const total = data?.total ?? 0
   const totalPages = Math.ceil(total / 20)
 
@@ -340,7 +349,7 @@ function SessionsTab({ slug }: { slug: string }) {
         {total} session{total !== 1 ? "s" : ""} total
       </p>
       <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] divide-y divide-[hsl(var(--border))]">
-        {sessions.map((session) => (
+        {sortedSessions.map((session) => (
           <div
             key={session.id}
             className="flex items-center gap-3 px-4 py-3"

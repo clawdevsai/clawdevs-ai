@@ -203,31 +203,28 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Main content: agents + activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Agents grid — takes 2 columns */}
-          <div className="lg:col-span-2 flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
-                Agents
-                {!agentsLoading && (
-                  <span className="ml-2 text-[hsl(var(--muted-foreground))] font-normal">
-                    ({agents.length})
-                  </span>
-                )}
-              </h2>
-            </div>
-            <AgentsGrid agents={agents} loading={agentsLoading} />
-          </div>
+        {/* Usage chart — moved to top */}
+        <UsageChart metrics={metrics} loading={metricsLoading} />
 
-          {/* Activity feed — 1 column, full height */}
-          <div className="flex flex-col" style={{ minHeight: "400px" }}>
-            <ActivityFeed events={activityEvents} loading={activityLoading} />
+        {/* Agents grid — full width */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
+              Agents
+              {!agentsLoading && (
+                <span className="ml-2 text-[hsl(var(--muted-foreground))] font-normal">
+                  ({agents.length})
+                </span>
+              )}
+            </h2>
           </div>
+          <AgentsGrid agents={agents} loading={agentsLoading} />
         </div>
 
-        {/* Usage chart — full width */}
-        <UsageChart metrics={metrics} loading={metricsLoading} />
+        {/* Recent Activity — moved to bottom with controlled height */}
+        <div className="h-[360px]">
+          <ActivityFeed events={activityEvents} loading={activityLoading} />
+        </div>
       </div>
     </AppLayout>
   )
