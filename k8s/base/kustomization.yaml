@@ -87,6 +87,8 @@ configMapGenerator:
       - dev_mobile-USER.md=openclaw-config/dev_mobile/USER.md
       - dev_mobile-TOOLS.md=openclaw-config/dev_mobile/TOOLS.md
       - dev_mobile-skill-dev_mobile_implementation-SKILL.md=openclaw-config/agents/dev_mobile/skills/dev_mobile_implementation/SKILL.md
+      # shared skills
+      - shared-skill-self-improving-SKILL.md=openclaw-config/agents/shared/skills/self-improving/SKILL.md
       # qa_engineer
       - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
       - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md
@@ -101,7 +103,6 @@ configMapGenerator:
       - qa_engineer-skill-qa_engineer_validation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa_engineer_validation/SKILL.md
       - qa_engineer-skill-test-specialist-SKILL.md=openclaw-config/agents/qa_engineer/skills/test-specialist/SKILL.md
       - qa_engineer-skill-qa-bug-investigation-SKILL.md=openclaw-config/agents/qa_engineer/skills/qa-bug-investigation/SKILL.md
-      - qa_engineer-skill-self-improving-SKILL.md=openclaw-config/agents/qa_engineer/skills/self-improving/SKILL.md
       # devops_sre
       - devops_sre-AGENTS.md=openclaw-config/devops_sre/AGENTS.md
       - devops_sre-BOOT.md=openclaw-config/devops_sre/BOOT.md

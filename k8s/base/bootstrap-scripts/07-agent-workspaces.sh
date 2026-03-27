@@ -260,8 +260,6 @@ mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/test-specialist"
 cp /bootstrap/agent-config/qa_engineer-skill-test-specialist-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/test-specialist/SKILL.md"
 mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa-bug-investigation"
 cp /bootstrap/agent-config/qa_engineer-skill-qa-bug-investigation-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa-bug-investigation/SKILL.md"
-mkdir -p "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/self-improving"
-cp /bootstrap/agent-config/qa_engineer-skill-self-improving-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/self-improving/SKILL.md"
 cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CONSTITUTION.md"
 cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/BRIEF_TEMPLATE.md"
 cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/CLARIFY_TEMPLATE.md"
@@ -606,3 +604,43 @@ for skill_src_dir in \
   cp -f "${skill_src_dir}/SKILL.md" "${dest_dir}/SKILL.md"
 done
 # --- Fim: Skills no workspace compartilhado ---
+
+# --- Rollout global da skill self-improving (hardened) ---
+# Fonte canonica da skill (path compartilhado).
+SELF_IMPROVING_CANONICAL_SRC="/bootstrap/agent-config/shared-skill-self-improving-SKILL.md"
+if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
+  for si_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+    si_ws="${OPENCLAW_STATE_DIR}/workspace-${si_agent}"
+    si_skill_dir="${si_ws}/skills/self-improving"
+    mkdir -p "${si_skill_dir}"
+    cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${si_skill_dir}/SKILL.md"
+
+    # Gate de seguranca: bloquear artefatos executaveis do pacote upstream 3.0.6.
+    rm -rf "${si_skill_dir}/hooks" "${si_skill_dir}/scripts"
+    rm -f "${si_skill_dir}/HOOK.md" "${si_skill_dir}/handler.js" "${si_skill_dir}/handler.ts"
+
+    # Estrutura minima de learnings por workspace (nao sobrescreve).
+    si_learnings_dir="${si_ws}/.learnings"
+    mkdir -p "${si_learnings_dir}"
+
+    if [ ! -f "${si_learnings_dir}/LEARNINGS.md" ]; then
+      printf '# LEARNINGS\n\n' > "${si_learnings_dir}/LEARNINGS.md"
+    fi
+    if [ ! -f "${si_learnings_dir}/ERRORS.md" ]; then
+      printf '# ERRORS\n\n' > "${si_learnings_dir}/ERRORS.md"
+    fi
+    if [ ! -f "${si_learnings_dir}/FEATURE_REQUESTS.md" ]; then
+      printf '# FEATURE REQUESTS\n\n' > "${si_learnings_dir}/FEATURE_REQUESTS.md"
+    fi
+  done
+
+  # Expor a mesma skill no workspace compartilhado utilizado pelos agentes.
+  shared_self_improving_dir="${SHARED_WORKSPACE}/skills/self-improving"
+  mkdir -p "${shared_self_improving_dir}"
+  cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${shared_self_improving_dir}/SKILL.md"
+  rm -rf "${shared_self_improving_dir}/hooks" "${shared_self_improving_dir}/scripts"
+  rm -f "${shared_self_improving_dir}/HOOK.md" "${shared_self_improving_dir}/handler.js" "${shared_self_improving_dir}/handler.ts"
+else
+  echo "[bootstrap] warning: canonical self-improving skill not found at ${SELF_IMPROVING_CANONICAL_SRC}"
+fi
+# --- Fim: rollout global da skill self-improving ---

@@ -639,6 +639,28 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# Garantir skill self-improving para todos os agentes sem remover skills existentes.
+# Requisito: adicao idempotente (nao duplica entradas).
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .agents.list |= map(
+        .skills = (
+          (.skills // [])
+          | if index("self-improving") then . else . + ["self-improving"] end
+        )
+      )
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] self-improving garantido em agents.list[].skills"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar patch da skill self-improving em openclaw.json"
+  fi
+fi
+
 # Cada agente usa seu proprio workspace com identidade isolada (workspace definido por agente no JSON).
 
 # Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
@@ -667,6 +689,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
   }
 }
 EOFAPPROVALS
+echo "[bootstrap] warning: residual risk accepted for this rollout -> exec-approvals uses autoAllowSkills=true (hardening out of scope)"
 # Repair agent main sessions when the persisted transcript is missing, invalid,
 # or contains no assistant text messages that the chat UI can render.
 repair_main_session() {
