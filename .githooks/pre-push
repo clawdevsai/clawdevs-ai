@@ -107,7 +107,7 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
     fi
 
     # Run coverage check
-    COVERAGE_OUTPUT=$($POETRY run pytest tests/ --cov=app --cov-report=term-only 2>/dev/null || true)
+    COVERAGE_OUTPUT=$($POETRY run pytest tests/ --cov=app --cov-report=term 2>/dev/null || true)
     COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $NF}' | tr -d '%')
 
     if [ -z "$COVERAGE" ]; then
