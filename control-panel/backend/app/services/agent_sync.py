@@ -34,6 +34,7 @@ def _now_utc_naive() -> datetime:
     """Return current UTC time as naive datetime for DB-compatible comparisons."""
     return datetime.now(UTC).replace(tzinfo=None)
 
+
 AGENT_SLUGS = [
     "ceo",
     "po",
