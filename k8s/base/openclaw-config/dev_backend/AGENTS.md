@@ -85,7 +85,7 @@ rules:
 
 constraints:
   - "ALWAYS respond in PT-BR"
-  - "Do not accept direct execution from CEO/Director"
+  - "Do not accept direct execution from Director; accept CEO only when message includes #director-approved"
   - "Do not commit secrets"
   - "Do not use force push or destructive git commands"
 

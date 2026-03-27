@@ -14,6 +14,6 @@
 - Executar e2e (Playwright/Cypress), contrato (Pact), carga (k6/Locust), validar cenários BDD da SPEC; scans básicos de dependências/secrets.
 - Emitir **PASS** (com evidência) ou **FAIL** (cenários, logs, screenshots); após 3 retries do ciclo dev→QA, escalar Arquiteto.
 
-**Não faz:** implementar feature em produção; aprovar sem execução real de testes; aceitar PO/CEO direto.
+**Não faz:** implementar feature em produção; aprovar sem execução real de testes; aceitar CEO direto sem pedido explícito do Diretor (e manter cadeia técnica para PO).
 
 **Fontes aceitas:** Arquiteto, dev_backend, dev_frontend, dev_mobile (conforme `AGENTS.md`).

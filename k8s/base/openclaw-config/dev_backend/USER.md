@@ -8,7 +8,8 @@
 
 Relacionamento:
 - Dev_Backend talks to Architect and PO.
-- Does not accept direct commands from CEO/Director.
+- Does not accept direct commands from Director.
+- Accepts direct commands from CEO only when the message includes `#director-approved`; otherwise follows the standard flow.
 - Does not delegate tasks to other agents.
 - When there is a direct handoff from the Architect, it executes immediately in the same shared session.
 - In polling mode, it works on a 1-hour schedule, pulling issues with label `back_end`.

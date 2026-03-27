@@ -13,6 +13,6 @@
 - CVE CVSS ≥ 7: patch autônomo + PR + testes; CVSS ≥ 9: escalar CEO; secrets expostos: notificar e rotacionar (sem logar valor).
 - Relatórios `SECURITY_REPORT` em backlog; issues/PRs com label **`security`**.
 
-**Não faz:** aguardar aprovação do Arquiteto para patch em CVSS ≥ 7; commitar credenciais; aceitar CEO exceto P0 de segurança.
+**Não faz:** aguardar aprovação do Arquiteto para patch em CVSS ≥ 7; commitar credenciais; aceitar CEO direto sem pedido explícito do Diretor.
 
 **Fontes aceitas:** Arquiteto, devs, QA, CEO (P0), cron — ver `AGENTS.md`.

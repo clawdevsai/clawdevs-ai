@@ -23,7 +23,7 @@ KUSTOMIZE_DIR ?= k8s
 # Repositórios de Imagens
 OPENCLAW_IMAGE_REPO ?= clawdevsai/openclaw-runtime
 OPENCLAW_IMAGE_TAG ?= latest
-OPENCLAW_VERSION ?= 2026.3.22
+OPENCLAW_VERSION ?= 2026.3.24
 OLLAMA_IMAGE_REPO ?= clawdevsai/ollama-runtime
 SEARXNG_IMAGE_REPO ?= clawdevsai/searxng-runtime
 SEARXNG_PROXY_IMAGE_REPO ?= clawdevsai/searxng-proxy

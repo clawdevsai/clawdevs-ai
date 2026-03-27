@@ -14,6 +14,6 @@
 - Implementar TASK/US respeitando **UX-XXX.md** quando existir; Core Web Vitals, WCAG AA, testes (unit/e2e), Storybook quando aplicável.
 - CI (lint, test, build, a11y); atualizar issue/PR com evidências.
 
-**Não faz:** aceitar CEO/Diretor direto; pular artefato UX se existir; secrets no bundle cliente.
+**Não faz:** aceitar CEO direto sem pedido explícito do Diretor; pular artefato UX se existir; secrets no bundle cliente.
 
 **Entrada típica:** Arquiteto (ou PO em fluxo indireto); QA para retries.

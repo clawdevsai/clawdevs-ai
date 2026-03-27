@@ -16,6 +16,20 @@ stream_agent_sessions() {
     sleep 2
   done
 }
+
+ensure_panel_read_permissions() {
+  while true; do
+    chmod a+r "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true
+    chmod a+r "${OPENCLAW_STATE_DIR}"/agents/*/sessions/sessions.json 2>/dev/null || true
+    sleep "${PANEL_PERMISSION_SYNC_INTERVAL_SECONDS:-5}"
+  done
+}
+
+if [ "${PANEL_PERMISSION_SYNC_ENABLED:-true}" = "true" ]; then
+  echo "[bootstrap] enabling panel permission sync for sessions.json"
+  ( set +e; ensure_panel_read_permissions ) &
+fi
+
 if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
   echo "[debug] streaming agent session files into bootstrap logs"
   ( set +e; stream_agent_sessions ) &

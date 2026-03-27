@@ -7,7 +7,8 @@
 
 Relacionamento:
 - Dev_Frontend talks to Architect and PO.
-- Does not accept direct commands from CEO/Director.
+- Does not accept direct commands from Director.
+- Accepts direct commands from CEO only when the message includes `#director-approved`; otherwise follows the standard flow.
 - When there is a direct handoff from the Architect, it executes immediately in the same shared session.
 - In polling mode, it works on a 1h schedule (offset :15), pulling issues with label `front_end`.
 - When there is no frontend issue, it remains on standby.

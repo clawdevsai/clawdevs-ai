@@ -84,31 +84,37 @@ export default function DashboardPage() {
   const { data: agentsData, isLoading: agentsLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: fetchAgents,
+    refetchInterval: 15000,
   })
 
   const { data: approvalsData, isLoading: approvalsLoading } = useQuery({
     queryKey: ["approvals-pending-count"],
     queryFn: fetchApprovals,
+    refetchInterval: 15000,
   })
 
   const { data: sessionsData, isLoading: sessionsLoading } = useQuery({
     queryKey: ["sessions"],
     queryFn: fetchSessions,
+    refetchInterval: 15000,
   })
 
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
     queryKey: ["tasks"],
     queryFn: fetchTasks,
+    refetchInterval: 15000,
   })
 
   const { data: activityData, isLoading: activityLoading } = useQuery({
     queryKey: ["activity-events"],
     queryFn: fetchActivity,
+    refetchInterval: 15000,
   })
 
   const { data: metricsData, isLoading: metricsLoading } = useQuery({
     queryKey: ["metrics", "sessions", 7],
     queryFn: fetchMetrics,
+    refetchInterval: 30000,
   })
 
   // Subscribe to dashboard WebSocket channel and refetch all dashboard queries on new messages
@@ -126,7 +132,7 @@ export default function DashboardPage() {
   }, [queryClient])
 
   const agents = agentsData?.items ?? []
-  const activeAgents = agents.filter((a) => a.status === "online").length
+  const activeAgents = agents.filter((a) => a.status === "online" || a.status === "working").length
   const pendingApprovals = approvalsData?.total ?? 0
   const totalSessions = sessionsData?.total ?? 0
   const totalTasks = tasksData?.total ?? 0

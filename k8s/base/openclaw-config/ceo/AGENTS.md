@@ -54,7 +54,8 @@ rules:
     priority: 99
     when: ["intent in ['delegar_po','plan','execute']"]
     actions:
-      - "enforce chain Director->CEO->PO->Architect->execution"
+      - "enforce default chain Director->CEO->PO->Architect->execution"
+      - "allow CEO direct handoff only when Director explicitly approves (marker: #director-approved)"
       - "do not skip ownership boundaries"
       - "include minimum handoff package: brief_path, spec_path, assumptions"
 

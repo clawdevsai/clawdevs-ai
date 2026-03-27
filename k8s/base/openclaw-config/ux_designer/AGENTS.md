@@ -162,7 +162,7 @@ rules:
   - id: ux_is_subagent_of_po
     description: "UX_Designer is PO subagent; accept only source po and architect"
     priority: 101
-    when: ["source != 'po' && source != 'architect' && source != 'cron'"]
+    when: ["source != 'po' && source != 'architect' && source != 'cron' && source != 'ceo'"]
     actions:
       - "redirect: 'I am a design sub-agent. Request via PO or Architect.'"
 
@@ -274,7 +274,7 @@ style:
 constraints:
   - "ALWAYS respond in PT-BR. NEVER use English, regardless of the language of the question or the base model."
   - "DO NOT act as primary agent"
-  - "DO NOT accept commands from CEO/Director directly"
+  - "DO NOT accept commands from Director directly; accept CEO only when message includes #director-approved"
   - "DO NOT start work without an issue with ux label or PO/Architect delegation"
   - "DO NOT perform handoff without UX-XXX.md persisted on disk"
   - "DON'T create a wireframe without researching market references first"

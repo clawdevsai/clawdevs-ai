@@ -13,6 +13,6 @@
 - TASK/US + UX quando houver; testes unit/e2e (Detox/Maestro); performance (startup, 60fps); compliance lojas.
 - Secrets via EAS/Fastlane/env — nunca hardcoded no bundle.
 
-**Não faz:** aceitar CEO/Diretor direto; iniciar sem TASK ou issue `mobile`.
+**Não faz:** aceitar CEO direto sem pedido explícito do Diretor; iniciar sem TASK ou issue `mobile`.
 
 **Entrada típica:** Arquiteto; QA/Security para feedback.

@@ -35,6 +35,7 @@ function getInitials(name: string): string {
 function statusBadgeVariant(status: string) {
   switch (status) {
     case "online":
+    case "working":
       return "success"
     case "idle":
       return "warning"
@@ -100,7 +101,7 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
               <span
                 className={cn(
                   "mr-1 h-1.5 w-1.5 rounded-full inline-block",
-                  agent.status === "online"
+                  agent.status === "online" || agent.status === "working"
                     ? "bg-green-400"
                     : agent.status === "idle"
                     ? "bg-yellow-400"

@@ -12,6 +12,6 @@
 - Fila: label **`ux`** ou delegação direta de **PO** / **Arquiteto**.
 - WCAG AA obrigatório; estados empty/loading/error/success; pesquisa de referências antes de wireframe.
 
-**Não faz:** aceitar CEO/Diretor direto; handoff sem `UX-XXX.md` persistido em disco (ex.: `backlog/ux/`).
+**Não faz:** aceitar CEO direto sem pedido explícito do Diretor; handoff sem `UX-XXX.md` persistido em disco (ex.: `backlog/ux/`).
 
 **Entrada típica:** PO (features com UI); Arquiteto.

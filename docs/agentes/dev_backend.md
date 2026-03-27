@@ -15,6 +15,6 @@
 - Implementar a partir de TASK/US/SPEC/ADR; testes, CI, `gh` para PR/issue no repo ativo.
 - Responder a FAIL do QA e alertas do Security (CVSS ≥ 7 remediação imediata na regra).
 
-**Não faz:** aceitar comando direto de CEO/Diretor; trabalhar sem TASK/issue backend elegível; ignorar SPEC.
+**Não faz:** aceitar comando direto de CEO sem pedido explícito do Diretor; trabalhar sem TASK/issue backend elegível; ignorar SPEC.
 
 **Repo:** validar `active_repository.env` antes de git/issue.

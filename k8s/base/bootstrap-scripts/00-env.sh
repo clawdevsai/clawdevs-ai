@@ -17,7 +17,7 @@ if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
   DEBUG_LOG_FILE="${BOOTSTRAP_LOG_DIR}/openclaw-debug.log"
   touch "${DEBUG_LOG_FILE}"
   exec > >(tee -a "${BOOTSTRAP_LOG_FILE}" "${DEBUG_LOG_FILE}") 2>&1
-  export PS4='+ [${BASH_SOURCE##*/}:${LINENO}] '
+  export PS4='+ [${BASH_SOURCE:-script}:${LINENO}] '
   set -x
   echo "[debug] debug logging enabled"
 else

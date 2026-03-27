@@ -14,6 +14,6 @@
 - Pipelines (GitHub Actions), Terraform/Helm/K8s, rotação de secrets, runbooks.
 - Incidentes: P0 → CEO imediato; P1 → Arquiteto e PO; relatório semanal **PROD_METRICS** em `backlog/status/`.
 
-**Não faz:** mudar produção sem TASK ou P0 documentado; commitar secrets; aceitar CEO exceto P0.
+**Não faz:** mudar produção sem TASK ou P0 documentado; commitar secrets; aceitar CEO direto sem pedido explícito do Diretor.
 
 **Entrada típica:** Arquiteto, PO, CEO (P0).
