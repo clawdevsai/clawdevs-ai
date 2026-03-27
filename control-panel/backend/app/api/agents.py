@@ -50,6 +50,7 @@ class AgentResponse(BaseModel):
     cron_status: str
     created_at: datetime
     current_activity: str | None = None
+    current_activity_full: str | None = None
     current_activity_at: datetime | None = None
     # Backward-compatible aliases still consumed by frontend screens.
     model: str | None = None
@@ -61,6 +62,7 @@ class AgentResponse(BaseModel):
         agent: Agent,
         *,
         current_activity: str | None = None,
+        current_activity_full: str | None = None,
         current_activity_at: datetime | None = None,
     ) -> "AgentResponse":
         return cls(
@@ -78,6 +80,7 @@ class AgentResponse(BaseModel):
             cron_status=agent.cron_status,
             created_at=agent.created_at,
             current_activity=current_activity,
+            current_activity_full=current_activity_full,
             current_activity_at=current_activity_at,
             model=agent.current_model,
             last_heartbeat=agent.last_heartbeat_at,
@@ -112,10 +115,11 @@ async def get_agent(
     agent = result.first()
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Agent '{slug}' not found")
-    current_activity, current_activity_at = get_agent_current_activity(agent.slug)
+    current_activity, current_activity_full, current_activity_at = get_agent_current_activity(agent.slug)
     return AgentResponse.from_orm(
         agent,
         current_activity=current_activity,
+        current_activity_full=current_activity_full,
         current_activity_at=current_activity_at,
     )
 

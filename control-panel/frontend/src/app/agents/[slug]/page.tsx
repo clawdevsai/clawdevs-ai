@@ -27,7 +27,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { formatDistanceToNow, format } from "date-fns"
 import Link from "next/link"
 import * as Tabs from "@radix-ui/react-tabs"
-import { ArrowLeft, Clock, Calendar, CheckSquare, Brain } from "lucide-react"
+import { ArrowLeft, Clock, Calendar, CheckSquare, Brain, Eye, Download, X } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -51,6 +51,7 @@ interface Agent {
   cron_expression?: string | null
   cron_status?: string | null
   current_activity?: string | null
+  current_activity_full?: string | null
   current_activity_at?: string | null
 }
 
@@ -82,6 +83,13 @@ interface MemoryEntry {
   created_at: string
 }
 
+interface MemoryFileResponse {
+  agent_slug: string
+  file_name: string
+  content: string
+  updated_at?: string | null
+}
+
 interface PaginatedResponse<T> {
   items: T[]
   total: number
@@ -111,6 +119,19 @@ const fetchMemory = (slug: string) =>
     url: "/memory",
     method: "GET",
     params: { agent_slug: slug },
+  })
+
+const fetchMemoryFile = (slug: string) =>
+  customInstance<MemoryFileResponse>({
+    url: `/memory/agent/${slug}/file`,
+    method: "GET",
+  })
+
+const fetchMemoryFileDownload = (slug: string) =>
+  customInstance<Blob>({
+    url: `/memory/agent/${slug}/file/download`,
+    method: "GET",
+    responseType: "blob",
   })
 
 // ---- Status helpers -------------------------------------------------------
@@ -170,6 +191,9 @@ function HeroSkeleton() {
 // ---- Overview Tab ---------------------------------------------------------
 
 function OverviewTab({ agent }: { agent: Agent }) {
+  const [showFullWork, setShowFullWork] = useState(false)
+  const fullWork = agent.current_activity_full ?? agent.current_activity ?? ""
+
   const fields: { label: string; value: React.ReactNode }[] = [
     { label: "ID", value: <span className="font-mono text-xs">{agent.id}</span> },
     { label: "Slug", value: <span className="font-mono text-xs">{agent.slug}</span> },
@@ -179,12 +203,23 @@ function OverviewTab({ agent }: { agent: Agent }) {
       label: "Current Work",
       value: agent.current_activity ? (
         <div className="flex flex-col gap-1">
-          <span className="text-sm text-[hsl(var(--foreground))] whitespace-normal break-words">
-            {agent.current_activity}
-          </span>
+          <div className="flex items-start gap-2">
+            <span className="text-sm text-[hsl(var(--foreground))] whitespace-normal break-words flex-1">
+              {agent.current_activity}
+            </span>
+            {fullWork && (
+              <button
+                onClick={() => setShowFullWork(true)}
+                className="inline-flex items-center justify-center h-6 w-6 rounded border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+                title="View full current work"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
           {agent.current_activity_at && (
             <span className="text-xs text-[hsl(var(--muted-foreground))]">
-              updated {formatDistanceToNow(new Date(agent.current_activity_at), { addSuffix: true })}
+              updated {formatDistanceToNow(parseApiDate(agent.current_activity_at), { addSuffix: true })}
             </span>
           )}
         </div>
@@ -195,7 +230,7 @@ function OverviewTab({ agent }: { agent: Agent }) {
     {
       label: "Last Heartbeat",
       value: (agent.last_heartbeat ?? agent.last_heartbeat_at)
-        ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
+        ? formatDistanceToNow(parseApiDate((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
         : "—",
     },
   ]
@@ -239,6 +274,27 @@ function OverviewTab({ agent }: { agent: Agent }) {
           </div>
         ))}
       </dl>
+      {showFullWork && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-3xl rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[hsl(var(--border))] flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-[hsl(var(--foreground))]">Current Work (Full)</p>
+              <button
+                onClick={() => setShowFullWork(false)}
+                className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              <pre className="text-xs leading-5 font-mono whitespace-pre-wrap break-words rounded-lg border border-[hsl(var(--border))] bg-black/30 p-4 overflow-auto max-h-[60vh]">
+                {fullWork}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -310,7 +366,7 @@ function SessionsTab({ slug }: { slug: string }) {
                 {session.status}
               </Badge>
               <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                {formatDistanceToNow(new Date(session.created_at), {
+                {formatDistanceToNow(parseApiDate(session.created_at), {
                   addSuffix: true,
                 })}
               </span>
@@ -404,7 +460,7 @@ function ApprovalsTab({ slug }: { slug: string }) {
                 {approval.status}
               </Badge>
               <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                {formatDistanceToNow(new Date(approval.created_at), {
+                {formatDistanceToNow(parseApiDate(approval.created_at), {
                   addSuffix: true,
                 })}
               </span>
@@ -423,8 +479,45 @@ function MemoryTab({ slug }: { slug: string }) {
     queryKey: ["memory", slug],
     queryFn: () => fetchMemory(slug),
   })
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [viewerLoading, setViewerLoading] = useState(false)
+  const [viewerError, setViewerError] = useState<string | null>(null)
+  const [memoryFile, setMemoryFile] = useState<MemoryFileResponse | null>(null)
 
   const entries = data?.items ?? []
+
+  const openFullMemory = async () => {
+    setViewerOpen(true)
+    setViewerLoading(true)
+    setViewerError(null)
+    try {
+      const file = await fetchMemoryFile(slug)
+      setMemoryFile(file)
+    } catch (error) {
+      console.error(error)
+      setViewerError("Failed to load full memory file")
+      setMemoryFile(null)
+    } finally {
+      setViewerLoading(false)
+    }
+  }
+
+  const downloadMemory = async () => {
+    try {
+      const blob = await fetchMemoryFileDownload(slug)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${slug}-MEMORY.md`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(error)
+      setViewerError("Failed to download memory file")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -447,9 +540,19 @@ function MemoryTab({ slug }: { slug: string }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-[hsl(var(--muted-foreground))]">
-        {data?.total ?? 0} entr{(data?.total ?? 0) !== 1 ? "ies" : "y"} total
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+          {data?.total ?? 0} entr{(data?.total ?? 0) !== 1 ? "ies" : "y"} total
+        </p>
+        <button
+          onClick={openFullMemory}
+          className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+          title="View full MEMORY.md"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Full view
+        </button>
+      </div>
       <div className="space-y-3">
         {entries.map((entry) => (
           <div
@@ -487,8 +590,60 @@ function MemoryTab({ slug }: { slug: string }) {
           </div>
         ))}
       </div>
+
+      {viewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-5xl max-h-[88vh] rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[hsl(var(--border))] flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] truncate">
+                  {memoryFile?.file_name ?? "MEMORY.md"}
+                </p>
+                {memoryFile?.updated_at && (
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
+                    Updated {formatDistanceToNow(parseApiDate(memoryFile.updated_at), { addSuffix: true })}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={downloadMemory}
+                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+                  title="Download MEMORY.md"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Download
+                </button>
+                <button
+                  onClick={() => setViewerOpen(false)}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-[hsl(var(--border))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))] transition-colors"
+                  title="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              {viewerLoading ? (
+                <Skeleton className="h-[60vh] w-full rounded-lg" />
+              ) : viewerError ? (
+                <p className="text-sm text-red-400">{viewerError}</p>
+              ) : (
+                <pre className="text-xs leading-5 font-mono whitespace-pre-wrap break-words rounded-lg border border-[hsl(var(--border))] bg-black/30 p-4 overflow-auto max-h-[65vh]">
+                  {memoryFile?.content || "No content available."}
+                </pre>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function parseApiDate(value: string): Date {
+  const hasTimezone = /[zZ]$|[+-]\d{2}:\d{2}$/.test(value)
+  return new Date(hasTimezone ? value : `${value}Z`)
 }
 
 // ---- Page -----------------------------------------------------------------
@@ -585,7 +740,7 @@ export default function AgentProfilePage({ params }: PageProps) {
               {(agent.last_heartbeat ?? agent.last_heartbeat_at) && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">
                   Last seen{" "}
-                  {formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
+                  {formatDistanceToNow(parseApiDate((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
                     addSuffix: true,
                   })}
                 </p>

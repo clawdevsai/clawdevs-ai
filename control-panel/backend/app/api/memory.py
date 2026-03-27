@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 from typing import Annotated, Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+from pathlib import Path
+from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from sqlmodel import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -27,11 +28,13 @@ from datetime import datetime
 from uuid import UUID
 
 from app.core.database import get_session
+from app.core.config import get_settings
 from app.api.deps import CurrentUser
 from app.models import MemoryEntry
 from app.services.memory_sync import sync_memory_entries
 
 router = APIRouter()
+settings = get_settings()
 
 
 class MemoryEntryResponse(BaseModel):
@@ -51,6 +54,19 @@ class MemoryEntryResponse(BaseModel):
 class MemoryListResponse(BaseModel):
     items: list[MemoryEntryResponse]
     total: int
+
+
+class MemoryFileResponse(BaseModel):
+    agent_slug: str
+    file_name: str
+    content: str
+    updated_at: datetime | None
+
+
+def _memory_file_path(agent_slug: str) -> Path:
+    if not agent_slug.replace("_", "").replace("-", "").isalnum():
+        raise HTTPException(status_code=400, detail="Invalid agent slug")
+    return Path(settings.openclaw_data_path) / "memory" / agent_slug / "MEMORY.md"
 
 
 @router.get("", response_model=MemoryListResponse)
@@ -105,6 +121,52 @@ async def list_memory(
         for e in entries
     ]
     return MemoryListResponse(items=items, total=total)
+
+
+@router.get("/agent/{agent_slug}/file", response_model=MemoryFileResponse)
+async def get_memory_file(
+    agent_slug: str,
+    _: CurrentUser,
+):
+    memory_file = _memory_file_path(agent_slug)
+    if not memory_file.exists():
+        raise HTTPException(status_code=404, detail="Memory file not found")
+    try:
+        content = memory_file.read_text(encoding="utf-8")
+    except OSError:
+        raise HTTPException(status_code=500, detail="Failed to read memory file")
+
+    mtime = datetime.utcfromtimestamp(memory_file.stat().st_mtime)
+    return MemoryFileResponse(
+        agent_slug=agent_slug,
+        file_name="MEMORY.md",
+        content=content,
+        updated_at=mtime,
+    )
+
+
+@router.get("/agent/{agent_slug}/file/download")
+async def download_memory_file(
+    agent_slug: str,
+    _: CurrentUser,
+):
+    memory_file = _memory_file_path(agent_slug)
+    if not memory_file.exists():
+        raise HTTPException(status_code=404, detail="Memory file not found")
+    try:
+        content = memory_file.read_text(encoding="utf-8")
+    except OSError:
+        raise HTTPException(status_code=500, detail="Failed to read memory file")
+
+    filename = f"{agent_slug}-MEMORY.md"
+    return Response(
+        content=content,
+        media_type="text/markdown; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.post("/{entry_id}/promote")
