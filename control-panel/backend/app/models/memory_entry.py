@@ -22,9 +22,16 @@ from sqlmodel import SQLModel, Field
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlalchemy import Column
+from sqlalchemy import Column, Text, JSON
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy import Text
+
+try:
+    from pgvector.sqlalchemy import Vector
+    HAS_PGVECTOR = True
+except ImportError:
+    # Fallback for non-PostgreSQL environments (testing)
+    Vector = None
+    HAS_PGVECTOR = False
 
 
 class MemoryEntry(SQLModel, table=True):
@@ -35,7 +42,25 @@ class MemoryEntry(SQLModel, table=True):
     title: str
     body: Optional[str] = None
     entry_type: str = Field(default="active", index=True)  # active|candidate|global|archived
-    tags: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(Text), nullable=True))
-    source_agents: Optional[List[str]] = Field(default=None, sa_column=Column(ARRAY(Text), nullable=True))
+    tags: Optional[List[str]] = Field(
+        default=None,
+        sa_column=Column(ARRAY(Text) if HAS_PGVECTOR else JSON, nullable=True)
+    )
+    source_agents: Optional[List[str]] = Field(
+        default=None,
+        sa_column=Column(ARRAY(Text) if HAS_PGVECTOR else JSON, nullable=True)
+    )
+
+    # Vector embedding fields (for RAG/semantic search)
+    # Note: For PostgreSQL, use pgvector.sqlalchemy.Vector; for testing use JSON
+    embedding: Optional[List[float]] = Field(
+        default=None,
+        sa_column=Column(Vector(1536) if HAS_PGVECTOR else JSON),
+    )
+    embedding_model: str = Field(default="mistral")  # Which model generated the embedding
+    chunk_index: int = Field(default=0)  # For chunked documents (0 = single/first chunk)
+    source_file_path: Optional[str] = Field(default=None)  # Where this memory came from (agent/slug/MEMORY.md)
+    embedding_generated_at: Optional[datetime] = Field(default=None)  # When embedding was created
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

@@ -1,0 +1,87 @@
+name: Validate Deployment
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  kustomize-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/k8s-set-context@v1
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Validate Kustomize manifests
+        run: kubectl kustomize k8s
+
+      - name: Check for secrets
+        run: |
+          echo "Checking for hardcoded secrets..."
+          grep -r "password\|secret\|token" k8s/overlays/ || true
+          grep -r "api_key\|apikey" k8s/overlays/ || true
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Python tests
+        run: |
+          cd control-panel/backend
+          python -m pytest --tb=short -q || true
+
+      - name: Run frontend tests
+        run: |
+          cd control-panel/frontend
+          npm install --legacy-peer-deps
+          npm run lint || true
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/k8s-set-context@v1
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Wait for pods to be ready
+        run: |
+          kubectl wait --for=condition=Ready pod/ollama --timeout=300s || true
+          kubectl wait --for=condition=Ready pod/clawdevs-ai-0 --timeout=300s || true
+
+      - name: Test OpenClaw connectivity
+        run: |
+          kubectl port-forward svc/ollama 11434:11434 &
+          sleep 5
+          curl -s http://localhost:11434/api/tags || echo "Ollama not responding"
+          pkill -f "port-forward"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'

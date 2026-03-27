@@ -38,5 +38,23 @@ class Task(SQLModel, table=True):
     github_repo: Optional[str] = None
     label: Optional[str] = Field(default=None, index=True)  # back_end|front_end|mobile|tests|devops|dba|security|ux
     due_at: Optional[datetime] = None
+
+    # Failure tracking fields
+    failure_count: int = Field(default=0, index=True)
+    consecutive_failures: int = Field(default=0)
+    last_error: Optional[str] = None
+    error_reason: Optional[str] = None
+    last_failed_at: Optional[datetime] = None
+
+    # Escalation fields
+    escalated_to_agent_id: Optional[UUID] = Field(default=None, foreign_key="agents.id", index=True)
+    escalation_reason: Optional[str] = None
+    escalated_at: Optional[datetime] = None
+
+    # Cost tracking fields
+    estimated_cost: Optional[float] = None
+    actual_cost: float = Field(default=0.0)
+    cost_tier: Optional[str] = Field(default=None)  # local|medium|premium
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

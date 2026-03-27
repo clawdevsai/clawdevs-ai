@@ -40,5 +40,11 @@ class Agent(SQLModel, table=True):
     cron_last_run_at: Optional[datetime] = None
     cron_next_run_at: Optional[datetime] = None
     cron_status: str = Field(default="idle")  # idle|running|error
+
+    # Escalation capability
+    can_escalate: bool = Field(default=False)  # Only Arquiteto and CEO
+    max_escalations: int = Field(default=0)  # Max escalations this agent can handle
+    escalations_handled: int = Field(default=0)  # Count of escalations handled
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

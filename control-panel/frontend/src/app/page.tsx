@@ -30,6 +30,7 @@ import { StatsCard } from "@/components/dashboard/stats-card"
 import { AgentsGrid } from "@/components/dashboard/agents-grid"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { UsageChart } from "@/components/dashboard/usage-chart"
+import { TaskHealth } from "@/components/dashboard/task-health"
 import { customInstance } from "@/lib/axios-instance"
 import { wsManager } from "@/lib/ws"
 
@@ -98,6 +99,12 @@ const fetchMetrics = () =>
     params: { metric_type: "active_sessions", hours: 24, interval_minutes: 1 },
   })
 
+const fetchHealthSummary = () =>
+  customInstance<{ healthy: number; stalled: number; failed: number; blocked: number }>({
+    url: "/api/health/summary",
+    method: "GET",
+  })
+
 // ---- Page -----------------------------------------------------------------
 
 export default function DashboardPage() {
@@ -133,11 +140,17 @@ export default function DashboardPage() {
     refetchInterval: 15000,
   })
 
-  const { data: metricsData, isLoading: metricsLoading } = useQuery({
-    queryKey: ["metrics", "active_sessions", 24, 1],
-    queryFn: fetchMetrics,
-    refetchInterval: 60000,
-  })
+   const { data: metricsData, isLoading: metricsLoading } = useQuery({
+     queryKey: ["metrics", "active_sessions", 24, 1],
+     queryFn: fetchMetrics,
+     refetchInterval: 60000,
+   })
+
+   const { data: healthData, isLoading: healthLoading } = useQuery({
+     queryKey: ["health-summary"],
+     queryFn: fetchHealthSummary,
+     refetchInterval: 15000,
+   })
 
   // Subscribe to dashboard WebSocket channel and refetch all dashboard queries on new messages
   useEffect(() => {
@@ -205,6 +218,35 @@ export default function DashboardPage() {
 
         {/* Usage chart — moved to top */}
         <UsageChart metrics={metrics} loading={metricsLoading} />
+
+        {/* Task Health */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2">
+            <TaskHealth 
+              data={healthData || { healthy: 0, stalled: 0, failed: 0, blocked: 0 }} 
+              loading={healthLoading || !healthData} 
+            />
+          </div>
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))] mb-4">
+              Agent Cycles
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[hsl(var(--muted-foreground))]">Memory Curator</span>
+                <span className="text-xs text-green-500">Healthy</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[hsl(var(--muted-foreground))]">Dev Backend</span>
+                <span className="text-xs text-green-500">Healthy</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-[hsl(var(--muted-foreground))]">QA Engineer</span>
+                <span className="text-xs text-yellow-500">3 retries</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Agents grid — full width */}
         <div className="flex flex-col gap-3">

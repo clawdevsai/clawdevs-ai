@@ -1,0 +1,268 @@
+# Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+"""
+Failure Detection & Self-Healing Service
+
+Monitors task failures and automatically escalates to senior agents
+when thresholds are met. Implements exponential backoff retry logic
+and domain-specific escalation routing.
+"""
+
+import logging
+from datetime import datetime, timedelta
+from typing import Optional
+from uuid import UUID
+
+from sqlmodel import Session, select
+
+from app.models.task import Task
+from app.models.agent import Agent
+from app.models.activity_event import ActivityEvent
+
+logger = logging.getLogger(__name__)
+
+# Domain-specific escalation mapping
+ESCALATION_MAPPING = {
+    "back_end": "dev_backend",
+    "front_end": "dev_frontend",
+    "mobile": "dev_mobile",
+    "tests": "qa_engineer",
+    "devops": "devops_sre",
+    "dba": "dba_data_engineer",
+    "security": "security_engineer",
+    "ux": "ux_designer",
+}
+
+# Senior escalation agents (can handle escalations)
+SENIOR_AGENTS = {
+    "arquiteto": {"can_escalate": True, "max_escalations": 10, "fallback_to": "ceo"},
+    "ceo": {"can_escalate": True, "max_escalations": 5, "fallback_to": None},
+}
+
+
+class FailureDetector:
+    """Detects and responds to repeated task failures."""
+
+    def __init__(self, db_session: Session):
+        self.db_session = db_session
+        self.failure_threshold = 3  # Escalate after 3 consecutive failures
+        self.backoff_base = 1.5  # Exponential backoff multiplier
+
+    async def record_failure(
+        self,
+        task_id: UUID,
+        error_message: str,
+        error_type: str = "execution_error",
+    ) -> None:
+        """Record a failure and check if escalation is needed."""
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        if not task:
+            logger.warning(f"Task {task_id} not found for failure recording")
+            return
+
+        # Update failure tracking
+        task.failure_count += 1
+        task.consecutive_failures += 1
+        task.last_error = error_message
+        task.error_reason = error_type
+        task.last_failed_at = datetime.utcnow()
+        task.updated_at = datetime.utcnow()
+
+        # Create activity event for failure
+        await self._create_failure_event(task_id, error_type, error_message)
+
+        logger.info(
+            f"Task {task_id} failed (attempt {task.failure_count}): {error_type}"
+        )
+
+        # Check if escalation is needed
+        if task.consecutive_failures >= self.failure_threshold:
+            await self.escalate_task(task_id, error_type, error_message)
+
+        self.db_session.add(task)
+        await self.db_session.commit()
+
+    async def escalate_task(
+        self,
+        task_id: UUID,
+        error_type: str,
+        error_message: str,
+    ) -> None:
+        """Escalate a failed task to appropriate senior agent."""
+        task = self.db_session.exec(select(Task).where(Task.id == task_id)).first()
+        if not task:
+            logger.warning(f"Cannot escalate: task {task_id} not found")
+            return
+
+        if task.escalated_to_agent_id:
+            logger.info(f"Task {task_id} already escalated, skipping duplicate escalation")
+            return
+
+        # Determine escalation target based on task label
+        escalation_agent_slug = self._get_escalation_target(task.label)
+
+        # Find the escalation agent
+        escalation_agent = (await self.db_session.exec(
+            select(Agent).where(Agent.slug == escalation_agent_slug)
+        )).first()
+
+        if not escalation_agent:
+            # Fallback to Arquiteto if domain-specific agent not found
+            escalation_agent = (await self.db_session.exec(
+                select(Agent).where(Agent.slug == "arquiteto")
+            )).first()
+
+        if not escalation_agent:
+            logger.error("No escalation agent available (Arquiteto not found)")
+            return
+
+        # Check if agent can handle escalations
+        if not escalation_agent.can_escalate:
+            logger.warning(
+                f"Agent {escalation_agent_slug} cannot escalate. "
+                "Using fallback agent (Arquiteto)"
+            )
+            escalation_agent = (await self.db_session.exec(
+                select(Agent).where(Agent.slug == "arquiteto")
+            )).first()
+
+        if escalation_agent and escalation_agent.can_escalate:
+            # Check escalation limit
+            if (
+                escalation_agent.max_escalations > 0
+                and escalation_agent.escalations_handled >= escalation_agent.max_escalations
+            ):
+                logger.warning(
+                    f"Agent {escalation_agent.slug} has reached max escalations. "
+                    "Cannot escalate further."
+                )
+                return
+
+            # Perform escalation
+            task.escalated_to_agent_id = escalation_agent.id
+            task.escalation_reason = f"Failed {task.consecutive_failures}x: {error_type}"
+            task.escalated_at = datetime.utcnow()
+            escalation_agent.escalations_handled += 1
+
+            await self._create_escalation_event(
+                task_id,
+                escalation_agent.id,
+                task.escalation_reason,
+            )
+
+            logger.info(
+                f"Task {task_id} escalated to {escalation_agent.slug} "
+                f"(reason: {error_type})"
+            )
+
+            self.db_session.add(task)
+            self.db_session.add(escalation_agent)
+            await self.db_session.commit()
+
+    async def apply_exponential_backoff(
+        self, task_id: UUID, attempt: int
+    ) -> timedelta:
+        """Calculate exponential backoff for retry."""
+        delay_seconds = int(self.backoff_base ** (attempt - 1))
+        # Cap at 5 minutes
+        delay_seconds = min(delay_seconds, 300)
+        return timedelta(seconds=delay_seconds)
+
+    async def reset_consecutive_failures(self, task_id: UUID) -> None:
+        """Reset consecutive failure count on successful execution."""
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        if task:
+            task.consecutive_failures = 0
+            task.updated_at = datetime.utcnow()
+            self.db_session.add(task)
+            await self.db_session.commit()
+            logger.info(f"Reset consecutive failures for task {task_id}")
+
+    def _get_escalation_target(self, label: Optional[str]) -> str:
+        """Get domain-specific escalation agent."""
+        if label and label in ESCALATION_MAPPING:
+            return ESCALATION_MAPPING[label]
+        return "arquiteto"  # Default fallback
+
+    async def _create_failure_event(
+        self,
+        task_id: UUID,
+        error_type: str,
+        error_message: str,
+    ) -> None:
+        """Create activity event for task failure."""
+        event = ActivityEvent(
+            task_id=task_id,
+            event_type="task_failed",
+            severity="error",
+            description=f"Task failed: {error_type}",
+            details={
+                "error_type": error_type,
+                "error_message": error_message,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+        )
+        self.db_session.add(event)
+        await self.db_session.commit()
+
+    async def _create_escalation_event(
+        self,
+        task_id: UUID,
+        agent_id: UUID,
+        reason: str,
+    ) -> None:
+        """Create activity event for escalation."""
+        event = ActivityEvent(
+            task_id=task_id,
+            event_type="task_escalated",
+            severity="warning",
+            description=f"Task escalated to senior agent",
+            details={
+                "escalated_to_agent_id": str(agent_id),
+                "reason": reason,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
+        )
+        self.db_session.add(event)
+        await self.db_session.commit()
+
+    async def get_task_health(self, task_id: UUID) -> dict:
+        """Get health status of a task."""
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        if not task:
+            return {"status": "unknown", "message": "Task not found"}
+
+        health_status = "healthy"
+        if task.consecutive_failures >= self.failure_threshold:
+            health_status = "failed"
+        elif task.consecutive_failures > 0:
+            health_status = "unhealthy"
+
+        return {
+            "task_id": str(task_id),
+            "status": health_status,
+            "failure_count": task.failure_count,
+            "consecutive_failures": task.consecutive_failures,
+            "last_error": task.last_error,
+            "last_failed_at": task.last_failed_at.isoformat() if task.last_failed_at else None,
+            "escalated_to_agent_id": str(task.escalated_to_agent_id) if task.escalated_to_agent_id else None,
+            "escalation_reason": task.escalation_reason,
+        }

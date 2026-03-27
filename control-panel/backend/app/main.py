@@ -44,6 +44,9 @@ from app.api import activity_events as activity_events_api
 from app.api import ws as ws_api
 from app.api import repositories as repositories_api
 from app.api import settings as settings_api
+from app.api import health as health_api
+from app.api import memory_rag as memory_rag_api
+from app.api import governance as governance_api
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -105,10 +108,13 @@ app.include_router(repositories_api.router, prefix="/repositories", tags=["repos
 app.include_router(settings_api.router, prefix="/settings", tags=["settings"])
 app.include_router(sdd_api.router, prefix="/sdd", tags=["sdd"])
 app.include_router(memory_api.router, prefix="/memory", tags=["memory"])
+app.include_router(memory_rag_api.router, tags=["memory"])
 app.include_router(crons_api.router, prefix="/crons", tags=["crons"])
 app.include_router(cluster_api.router, prefix="/cluster", tags=["cluster"])
 app.include_router(metrics_api.router, prefix="/metrics", tags=["metrics"])
 app.include_router(activity_events_api.router, prefix="/activity-events", tags=["activity"])
+app.include_router(health_api.router, tags=["health"])
+app.include_router(governance_api.router, tags=["governance"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])

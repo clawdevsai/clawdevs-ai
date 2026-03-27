@@ -53,6 +53,24 @@ class Settings(BaseSettings):
     # Kubernetes
     k8s_namespace: str = "default"
 
+    # Cost tracking - Token costs per 1M tokens for each model
+    token_costs_per_model: dict[str, float] = {
+        "ollama": 0.0,  # Free
+        "mistral": 0.0,  # Free (ollama)
+        "claude-3-haiku": 0.00025,
+        "claude-3-sonnet": 0.003,
+        "claude-3-opus": 0.015,
+        "gpt-4-mini": 0.00015,
+        "gpt-4": 0.03,
+    }
+
+    # Cost tier budgets (max monthly and per-task)
+    cost_tier_budgets: dict[str, dict[str, float]] = {
+        "local": {"max_monthly": 10.0, "max_per_task": 5.0},
+        "medium": {"max_monthly": 100.0, "max_per_task": 50.0},
+        "premium": {"max_monthly": 500.0, "max_per_task": 200.0},
+    }
+
     # Security
     debug: bool = False
     allowed_origins: list[str] = [

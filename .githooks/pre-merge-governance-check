@@ -1,0 +1,152 @@
+#!/bin/bash
+
+# Copyright (c) 2026 Diego Silva Morais
+# Pre-merge Git Hook - Governance Validation
+#
+# Validates that code changes comply with CONSTITUTION and policies
+# before allowing merge to protected branches.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONSTITUTION_FILE="$SCRIPT_DIR/k8s/base/openclaw-config/shared/CONSTITUTION.md"
+COST_ORCHESTRATION_FILE="$SCRIPT_DIR/k8s/base/openclaw-config/shared/DYNAMIC_COST_ORCHESTRATION.md"
+MULTI_REPO_FILE="$SCRIPT_DIR/k8s/base/openclaw-config/shared/MULTI_REPO_COORDINATION.md"
+
+# Color output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}Running governance checks...${NC}"
+
+# Check 1: Verify constitution files exist
+if [ ! -f "$CONSTITUTION_FILE" ]; then
+    echo -e "${RED}✗ CONSTITUTION.md not found${NC}"
+    exit 1
+fi
+
+if [ ! -f "$COST_ORCHESTRATION_FILE" ]; then
+    echo -e "${RED}✗ DYNAMIC_COST_ORCHESTRATION.md not found${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ Policy documents found${NC}"
+
+# Check 2: Detect sensitive files being committed
+echo "Checking for sensitive files..."
+SENSITIVE_PATTERNS=(
+    "\.env"
+    "secrets\.json"
+    "credentials"
+    "private_key"
+    "\.pem$"
+)
+
+VIOLATIONS=0
+for pattern in "${SENSITIVE_PATTERNS[@]}"; do
+    if git diff --cached --name-only | grep -E "$pattern"; then
+        echo -e "${RED}✗ Sensitive file detected: $pattern${NC}"
+        ((VIOLATIONS++))
+    fi
+done
+
+if [ $VIOLATIONS -gt 0 ]; then
+    echo -e "${RED}✗ Sensitive files must not be committed${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ No sensitive files detected${NC}"
+
+# Check 3: Validate multi-repo dependency ordering
+echo "Checking multi-repo coordination..."
+
+CHANGED_DIRS=$(git diff --cached --name-only | cut -d'/' -f1 | sort -u)
+REPO_TYPE=""
+
+for dir in $CHANGED_DIRS; do
+    case $dir in
+        control-panel|backend)
+            REPO_TYPE="backend"
+            ;;
+        frontend)
+            REPO_TYPE="frontend"
+            ;;
+        mobile)
+            REPO_TYPE="mobile"
+            ;;
+        shared|libs)
+            REPO_TYPE="shared_lib"
+            ;;
+    esac
+done
+
+# If frontend or mobile changed, ensure PR mentions dependencies
+if [ "$REPO_TYPE" = "frontend" ] || [ "$REPO_TYPE" = "mobile" ]; then
+    if ! git log -1 --pretty=%b | grep -qi "depends on\|related to"; then
+        echo -e "${YELLOW}⚠ PR should mention dependencies (Depends on: #123)${NC}"
+    fi
+fi
+
+echo -e "${GREEN}✓ Multi-repo check passed${NC}"
+
+# Check 4: No direct SQL in commits
+echo "Checking for direct SQL..."
+if git diff --cached | grep -E "SELECT|INSERT|UPDATE|DELETE" | grep -v "\.sql" | grep -v "test"; then
+    echo -e "${RED}✗ Direct SQL found. Use ORM or migrations.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✓ No direct SQL detected${NC}"
+
+# Check 5: Production protection
+echo "Checking production safety..."
+if git diff --cached --name-only | grep -i "production"; then
+    if ! git log -1 --pretty=%b | grep -qi "devops\|sre\|production"; then
+        echo -e "${RED}✗ Production changes require DevOps/SRE review${NC}"
+        exit 1
+    fi
+fi
+
+echo -e "${GREEN}✓ Production changes validated${NC}"
+
+# Check 6: Check for secrets in code
+echo "Scanning for hardcoded secrets..."
+SECRETS_PATTERNS=(
+    "password.*=.*['\"]"
+    "api_key.*=.*['\"]"
+    "secret.*=.*['\"]"
+    "token.*=.*['\"]"
+)
+
+for pattern in "${SECRETS_PATTERNS[@]}"; do
+    if git diff --cached | grep -E "$pattern" | grep -v "test" | grep -v "example"; then
+        echo -e "${RED}✗ Potential hardcoded secret detected${NC}"
+        exit 1
+    fi
+done
+
+echo -e "${GREEN}✓ No hardcoded secrets detected${NC}"
+
+# Check 7: Verify commit message has governance context
+echo "Checking commit message..."
+if ! git log -1 --pretty=%B | grep -qi "feat\|fix\|refactor\|test\|docs\|chore"; then
+    echo -e "${YELLOW}⚠ Commit message should start with conventional type (feat|fix|refactor|etc)${NC}"
+fi
+
+echo -e "${GREEN}✓ Commit message checked${NC}"
+
+# Final summary
+echo ""
+echo -e "${GREEN}════════════════════════════════════════${NC}"
+echo -e "${GREEN}✓ All governance checks passed!${NC}"
+echo -e "${GREEN}════════════════════════════════════════${NC}"
+echo ""
+echo "Checked against:"
+echo "  - CONSTITUTION.md"
+echo "  - DYNAMIC_COST_ORCHESTRATION.md"
+echo "  - MULTI_REPO_COORDINATION.md"
+echo ""
+
+exit 0
