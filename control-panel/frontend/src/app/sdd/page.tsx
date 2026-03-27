@@ -54,7 +54,7 @@ interface SddArtifactsResponse {
 
 const fetchArtifacts = (page: number, pageSize: number) =>
   customInstance<SddArtifactsResponse>({
-    url: "/sdd-artifacts",
+    url: "/sdd",
     method: "GET",
     params: { page, page_size: pageSize },
   })

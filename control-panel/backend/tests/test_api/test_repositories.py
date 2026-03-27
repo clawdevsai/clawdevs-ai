@@ -115,16 +115,18 @@ class TestCreateRepository:
         assert data["full_name"] == "org/new-repo"
 
     @pytest.mark.asyncio
-    async def test_create_repository_conflict(
+    async def test_create_repository_existing_registers_without_error(
         self,
         client: AsyncClient,
         db_session: AsyncSession,
         auth_headers: dict,
     ):
-        """Test creating a duplicate repository returns 409."""
+        """Test creating an already-registered repository returns existing record (upsert)."""
         request_body = {
             "name": "existing-repo",
-            "full_name": "org/existing-repo"
+            "full_name": "org/existing-repo",
+            "description": "Updated description",
+            "default_branch": "develop",
         }
 
         existing = Repository(
@@ -132,7 +134,7 @@ class TestCreateRepository:
             full_name="org/existing-repo",
             description=None,
             default_branch="main",
-            is_active=True,
+            is_active=False,
         )
         db_session.add(existing)
         await db_session.commit()
@@ -140,7 +142,12 @@ class TestCreateRepository:
         response = await client.post(
             "/repositories", json=request_body, headers=auth_headers
         )
-        assert response.status_code == 409
+        assert response.status_code == 200
+        data = response.json()
+        assert data["full_name"] == "org/existing-repo"
+        assert data["description"] == "Updated description"
+        assert data["default_branch"] == "develop"
+        assert data["is_active"] is True
 
 
 class TestUpdateRepository:

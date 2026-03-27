@@ -25,6 +25,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import { RefreshCw } from "lucide-react"
+import type { AxiosError } from "axios"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -70,6 +71,10 @@ interface EventsResponse {
   items: K8sEvent[]
 }
 
+interface ApiErrorResponse {
+  detail?: string
+}
+
 // ---- Fetchers -------------------------------------------------------------
 
 const fetchPods = () =>
@@ -111,6 +116,14 @@ function pvcStatusVariant(status: string): "success" | "warning" | "secondary" {
 
 function eventTypeVariant(type: string): "warning" | "secondary" {
   return type === "Warning" ? "warning" : "secondary"
+}
+
+function getErrorMessage(error: unknown): string {
+  const axiosError = error as AxiosError<ApiErrorResponse>
+  const detail = axiosError?.response?.data?.detail
+  if (detail) return detail
+  if (axiosError?.message) return axiosError.message
+  return "Unable to load Kubernetes data."
 }
 
 // ---- Sub-components -------------------------------------------------------
@@ -177,6 +190,8 @@ export default function ClusterPage() {
   const {
     data: podsData,
     isLoading: podsLoading,
+    isError: podsIsError,
+    error: podsError,
     dataUpdatedAt: podsUpdated,
   } = useQuery({
     queryKey: ["cluster-pods"],
@@ -187,6 +202,8 @@ export default function ClusterPage() {
   const {
     data: pvcsData,
     isLoading: pvcsLoading,
+    isError: pvcsIsError,
+    error: pvcsError,
     dataUpdatedAt: pvcsUpdated,
   } = useQuery({
     queryKey: ["cluster-pvcs"],
@@ -197,6 +214,8 @@ export default function ClusterPage() {
   const {
     data: eventsData,
     isLoading: eventsLoading,
+    isError: eventsIsError,
+    error: eventsError,
     dataUpdatedAt: eventsUpdated,
   } = useQuery({
     queryKey: ["cluster-events"],
@@ -249,6 +268,15 @@ export default function ClusterPage() {
                 <tbody>
                   {podsLoading ? (
                     <TableSkeleton cols={6} />
+                  ) : podsIsError ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-red-400"
+                      >
+                        {getErrorMessage(podsError)}
+                      </td>
+                    </tr>
                   ) : pods.length === 0 ? (
                     <tr>
                       <td
@@ -321,6 +349,15 @@ export default function ClusterPage() {
                 <tbody>
                   {pvcsLoading ? (
                     <TableSkeleton cols={6} />
+                  ) : pvcsIsError ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-red-400"
+                      >
+                        {getErrorMessage(pvcsError)}
+                      </td>
+                    </tr>
                   ) : pvcs.length === 0 ? (
                     <tr>
                       <td
@@ -393,6 +430,15 @@ export default function ClusterPage() {
                 <tbody>
                   {eventsLoading ? (
                     <TableSkeleton cols={5} rows={3} />
+                  ) : eventsIsError ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-4 py-10 text-center text-sm text-red-400"
+                      >
+                        {getErrorMessage(eventsError)}
+                      </td>
+                    </tr>
                   ) : events.length === 0 ? (
                     <tr>
                       <td

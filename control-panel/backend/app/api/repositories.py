@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response, status
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -88,19 +88,33 @@ async def list_repositories(
 @router.post("", response_model=RepositoryResponse, status_code=201)
 async def create_repository(
     body: CreateRepositoryRequest,
+    response: Response,
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    from datetime import datetime, timezone
-    result = await session.exec(select(Repository).where(Repository.full_name == body.full_name))
-    if result.first():
-        raise HTTPException(status_code=409, detail="Repository already exists")
+    from datetime import datetime
+    normalized_full_name = body.full_name.strip()
+    normalized_name = body.name.strip()
+
+    result = await session.exec(select(Repository).where(Repository.full_name == normalized_full_name))
+    existing = result.first()
+    if existing:
+        existing.name = normalized_name or existing.name
+        existing.description = body.description
+        existing.default_branch = body.default_branch
+        existing.is_active = True
+        existing.updated_at = datetime.utcnow()
+        await session.commit()
+        await session.refresh(existing)
+        response.status_code = status.HTTP_200_OK
+        return _to_response(existing)
+
     repo = Repository(
-        name=body.name,
-        full_name=body.full_name,
+        name=normalized_name,
+        full_name=normalized_full_name,
         description=body.description,
         default_branch=body.default_branch,
-        updated_at=datetime.now(timezone.utc),
+        updated_at=datetime.utcnow(),
     )
     session.add(repo)
     await session.commit()
@@ -115,7 +129,7 @@ async def update_repository(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    from datetime import datetime, timezone
+    from datetime import datetime
     result = await session.exec(select(Repository).where(Repository.id == UUID(repo_id)))
     repo = result.first()
     if repo is None:
@@ -128,7 +142,7 @@ async def update_repository(
         repo.default_branch = body.default_branch
     if body.is_active is not None:
         repo.is_active = body.is_active
-    repo.updated_at = datetime.now(timezone.utc)
+    repo.updated_at = datetime.utcnow()
     await session.commit()
     await session.refresh(repo)
     return _to_response(repo)

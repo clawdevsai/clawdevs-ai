@@ -123,13 +123,20 @@ function decodeJwtPayload(
   }
 }
 
-function SectionDivider({ title }: { title: string }) {
+function SectionDivider({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="flex items-center gap-3 py-2">
-      <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wide whitespace-nowrap">
-        {title}
-      </span>
-      <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-3">
+        <span className="text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wide whitespace-nowrap">
+          {title}
+        </span>
+        <div className="flex-1 h-px bg-[hsl(var(--border))]" />
+      </div>
+      {description && (
+        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+          {description}
+        </p>
+      )}
     </div>
   )
 }
@@ -202,7 +209,7 @@ function RepositoriesSection() {
           onClick={() => setShowForm((v) => !v)}
           className="px-3 py-1.5 text-xs rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity"
         >
-          + Add Repository
+          + Adicionar repositório
         </button>
       </div>
 
@@ -409,20 +416,34 @@ export default function SettingsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl flex flex-col gap-8">
+      <div className="max-w-5xl w-full flex flex-col gap-8">
         {/* Header */}
         <div>
           <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
             Settings
           </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
-            System configuration and account management
+            Gerencie conta, conexão com gateway, cluster e repositórios.
           </p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+            <p className="text-sm font-medium text-[hsl(var(--foreground))]">Conta e Segurança</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">Atualize sua senha e valide dados do seu acesso atual.</p>
+          </div>
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
+            <p className="text-sm font-medium text-[hsl(var(--foreground))]">Gateway e Cluster</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">Verifique conectividade e os metadados do Kubernetes em uso.</p>
+          </div>
+        </div>
+
         {/* ── Account ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          <SectionDivider title="Account" />
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Conta"
+            description="Informações do usuário autenticado e troca de senha."
+          />
 
           <FieldRow label="Username">
             <ReadOnlyValue value={jwtPayload?.sub ?? "—"} />
@@ -444,7 +465,10 @@ export default function SettingsPage() {
           {/* Change password form */}
           <div className="pt-2">
             <p className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
-              Change Password
+              Alterar senha
+            </p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mb-3">
+              Recomendado trocar periodicamente para manter seu acesso seguro.
             </p>
             <form
               onSubmit={handleChangePassword}
@@ -452,7 +476,7 @@ export default function SettingsPage() {
             >
               <input
                 type="password"
-                placeholder="Current password"
+                placeholder="Senha atual"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className={inputClass}
@@ -460,7 +484,7 @@ export default function SettingsPage() {
               />
               <input
                 type="password"
-                placeholder="New password"
+                placeholder="Nova senha"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className={inputClass}
@@ -468,7 +492,7 @@ export default function SettingsPage() {
               />
               <input
                 type="password"
-                placeholder="Confirm new password"
+                placeholder="Confirmar nova senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={inputClass}
@@ -497,15 +521,18 @@ export default function SettingsPage() {
                 disabled={pwMutation.isPending}
                 className="self-start px-4 py-2 text-sm rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50 transition-opacity"
               >
-                {pwMutation.isPending ? "Saving…" : "Update Password"}
+                {pwMutation.isPending ? "Salvando…" : "Atualizar senha"}
               </button>
             </form>
           </div>
         </div>
 
         {/* ── Gateway ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          <SectionDivider title="Gateway" />
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Gateway"
+            description="Endpoint usado para comunicação com o OpenClaw."
+          />
 
           <FieldRow label="Gateway URL">
             {settingsLoading ? (
@@ -527,16 +554,16 @@ export default function SettingsPage() {
                 ) : (
                   <RefreshCw className="h-3 w-3" />
                 )}
-                Test Connection
+                Testar conexão
               </button>
               {gatewayStatus === "ok" && (
                 <span className="flex items-center gap-1.5 text-xs text-green-400">
-                  <CheckCircle className="h-3.5 w-3.5" /> Healthy
+                  <CheckCircle className="h-3.5 w-3.5" /> Conectado
                 </span>
               )}
               {gatewayStatus === "error" && (
                 <span className="flex items-center gap-1.5 text-xs text-red-400">
-                  <XCircle className="h-3.5 w-3.5" /> Unreachable
+                  <XCircle className="h-3.5 w-3.5" /> Indisponível
                 </span>
               )}
             </div>
@@ -544,8 +571,11 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Cluster Info ─────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          <SectionDivider title="Cluster Info" />
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Cluster Info"
+            description="Metadados do cluster e namespace usados pelo painel."
+          />
 
           {clusterLoading ? (
             <div className="flex flex-col gap-3">
@@ -556,7 +586,7 @@ export default function SettingsPage() {
           ) : (
             <>
               {clusterInfo?.cluster_name && (
-                <FieldRow label="Cluster Name">
+                <FieldRow label="Nome do cluster">
                   <ReadOnlyValue value={clusterInfo.cluster_name} />
                 </FieldRow>
               )}
@@ -569,7 +599,7 @@ export default function SettingsPage() {
                   }
                 />
               </FieldRow>
-              <FieldRow label="Kubernetes Version">
+              <FieldRow label="Versão Kubernetes">
                 <ReadOnlyValue
                   value={
                     clusterInfo?.k8s_version ??
@@ -583,10 +613,13 @@ export default function SettingsPage() {
         </div>
 
         {/* ── Tokens ───────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          <SectionDivider title="Tokens" />
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Sessão e Token"
+            description="Dados da sessão autenticada e ação de logout seguro."
+          />
 
-          <FieldRow label="JWT Expiry">
+          <FieldRow label="Expiração do JWT">
             <ReadOnlyValue value={tokenExpiry ?? "—"} />
           </FieldRow>
 
@@ -605,14 +638,17 @@ export default function SettingsPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors"
             >
               <XCircle className="h-3.5 w-3.5" />
-              Revoke &amp; Sign Out
+              Revogar e sair
             </button>
           </FieldRow>
         </div>
 
         {/* ── Repositories ─────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4">
-          <SectionDivider title="Repositórios" />
+        <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
+          <SectionDivider
+            title="Repositórios"
+            description="Cadastre repositórios para habilitar operações dos agentes."
+          />
           <RepositoriesSection />
         </div>
       </div>

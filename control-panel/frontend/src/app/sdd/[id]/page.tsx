@@ -49,7 +49,7 @@ interface SddArtifact {
 // ---- Fetcher ----------------------------------------------------------------
 
 const fetchArtifact = (id: string) =>
-  customInstance<SddArtifact>({ url: `/sdd-artifacts/${id}`, method: "GET" })
+  customInstance<SddArtifact>({ url: `/sdd/${id}`, method: "GET" })
 
 // ---- Artifact type badge ---------------------------------------------------
 

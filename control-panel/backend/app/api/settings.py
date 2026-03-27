@@ -18,20 +18,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from datetime import datetime
-from uuid import UUID, uuid4
+from fastapi import APIRouter
+from app.api.deps import CurrentUser
+from app.core.config import get_settings
+from app.services.openclaw_client import openclaw_client
+from app.services import k8s_client
+
+settings = get_settings()
+router = APIRouter()
 
 
-class CronExecution(SQLModel, table=True):
-    __tablename__ = "cron_executions"
+@router.get("/info")
+async def get_settings_info(_: CurrentUser):
+    cluster_info = k8s_client.get_cluster_info(namespace=settings.k8s_namespace)
+    return {
+        "gateway_url": settings.openclaw_gateway_url,
+        "cluster_namespace": cluster_info.get("namespace") or settings.k8s_namespace,
+        "k8s_version": cluster_info.get("k8s_version") or "unknown",
+    }
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    agent_id: UUID = Field(foreign_key="agents.id", index=True)
-    started_at: datetime
-    finished_at: Optional[datetime] = None
-    exit_code: Optional[int] = None
-    log_tail: Optional[str] = None  # last N lines of log
-    status: str = Field(default="running")
-    trigger_type: str = Field(default="scheduled")  # scheduled|manual
+
+@router.get("/gateway-health")
+async def get_gateway_health(_: CurrentUser):
+    healthy = await openclaw_client.health()
+    return {"status": "ok" if healthy else "error"}

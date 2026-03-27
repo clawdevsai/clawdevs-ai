@@ -121,3 +121,33 @@ def list_pvcs(namespace: str = "default") -> list:
     except Exception as e:
         logger.error(f"Error listing PVCs: {e}")
         return []
+
+
+def get_cluster_info(namespace: str = "default") -> dict:
+    core, _ = get_k8s_clients()
+    if core is None:
+        return {"cluster_name": None, "namespace": namespace, "k8s_version": "unknown"}
+
+    k8s_version = "unknown"
+    cluster_name = None
+
+    try:
+        if kubernetes is not None:
+            version_api = kubernetes.client.VersionApi()
+            version_data = version_api.get_code()
+            k8s_version = getattr(version_data, "git_version", None) or "unknown"
+    except Exception as e:
+        logger.warning(f"Error getting Kubernetes version: {e}")
+
+    try:
+        nodes = core.list_node(limit=1)
+        if nodes.items:
+            cluster_name = nodes.items[0].metadata.cluster_name
+    except Exception as e:
+        logger.warning(f"Error getting cluster name: {e}")
+
+    return {
+        "cluster_name": cluster_name,
+        "namespace": namespace,
+        "k8s_version": k8s_version,
+    }

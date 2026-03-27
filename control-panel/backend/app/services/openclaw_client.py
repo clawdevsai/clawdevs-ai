@@ -28,7 +28,8 @@ settings = get_settings()
 class OpenClawClient:
     def __init__(self):
         self.base_url = settings.openclaw_gateway_url.rstrip("/")
-        self.headers = {"Authorization": f"Bearer {settings.openclaw_gateway_token}"}
+        token = (settings.openclaw_gateway_token or "").strip()
+        self.headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     async def health(self) -> bool:
         try:

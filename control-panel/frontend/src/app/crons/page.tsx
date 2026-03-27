@@ -46,6 +46,8 @@ interface Agent {
   model: string
   cron_expression?: string | null
   cron_status?: string | null
+  cron_last_run_at?: string | null
+  cron_next_run_at?: string | null
   last_heartbeat?: string | null
 }
 
@@ -77,7 +79,7 @@ const fetchAgents = () =>
 
 const fetchCronExecutions = () =>
   customInstance<CronExecutionsResponse>({
-    url: "/cron-executions",
+    url: "/crons/executions",
     method: "GET",
     params: { page: 1, page_size: 20 },
   })
@@ -120,6 +122,10 @@ function durationLabel(exec: CronExecution) {
     new Date(exec.started_at).getTime()
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(1)}s`
+}
+
+function parseApiDate(value: string) {
+  return /Z$|[+-]\d{2}:\d{2}$/.test(value) ? new Date(value) : new Date(`${value}Z`)
 }
 
 // ---- Sub-components -------------------------------------------------------
@@ -196,11 +202,16 @@ function CronCard({
 
       {/* Footer row */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-[hsl(var(--muted-foreground))]">
-          {agent.last_heartbeat
-            ? `Last run ${formatDistanceToNow(new Date(agent.last_heartbeat), { addSuffix: true })}`
+        <div className="text-xs text-[hsl(var(--muted-foreground))]">
+          {agent.cron_last_run_at
+            ? `Last run ${formatDistanceToNow(parseApiDate(agent.cron_last_run_at), { addSuffix: true })}`
             : "No runs yet"}
-        </span>
+          {agent.cron_next_run_at && (
+            <div className="mt-0.5">
+              {`Next run ${formatDistanceToNow(parseApiDate(agent.cron_next_run_at), { addSuffix: true })}`}
+            </div>
+          )}
+        </div>
         <button
           onClick={() => onTrigger(agent.slug)}
           disabled={triggering}
@@ -363,7 +374,7 @@ export default function CronsPage() {
                           {exec.agent_slug ?? exec.agent_id.slice(0, 12)}
                         </td>
                         <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
-                          {formatDistanceToNow(new Date(exec.started_at), {
+                          {formatDistanceToNow(parseApiDate(exec.started_at), {
                             addSuffix: true,
                           })}
                         </td>

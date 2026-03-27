@@ -98,6 +98,10 @@ function entryTypeBadgeVariant(
   }
 }
 
+function parseApiDate(value: string) {
+  return /Z$|[+-]\d{2}:\d{2}$/.test(value) ? new Date(value) : new Date(`${value}Z`)
+}
+
 // ---- Sub-components -------------------------------------------------------
 
 function MemoryCardSkeleton() {
@@ -180,7 +184,7 @@ function MemoryCard({ entry }: { entry: MemoryEntry }) {
           ))}
         </div>
         <span className="text-xs text-[hsl(var(--muted-foreground))] shrink-0">
-          {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true })}
+          {formatDistanceToNow(parseApiDate(entry.created_at), { addSuffix: true })}
         </span>
       </div>
     </div>
@@ -304,13 +308,13 @@ export default function MemoryPage() {
           </div>
 
           {/* Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
             {memoryLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <MemoryCardSkeleton key={i} />
               ))
             ) : entries.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 gap-3">
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <div className="h-12 w-12 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center">
                   <Search className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
                 </div>

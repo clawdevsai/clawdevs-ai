@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from app.api.deps import CurrentUser
 from app.core.config import get_settings
 from app.services import k8s_client
@@ -28,16 +28,33 @@ settings = get_settings()
 router = APIRouter()
 
 
+def _ensure_k8s_available() -> None:
+    core, _ = k8s_client.get_k8s_clients()
+    if core is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Kubernetes client unavailable in backend container. Verify backend image dependencies.",
+        )
+
+
 @router.get("/pods")
 async def get_pods(_: CurrentUser):
+    _ensure_k8s_available()
     return k8s_client.list_pods(namespace=settings.k8s_namespace)
+
+
+@router.get("/info")
+async def get_cluster_info(_: CurrentUser):
+    return k8s_client.get_cluster_info(namespace=settings.k8s_namespace)
 
 
 @router.get("/events")
 async def get_events(_: CurrentUser):
+    _ensure_k8s_available()
     return k8s_client.list_events(namespace=settings.k8s_namespace)
 
 
 @router.get("/pvcs")
 async def get_pvcs(_: CurrentUser):
+    _ensure_k8s_available()
     return k8s_client.list_pvcs(namespace=settings.k8s_namespace)
