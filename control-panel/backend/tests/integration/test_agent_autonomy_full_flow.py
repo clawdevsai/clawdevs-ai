@@ -260,9 +260,11 @@ class TestAgentAutonomyFullFlow:
         await db_session.commit()
 
         # Verify memory entries exist
-        entries = (await db_session.exec(
-            select(MemoryEntry).where(MemoryEntry.agent_slug == "dev_backend")
-        )).all()
+        entries = (
+            await db_session.exec(
+                select(MemoryEntry).where(MemoryEntry.agent_slug == "dev_backend")
+            )
+        ).all()
         assert len(entries) == 2
 
         # Test RAG retriever (simulated without actual embeddings)
@@ -495,6 +497,7 @@ class TestAgentAutonomyFullFlow:
 
         # 2. Assign to agent
         from uuid import UUID as PyUUID
+
         db_task = await db_session.get(Task, PyUUID(task_id))
         assert db_task is not None
         agent = Agent(display_name="Dev_Backend", slug="dev_backend", role="developer")
@@ -538,9 +541,13 @@ class TestAgentAutonomyFullFlow:
         await db_session.commit()
 
         # Verify memory stored
-        entries = (await db_session.exec(
-            select(MemoryEntry).where(MemoryEntry.source_file_path == f"task_{task_id}")
-        )).all()
+        entries = (
+            await db_session.exec(
+                select(MemoryEntry).where(
+                    MemoryEntry.source_file_path == f"task_{task_id}"
+                )
+            )
+        ).all()
         assert len(entries) == 1
 
     @pytest.mark.asyncio

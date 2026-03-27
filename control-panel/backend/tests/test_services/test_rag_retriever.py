@@ -23,13 +23,20 @@ class FakeEmbeddingService(EmbeddingService):
             return None
         return [0.1, 0.2, 0.3]
 
-    def cosine_similarity(self, embedding1: list[float], embedding2: list[float]) -> float:
+    def cosine_similarity(
+        self, embedding1: list[float], embedding2: list[float]
+    ) -> float:
         if not embedding1 or not embedding2:
             return 0.0
         return 0.9 if embedding2[0] <= 0.15 else 0.6
 
-    def chunk_text(self, text: str, chunk_size: int = 512, overlap: int = 64) -> list[str]:
-        return [text[i:i + chunk_size] for i in range(0, len(text), max(chunk_size - overlap, 1))]
+    def chunk_text(
+        self, text: str, chunk_size: int = 512, overlap: int = 64
+    ) -> list[str]:
+        return [
+            text[i : i + chunk_size]
+            for i in range(0, len(text), max(chunk_size - overlap, 1))
+        ]
 
 
 @pytest.fixture
@@ -42,7 +49,9 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    SessionLocal = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with SessionLocal() as session:
         yield session
 
@@ -83,28 +92,40 @@ async def sample_memories(session: AsyncSession) -> None:
 
 class TestRAGRetriever:
     @pytest.mark.asyncio
-    async def test_retrieve_similar_solutions(self, session: AsyncSession, sample_memories: None) -> None:
+    async def test_retrieve_similar_solutions(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
-        results = await retriever.retrieve_similar_solutions(query="secure user authentication", top_k=5)
+        results = await retriever.retrieve_similar_solutions(
+            query="secure user authentication", top_k=5
+        )
         assert len(results) > 0
         assert len(results) <= 5
         assert "similarity_score" in results[0]
 
     @pytest.mark.asyncio
-    async def test_retrieve_for_agent(self, session: AsyncSession, sample_memories: None) -> None:
+    async def test_retrieve_for_agent(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
-        context = await retriever.retrieve_for_agent("dev_backend", "how to authenticate users", top_k=3)
+        context = await retriever.retrieve_for_agent(
+            "dev_backend", "how to authenticate users", top_k=3
+        )
         assert isinstance(context, list)
         assert all(isinstance(item, str) for item in context)
 
     @pytest.mark.asyncio
-    async def test_retrieve_by_tags(self, session: AsyncSession, sample_memories: None) -> None:
+    async def test_retrieve_by_tags(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
         results = await retriever.retrieve_by_tags(tags=["security"], top_k=5)
         assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_get_rag_context(self, session: AsyncSession, sample_memories: None) -> None:
+    async def test_get_rag_context(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
         context = await retriever.get_rag_context(
             agent_slug="dev_backend",
@@ -117,13 +138,19 @@ class TestRAGRetriever:
     @pytest.mark.asyncio
     async def test_chunk_text(self, session: AsyncSession) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
-        chunks = retriever.chunk_text("This is a sentence. " * 100, chunk_size=100, overlap=10)
+        chunks = retriever.chunk_text(
+            "This is a sentence. " * 100, chunk_size=100, overlap=10
+        )
         assert len(chunks) > 1
 
     @pytest.mark.asyncio
     async def test_invalid_embedding_json(self, session: AsyncSession) -> None:
         retriever = RAGRetriever(session, FakeEmbeddingService())
-        session.add(MemoryEntry(title="Corrupted", body="x", embedding_model="mistral", embedding=None))
+        session.add(
+            MemoryEntry(
+                title="Corrupted", body="x", embedding_model="mistral", embedding=None
+            )
+        )
         await session.commit()
         results = await retriever.retrieve_similar_solutions("test", top_k=5)
         assert isinstance(results, list)

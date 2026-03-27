@@ -76,7 +76,9 @@ class EmbeddingService:
 
                 if response.status_code == 200:
                     data: Any = response.json()
-                    embedding = data.get("embedding") if isinstance(data, dict) else None
+                    embedding = (
+                        data.get("embedding") if isinstance(data, dict) else None
+                    )
 
                     if isinstance(embedding, list):
                         logger.debug(

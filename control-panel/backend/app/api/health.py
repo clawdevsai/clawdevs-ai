@@ -180,7 +180,11 @@ async def get_escalated_tasks(
     )
 
     tasks = (await session.exec(statement)).all()
-    total = (await session.exec(select(Task).where(col(Task.escalated_to_agent_id).is_not(None)))).all()
+    total = (
+        await session.exec(
+            select(Task).where(col(Task.escalated_to_agent_id).is_not(None))
+        )
+    ).all()
 
     return {
         "total": len(total),

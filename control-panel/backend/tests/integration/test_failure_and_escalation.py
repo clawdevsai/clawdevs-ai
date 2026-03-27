@@ -174,7 +174,9 @@ class TestFailureDetectionAndEscalation:
             role="architect",
             can_escalate=True,
         )
-        qa = Agent(display_name="QA_Engineer", slug="qa_engineer", role="qa", can_escalate=True)
+        qa = Agent(
+            display_name="QA_Engineer", slug="qa_engineer", role="qa", can_escalate=True
+        )
         db_session.add(architect)
         db_session.add(qa)
         await db_session.commit()

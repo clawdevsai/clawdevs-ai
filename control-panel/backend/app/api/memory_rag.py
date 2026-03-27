@@ -188,7 +188,9 @@ async def regenerate_embeddings(
     # Get memories without embeddings
     statement = (
         select(MemoryEntry)
-        .where(col(MemoryEntry.embedding).is_(None) & col(MemoryEntry.body).is_not(None))
+        .where(
+            col(MemoryEntry.embedding).is_(None) & col(MemoryEntry.body).is_not(None)
+        )
         .limit(limit)
     )
 

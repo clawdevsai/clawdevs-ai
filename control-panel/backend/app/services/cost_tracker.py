@@ -92,7 +92,9 @@ class CostTracker:
             tokens_used: Number of tokens consumed
             model: Model used
         """
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if not task:
             logger.warning(f"Task {task_id} not found for cost tracking")
             return
@@ -120,7 +122,9 @@ class CostTracker:
         Returns:
             (is_available, warning_message)
         """
-        agent = (await self.db_session.exec(select(Agent).where(Agent.id == agent_id))).first()
+        agent = (
+            await self.db_session.exec(select(Agent).where(Agent.id == agent_id))
+        ).first()
 
         if not agent:
             return False, "Agent not found"
@@ -166,7 +170,9 @@ class CostTracker:
         Returns:
             Warning message if overrun detected
         """
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if not task or not task.estimated_cost or not task.actual_cost:
             return None
 

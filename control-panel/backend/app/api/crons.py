@@ -84,7 +84,9 @@ async def list_cron_statuses(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(
-        select(Agent).where(col(Agent.cron_expression).is_not(None)).order_by(col(Agent.slug))
+        select(Agent)
+        .where(col(Agent.cron_expression).is_not(None))
+        .order_by(col(Agent.slug))
     )
     agents = result.all()
 

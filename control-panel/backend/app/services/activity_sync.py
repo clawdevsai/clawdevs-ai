@@ -48,7 +48,9 @@ async def sync_activity_from_sessions(db_session) -> int:
         existing = await db_session.exec(
             select(ActivityEvent).where(
                 ActivityEvent.entity_id == session.openclaw_session_id,
-                col(ActivityEvent.event_type).in_(["session.created", "session.active"]),
+                col(ActivityEvent.event_type).in_(
+                    ["session.created", "session.active"]
+                ),
             )
         )
         if existing.first():

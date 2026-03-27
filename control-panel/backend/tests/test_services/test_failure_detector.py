@@ -27,7 +27,9 @@ async def session() -> AsyncGenerator[AsyncSession, None]:
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    SessionLocal = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
     async with SessionLocal() as session:
         yield session
 
@@ -69,9 +71,13 @@ async def sample_task(session: AsyncSession) -> Task:
 
 class TestFailureDetector:
     @pytest.mark.asyncio
-    async def test_record_single_failure(self, session: AsyncSession, sample_task: Task) -> None:
+    async def test_record_single_failure(
+        self, session: AsyncSession, sample_task: Task
+    ) -> None:
         detector = FailureDetector(session)
-        await detector.record_failure(sample_task.id, "Connection timeout", "network_error")
+        await detector.record_failure(
+            sample_task.id, "Connection timeout", "network_error"
+        )
         await session.refresh(sample_task)
         assert sample_task.failure_count == 1
         assert sample_task.consecutive_failures == 1
@@ -87,13 +93,17 @@ class TestFailureDetector:
     ) -> None:
         detector = FailureDetector(session)
         for i in range(3):
-            await detector.record_failure(sample_task.id, f"Error {i+1}", "execution_error")
+            await detector.record_failure(
+                sample_task.id, f"Error {i+1}", "execution_error"
+            )
         await session.refresh(sample_task)
         assert sample_task.consecutive_failures == 3
         assert sample_task.escalated_to_agent_id == sample_agents["arquiteto"].id
 
     @pytest.mark.asyncio
-    async def test_reset_consecutive_failures(self, session: AsyncSession, sample_task: Task) -> None:
+    async def test_reset_consecutive_failures(
+        self, session: AsyncSession, sample_task: Task
+    ) -> None:
         detector = FailureDetector(session)
         await detector.record_failure(sample_task.id, "Error", "execution_error")
         await detector.record_failure(sample_task.id, "Error", "execution_error")
@@ -114,7 +124,9 @@ class TestFailureDetector:
         assert delay3.total_seconds() > delay2.total_seconds()
 
     @pytest.mark.asyncio
-    async def test_get_task_health(self, session: AsyncSession, sample_task: Task) -> None:
+    async def test_get_task_health(
+        self, session: AsyncSession, sample_task: Task
+    ) -> None:
         detector = FailureDetector(session)
         healthy = await detector.get_task_health(sample_task.id)
         assert healthy["status"] == "healthy"

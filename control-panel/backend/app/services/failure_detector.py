@@ -120,7 +120,9 @@ class FailureDetector:
         error_message: str,
     ) -> None:
         """Escalate a failed task to appropriate senior agent."""
-        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
+        task = (
+            await self.db_session.exec(select(Task).where(Task.id == task_id))
+        ).first()
         if not task:
             logger.warning(f"Cannot escalate: task {task_id} not found")
             return

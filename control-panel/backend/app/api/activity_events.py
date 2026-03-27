@@ -75,7 +75,9 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
 
     # Get recent sessions
     result = await db_session.exec(
-        select(Session).order_by(col(Session.last_active_at).desc().nulls_last()).limit(20)
+        select(Session)
+        .order_by(col(Session.last_active_at).desc().nulls_last())
+        .limit(20)
     )
     sessions = result.all()
 

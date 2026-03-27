@@ -628,16 +628,23 @@ done
 # --- Rollout global da skill self-improving (hardened) ---
 # Fonte canonica da skill (path compartilhado).
 SELF_IMPROVING_CANONICAL_SRC="/bootstrap/agent-config/shared-skill-self-improving-SKILL.md"
-if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
+SELF_IMPROVING_SECURITY_POLICY_SRC="/bootstrap/agent-config/shared-skill-self-improving-skill-security-policy.md"
+sanitize_skill_artifacts() {
+  local skill_dir="$1"
+  rm -rf "${skill_dir}/hooks" "${skill_dir}/scripts"
+  rm -f "${skill_dir}/HOOK.md" "${skill_dir}/handler.js" "${skill_dir}/handler.ts"
+}
+if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ] && [ -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" ]; then
   for si_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
     si_ws="${OPENCLAW_STATE_DIR}/workspace-${si_agent}"
     si_skill_dir="${si_ws}/skills/self-improving"
     mkdir -p "${si_skill_dir}"
     cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${si_skill_dir}/SKILL.md"
+    mkdir -p "${si_skill_dir}/references"
+    cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${si_skill_dir}/references/skill-security-policy.md"
 
     # Gate de seguranca: bloquear artefatos executaveis do pacote upstream 3.0.6.
-    rm -rf "${si_skill_dir}/hooks" "${si_skill_dir}/scripts"
-    rm -f "${si_skill_dir}/HOOK.md" "${si_skill_dir}/handler.js" "${si_skill_dir}/handler.ts"
+    sanitize_skill_artifacts "${si_skill_dir}"
 
     # Estrutura minima de learnings por workspace (nao sobrescreve).
     si_learnings_dir="${si_ws}/.learnings"
@@ -652,16 +659,34 @@ if [ -f "${SELF_IMPROVING_CANONICAL_SRC}" ]; then
     if [ ! -f "${si_learnings_dir}/FEATURE_REQUESTS.md" ]; then
       printf '# FEATURE REQUESTS\n\n' > "${si_learnings_dir}/FEATURE_REQUESTS.md"
     fi
+    if [ "${si_agent}" = "security_engineer" ] && [ ! -f "${si_learnings_dir}/SKILL_SECURITY_DECISIONS.md" ]; then
+      printf '# SKILL SECURITY DECISIONS\n\n' > "${si_learnings_dir}/SKILL_SECURITY_DECISIONS.md"
+    fi
+
+    # Hardening adicional: skills candidatas autonomas por agente nao podem carregar artefatos executaveis.
+    if [ -d "${si_ws}/skills" ]; then
+      find "${si_ws}/skills" -mindepth 1 -maxdepth 1 -type d -name "${si_agent}_*" | while read -r local_candidate_dir; do
+        sanitize_skill_artifacts "${local_candidate_dir}"
+      done
+    fi
   done
 
   # Expor a mesma skill no workspace compartilhado utilizado pelos agentes.
   shared_self_improving_dir="${SHARED_WORKSPACE}/skills/self-improving"
   mkdir -p "${shared_self_improving_dir}"
   cp -f "${SELF_IMPROVING_CANONICAL_SRC}" "${shared_self_improving_dir}/SKILL.md"
-  rm -rf "${shared_self_improving_dir}/hooks" "${shared_self_improving_dir}/scripts"
-  rm -f "${shared_self_improving_dir}/HOOK.md" "${shared_self_improving_dir}/handler.js" "${shared_self_improving_dir}/handler.ts"
+  mkdir -p "${shared_self_improving_dir}/references"
+  cp -f "${SELF_IMPROVING_SECURITY_POLICY_SRC}" "${shared_self_improving_dir}/references/skill-security-policy.md"
+  sanitize_skill_artifacts "${shared_self_improving_dir}"
+
+  # Hardening adicional: skills promovidas para o workspace compartilhado nao podem manter artefatos executaveis proibidos.
+  if [ -d "${SHARED_WORKSPACE}/skills" ]; then
+    find "${SHARED_WORKSPACE}/skills" -mindepth 1 -maxdepth 1 -type d | while read -r shared_skill_dir; do
+      sanitize_skill_artifacts "${shared_skill_dir}"
+    done
+  fi
 else
-  echo "[bootstrap] warning: canonical self-improving skill not found at ${SELF_IMPROVING_CANONICAL_SRC}"
+  echo "[bootstrap] warning: self-improving canonical files not found at ${SELF_IMPROVING_CANONICAL_SRC} / ${SELF_IMPROVING_SECURITY_POLICY_SRC}"
 fi
 # --- Fim: rollout global da skill self-improving ---
 

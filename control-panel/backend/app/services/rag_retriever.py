@@ -271,7 +271,9 @@ class RAGRetriever:
 
         return found_tags
 
-    def chunk_text(self, text: str, chunk_size: int = 512, overlap: int = 64) -> List[str]:
+    def chunk_text(
+        self, text: str, chunk_size: int = 512, overlap: int = 64
+    ) -> List[str]:
         """Compatibility wrapper around embedding chunking."""
         return self.embedding_service.chunk_text(
             text=text,
