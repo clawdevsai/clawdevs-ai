@@ -50,6 +50,8 @@ interface Agent {
   last_heartbeat_at?: string | null
   cron_expression?: string | null
   cron_status?: string | null
+  current_activity?: string | null
+  current_activity_at?: string | null
 }
 
 interface Session {
@@ -174,6 +176,23 @@ function OverviewTab({ agent }: { agent: Agent }) {
     { label: "Role", value: agent.role },
     { label: "Model", value: <span className="font-mono text-xs">{agent.model ?? agent.current_model ?? "—"}</span> },
     {
+      label: "Current Work",
+      value: agent.current_activity ? (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-[hsl(var(--foreground))] whitespace-normal break-words">
+            {agent.current_activity}
+          </span>
+          {agent.current_activity_at && (
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">
+              updated {formatDistanceToNow(new Date(agent.current_activity_at), { addSuffix: true })}
+            </span>
+          )}
+        </div>
+      ) : (
+        <span className="text-xs text-[hsl(var(--muted-foreground))]">No current activity reported</span>
+      ),
+    },
+    {
       label: "Last Heartbeat",
       value: (agent.last_heartbeat ?? agent.last_heartbeat_at)
         ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
@@ -209,7 +228,12 @@ function OverviewTab({ agent }: { agent: Agent }) {
             <dt className="w-32 shrink-0 text-xs text-[hsl(var(--muted-foreground))]">
               {label}
             </dt>
-            <dd className="text-sm text-[hsl(var(--foreground))] flex-1 truncate">
+            <dd
+              className={cn(
+                "text-sm text-[hsl(var(--foreground))] flex-1",
+                label === "Current Work" ? "whitespace-normal break-words" : "truncate"
+              )}
+            >
               {value}
             </dd>
           </div>

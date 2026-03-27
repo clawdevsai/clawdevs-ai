@@ -30,6 +30,7 @@ from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.models import Agent
 from app.services.agent_sync import sync_agents_runtime
+from app.services.agent_activity import get_agent_current_activity
 
 router = APIRouter()
 
@@ -48,12 +49,20 @@ class AgentResponse(BaseModel):
     cron_next_run_at: datetime | None
     cron_status: str
     created_at: datetime
+    current_activity: str | None = None
+    current_activity_at: datetime | None = None
     # Backward-compatible aliases still consumed by frontend screens.
     model: str | None = None
     last_heartbeat: datetime | None = None
 
     @classmethod
-    def from_orm(cls, agent: Agent) -> "AgentResponse":
+    def from_orm(
+        cls,
+        agent: Agent,
+        *,
+        current_activity: str | None = None,
+        current_activity_at: datetime | None = None,
+    ) -> "AgentResponse":
         return cls(
             id=str(agent.id),
             slug=agent.slug,
@@ -68,6 +77,8 @@ class AgentResponse(BaseModel):
             cron_next_run_at=agent.cron_next_run_at,
             cron_status=agent.cron_status,
             created_at=agent.created_at,
+            current_activity=current_activity,
+            current_activity_at=current_activity_at,
             model=agent.current_model,
             last_heartbeat=agent.last_heartbeat_at,
         )
@@ -101,7 +112,12 @@ async def get_agent(
     agent = result.first()
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Agent '{slug}' not found")
-    return AgentResponse.from_orm(agent)
+    current_activity, current_activity_at = get_agent_current_activity(agent.slug)
+    return AgentResponse.from_orm(
+        agent,
+        current_activity=current_activity,
+        current_activity_at=current_activity_at,
+    )
 
 
 @router.patch("/{slug}/status", response_model=AgentResponse)
