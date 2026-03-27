@@ -94,6 +94,14 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # 5. Test coverage
     echo "→ Checking test coverage (>80%)..."
+
+    # Check if pytest-cov is installed
+    if ! $POETRY run python -c "import pytest_cov" 2>/dev/null; then
+        echo -e "${YELLOW}⚠ pytest-cov not installed. Installing dev dependencies...${NC}"
+        $POETRY install --with dev --no-interaction 2>/dev/null || echo -e "${YELLOW}⚠ Could not install dev dependencies (run: poetry install --with dev)${NC}"
+    fi
+
+    # Run coverage check
     COVERAGE_OUTPUT=$($POETRY run pytest tests/ --cov=app --cov-report=term-only 2>/dev/null || true)
     COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $NF}' | tr -d '%')
 
