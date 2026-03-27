@@ -31,23 +31,23 @@ else
     NPM_CMD="npm"
 fi
 
-# Color output
+# Color output (using printf for better Windows compatibility)
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${BLUE}════════════════════════════════════════${NC}"
-echo -e "${BLUE}Running pre-push quality checks...${NC}"
-echo -e "${BLUE}════════════════════════════════════════${NC}"
+printf "${BLUE}════════════════════════════════════════${NC}\n"
+printf "${BLUE}Running pre-push quality checks...${NC}\n"
+printf "${BLUE}════════════════════════════════════════${NC}\n"
 echo ""
 
 FAILED=0
 
 # Check if backend code changed
 if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; then
-    echo -e "${YELLOW}Backend code changed. Running backend checks...${NC}"
+    printf "${YELLOW}Backend code changed. Running backend checks...${NC}\n"
     echo ""
 
     cd "$BACKEND_DIR"
@@ -55,40 +55,40 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
     # 1. Linting with ruff
     echo "→ Running linting (ruff)..."
     if ! $POETRY run ruff check . --fix; then
-        echo -e "${RED}✗ Linting failed. Fix issues and try again.${NC}"
+        printf "${RED}✗ Linting failed. Fix issues and try again.${NC}\n"
         ((FAILED++))
     else
-        echo -e "${GREEN}✓ Linting passed${NC}"
+        printf "${GREEN}✓ Linting passed${NC}\n"
     fi
     echo ""
 
     # 2. Code formatting with black
     echo "→ Checking code format (black)..."
     if ! $POETRY run black . --check --quiet 2>/dev/null; then
-        echo -e "${YELLOW}⚠ Code formatting issues found. Running black fix...${NC}"
+        printf "${YELLOW}⚠ Code formatting issues found. Running black fix...${NC}\n"
         $POETRY run black . --quiet
-        echo -e "${GREEN}✓ Code formatted${NC}"
+        printf "${GREEN}✓ Code formatted${NC}\n"
     else
-        echo -e "${GREEN}✓ Code formatting OK${NC}"
+        printf "${GREEN}✓ Code formatting OK${NC}\n"
     fi
     echo ""
 
     # 3. Type checking with mypy
     echo "→ Running type checking (mypy)..."
     if $POETRY run mypy . --ignore-missing-imports 2>/dev/null; then
-        echo -e "${GREEN}✓ Type checking passed${NC}"
+        printf "${GREEN}✓ Type checking passed${NC}\n"
     else
-        echo -e "${YELLOW}⚠ Type checking issues (non-blocking)${NC}"
+        printf "${YELLOW}⚠ Type checking issues (non-blocking)${NC}\n"
     fi
     echo ""
 
     # 4. Unit tests (non-blocking - environment issues may cause failures)
     echo "→ Running unit tests (pytest)..."
     if ! $POETRY run pytest tests/test_services/ -v --tb=short 2>/dev/null; then
-        echo -e "${YELLOW}⚠ Unit tests failed (non-blocking - check environment setup)${NC}"
+        printf "${YELLOW}⚠ Unit tests failed (non-blocking - check environment setup)${NC}\n"
         # Tests are non-blocking due to SQLite/PostgreSQL compatibility issues in local env
     else
-        echo -e "${GREEN}✓ Unit tests passed${NC}"
+        printf "${GREEN}✓ Unit tests passed${NC}\n"
     fi
     echo ""
 
@@ -97,12 +97,12 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
 
     # Check if pytest-cov is installed
     if ! $POETRY run python -c "import pytest_cov" 2>/dev/null; then
-        echo -e "${YELLOW}⚠ pytest-cov not installed. Installing dev dependencies...${NC}"
+        printf "${YELLOW}⚠ pytest-cov not installed. Installing dev dependencies...${NC}\n"
         # Try to install, and if lock file is outdated, update it
         if ! $POETRY install --with dev --no-interaction 2>/dev/null; then
-            echo -e "${YELLOW}⚠ Lock file may be outdated. Running poetry lock...${NC}"
+            printf "${YELLOW}⚠ Lock file may be outdated. Running poetry lock...${NC}\n"
             $POETRY lock --no-interaction 2>/dev/null || true
-            $POETRY install --with dev --no-interaction --no-root 2>/dev/null || echo -e "${YELLOW}⚠ Could not install dev dependencies${NC}"
+            $POETRY install --with dev --no-interaction --no-root 2>/dev/null || printf "${YELLOW}⚠ Could not install dev dependencies${NC}\n"
         fi
     fi
 
@@ -111,13 +111,13 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
     COVERAGE=$(echo "$COVERAGE_OUTPUT" | grep "^TOTAL" | awk '{print $NF}' | tr -d '%')
 
     if [ -z "$COVERAGE" ]; then
-        echo -e "${YELLOW}⚠ Could not parse coverage (pytest-cov may not be installed)${NC}"
+        printf "${YELLOW}⚠ Could not parse coverage (pytest-cov may not be installed)${NC}\n"
     elif ! [[ "$COVERAGE" =~ ^[0-9]+$ ]]; then
-        echo -e "${YELLOW}⚠ Invalid coverage format: $COVERAGE${NC}"
+        printf "${YELLOW}⚠ Invalid coverage format: $COVERAGE${NC}\n"
     elif [ "$COVERAGE" -lt 80 ]; then
-        echo -e "${YELLOW}⚠ Coverage ${COVERAGE}% < 80% threshold${NC}"
+        printf "${YELLOW}⚠ Coverage ${COVERAGE}% < 80%% threshold${NC}\n"
     else
-        echo -e "${GREEN}✓ Coverage OK (${COVERAGE}%)${NC}"
+        printf "${GREEN}✓ Coverage OK (${COVERAGE}%%)${NC}\n"
     fi
     echo ""
 
@@ -126,7 +126,7 @@ fi
 
 # Check if frontend code changed
 if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; then
-    echo -e "${YELLOW}Frontend code changed. Running frontend checks...${NC}"
+    printf "${YELLOW}Frontend code changed. Running frontend checks...${NC}\n"
     echo ""
 
     cd "$FRONTEND_DIR"
@@ -134,33 +134,33 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; t
     # 1. Linting
     echo "→ Running linting (eslint)..."
     if grep -q '"lint"' package.json && ! $NPM_CMD run lint; then
-        echo -e "${RED}✗ Linting failed${NC}"
+        printf "${RED}✗ Linting failed${NC}\n"
         ((FAILED++))
     else
-        echo -e "${GREEN}✓ Linting passed${NC}"
+        printf "${GREEN}✓ Linting passed${NC}\n"
     fi
     echo ""
 
     # 2. Type checking
     echo "→ Running TypeScript check..."
     if grep -q '"type-check"' package.json && ! $NPM_CMD run type-check; then
-        echo -e "${RED}✗ Type checking failed${NC}"
+        printf "${RED}✗ Type checking failed${NC}\n"
         ((FAILED++))
     elif ! grep -q '"type-check"' package.json; then
-        echo -e "${YELLOW}⚠ No type-check script configured${NC}"
+        printf "${YELLOW}⚠ No type-check script configured${NC}\n"
     else
-        echo -e "${GREEN}✓ Type checking passed${NC}"
+        printf "${GREEN}✓ Type checking passed${NC}\n"
     fi
     echo ""
 
     # 3. Unit tests
     echo "→ Running unit tests..."
     if grep -q '"test"' package.json && ! $NPM_CMD test; then
-        echo -e "${YELLOW}⚠ Tests not configured${NC}"
+        printf "${YELLOW}⚠ Tests not configured${NC}\n"
     elif ! grep -q '"test"' package.json; then
-        echo -e "${YELLOW}⚠ Tests not configured${NC}"
+        printf "${YELLOW}⚠ Tests not configured${NC}\n"
     else
-        echo -e "${GREEN}✓ Tests passed${NC}"
+        printf "${GREEN}✓ Tests passed${NC}\n"
     fi
     echo ""
 
@@ -168,15 +168,15 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/frontend"; t
 fi
 
 # Final result
-echo -e "${BLUE}════════════════════════════════════════${NC}"
+printf "${BLUE}════════════════════════════════════════${NC}\n"
 if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}✓ All quality checks passed!${NC}"
-    echo -e "${GREEN}Ready to push.${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    printf "${GREEN}✓ All quality checks passed!${NC}\n"
+    printf "${GREEN}Ready to push.${NC}\n"
+    printf "${BLUE}════════════════════════════════════════${NC}\n"
     exit 0
 else
-    echo -e "${RED}✗ $FAILED check(s) failed${NC}"
-    echo -e "${RED}Please fix issues and try again.${NC}"
-    echo -e "${BLUE}════════════════════════════════════════${NC}"
+    printf "${RED}✗ $FAILED check(s) failed${NC}\n"
+    printf "${RED}Please fix issues and try again.${NC}\n"
+    printf "${BLUE}════════════════════════════════════════${NC}\n"
     exit 1
 fi
