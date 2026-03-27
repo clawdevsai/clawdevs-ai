@@ -19,3 +19,17 @@
 # SOFTWARE.
 
 FROM public.ecr.aws/docker/library/postgres:18-alpine
+
+RUN apk add --no-cache --virtual .build-deps \
+        build-base \
+        clang19 \
+        llvm19-dev \
+        git \
+    && git clone --depth 1 https://github.com/pgvector/pgvector.git /tmp/pgvector \
+    && cd /tmp/pgvector \
+    && make clean \
+    && make -j$(nproc) \
+    && make install \
+    && cd / \
+    && rm -rf /tmp/pgvector \
+    && apk del .build-deps

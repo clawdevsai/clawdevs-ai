@@ -43,11 +43,13 @@ spec:
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: "2"
-              memory: 4Gi
+              cpu: "2000m"
+              memory: 1536Mi
+              nvidia.com/gpu: "1"
             limits:
-              cpu: "8"
-              memory: 20Gi
+              cpu: "2000m"
+              memory: 1536Mi
+              nvidia.com/gpu: "1"
 
           volumeMounts:
             - name: ollama-data
@@ -58,6 +60,10 @@ spec:
           env:
             - name: OLLAMA_HOST
               value: 0.0.0.0:11434
+            - name: OLLAMA_GPU_MEMORY
+              value: "4096"
+            - name: CUDA_MEM_POOL_MAX_SPLIT_SIZE_MB
+              value: "512"
             - name: OLLAMA_API_KEY
               valueFrom:
                 secretKeyRef:

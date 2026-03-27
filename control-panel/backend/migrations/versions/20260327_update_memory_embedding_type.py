@@ -1,6 +1,6 @@
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
+from pgvector.sqlalchemy import Vector
 
 # revision identifiers, used by Alembic.
 revision = "20260327_update_memory_embedding_type"
@@ -21,7 +21,7 @@ def upgrade() -> None:
         batch_op.drop_column("embedding")
         # Add new vector column
         batch_op.add_column(
-            sa.Column("embedding", postgresql.VECTOR(1536), nullable=True)  # type: ignore[attr-defined]
+            sa.Column("embedding", Vector(1536), nullable=True)
         )
 
 
