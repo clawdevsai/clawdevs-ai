@@ -29,7 +29,7 @@ Injeta falhas deliberadas e valida:
 """
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models import Task, Agent
 from app.services.failure_detector import FailureDetector
@@ -77,7 +77,7 @@ class TestFailureDetectionAndEscalation:
 
         # Criar developer agent
         dev_agent = Agent(
-            name="Dev_Backend",
+            display_name="Dev_Backend",
             slug="dev_backend",
             role="developer",
             can_escalate=False,
@@ -169,12 +169,12 @@ class TestFailureDetectionAndEscalation:
 
         # Criar agents
         architect = Agent(
-            name="Arquiteto",
+            display_name="Arquiteto",
             slug="arquiteto",
             role="architect",
             can_escalate=True,
         )
-        qa = Agent(name="QA_Engineer", slug="qa_engineer", role="qa", can_escalate=True)
+        qa = Agent(display_name="QA_Engineer", slug="qa_engineer", role="qa", can_escalate=True)
         db_session.add(architect)
         db_session.add(qa)
         await db_session.commit()
@@ -201,12 +201,12 @@ class TestFailureDetectionAndEscalation:
         # Verificar routing map
         routing_map = detector.domain_escalation_routing
         assert "backend" in routing_map, "Should have backend escalation route"
-        assert "frontend" in routing_map, "Should have frontend escalation route"
+        assert "front_end" in routing_map, "Should have frontend escalation route"
         assert (
             routing_map["backend"] is not None
         ), "Backend should escalate to Arquiteto"
         assert (
-            routing_map["frontend"] is not None
+            routing_map["front_end"] is not None
         ), "Frontend should escalate to Dev_Frontend"
         print("✅ Test 4 PASSED: Domain-specific escalation routing funcional")
 

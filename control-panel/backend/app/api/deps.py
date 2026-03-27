@@ -22,7 +22,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.auth import decode_token
 from app.core.database import get_session
@@ -43,7 +43,8 @@ async def get_current_user(
     payload = decode_token(credentials.credentials)
     if payload is None:
         raise credentials_exception
-    username: str = payload.get("sub")
+    username_obj = payload.get("sub")
+    username = username_obj if isinstance(username_obj, str) else None
     if not username:
         raise credentials_exception
     result = await session.exec(select(User).where(User.username == username))

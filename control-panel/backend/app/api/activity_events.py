@@ -20,8 +20,8 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, Query, Depends
-from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -75,7 +75,7 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
 
     # Get recent sessions
     result = await db_session.exec(
-        select(Session).order_by(Session.last_active_at.desc().nulls_last()).limit(20)
+        select(Session).order_by(col(Session.last_active_at).desc().nulls_last()).limit(20)
     )
     sessions = result.all()
 

@@ -20,9 +20,9 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query
-from sqlmodel import select
+from sqlmodel import col, select
 from sqlalchemy import func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
@@ -72,7 +72,7 @@ async def list_metrics(
         day_bucket = func.date_trunc("day", Session.created_at)
         query = (
             select(day_bucket, func.count(Session.id))
-            .where(Session.created_at >= day_start)
+            .where(col(Session.created_at) >= day_start)
             .group_by(day_bucket)
             .order_by(day_bucket.asc())
         )
@@ -89,10 +89,10 @@ async def list_metrics(
             .replace(tzinfo=None)
             .replace(hour=0, minute=0, second=0, microsecond=0)
         )
-        items: list[MetricResponse] = []
+        session_items: list[MetricResponse] = []
         cursor = start_day
         while cursor <= today:
-            items.append(
+            session_items.append(
                 MetricResponse(
                     metric_type="sessions",
                     value=count_by_day.get(cursor, 0.0),
@@ -103,7 +103,7 @@ async def list_metrics(
             )
             cursor = cursor + timedelta(days=1)
 
-        return MetricsListResponse(items=items, total=len(items))
+        return MetricsListResponse(items=session_items, total=len(session_items))
 
     # Real-time active sessions time series (last N hours, bucketed by minute interval).
     if metric_type == "active_sessions":
@@ -149,12 +149,12 @@ async def list_metrics(
             if end_idx + 1 < len(diffs):
                 diffs[end_idx + 1] -= 1
 
-        items: list[MetricResponse] = []
+        active_items: list[MetricResponse] = []
         current = 0
         for i in range(points):
             current += diffs[i]
             period_start = series_start + (bucket * i)
-            items.append(
+            active_items.append(
                 MetricResponse(
                     metric_type="active_sessions",
                     value=float(max(current, 0)),
@@ -164,19 +164,19 @@ async def list_metrics(
                 )
             )
 
-        return MetricsListResponse(items=items, total=len(items))
+        return MetricsListResponse(items=active_items, total=len(active_items))
 
-    query = (
+    metric_query = (
         select(Metric)
-        .where(Metric.period_start >= since)
-        .order_by(Metric.period_start.asc())
+        .where(col(Metric.period_start) >= since)
+        .order_by(col(Metric.period_start).asc())
     )
     if metric_type:
-        query = query.where(Metric.metric_type == metric_type)
+        metric_query = metric_query.where(col(Metric.metric_type) == metric_type)
     if agent_id:
-        query = query.where(Metric.agent_id == UUID(agent_id))
+        metric_query = metric_query.where(col(Metric.agent_id) == UUID(agent_id))
 
-    result = await session.exec(query)
+    result = await session.exec(metric_query)
     metrics = result.all()
     items = [
         MetricResponse(
@@ -199,7 +199,7 @@ async def overview_metrics(
     since = datetime.now(timezone.utc) - timedelta(hours=24)
 
     agents_result = await session.exec(
-        select(Agent).where(Agent.status.in_(["online", "working"]))
+        select(Agent).where(col(Agent.status).in_(["online", "working"]))
     )
     active_agents = len(agents_result.all())
 
@@ -209,14 +209,14 @@ async def overview_metrics(
     pending_approvals = len(approvals_result.all())
 
     tasks_result = await session.exec(
-        select(Task).where(Task.status.in_(["inbox", "in_progress", "review"]))
+        select(Task).where(col(Task.status).in_(["inbox", "in_progress", "review"]))
     )
     open_tasks = len(tasks_result.all())
 
     metrics_result = await session.exec(
         select(Metric).where(
-            Metric.metric_type == "tokens_used",
-            Metric.period_start >= since,
+            col(Metric.metric_type) == "tokens_used",
+            col(Metric.period_start) >= since,
         )
     )
     tokens_24h = sum(m.value for m in metrics_result.all())

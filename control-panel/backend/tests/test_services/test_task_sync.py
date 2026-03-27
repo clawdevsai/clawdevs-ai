@@ -22,7 +22,7 @@
 Tests for task_sync service.
 """
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class TestTaskSyncConstants:

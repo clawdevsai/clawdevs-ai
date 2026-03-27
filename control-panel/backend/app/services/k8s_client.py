@@ -23,7 +23,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 try:
-    import kubernetes  # type: ignore
+    import kubernetes
 except Exception:  # pragma: no cover
     kubernetes = None
 

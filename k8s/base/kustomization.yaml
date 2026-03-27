@@ -109,6 +109,7 @@ configMapGenerator:
       - dev_mobile-skill-dev_mobile_implementation-SKILL.md=openclaw-config/agents/dev_mobile/skills/dev_mobile_implementation/SKILL.md
       # shared skills
       - shared-skill-self-improving-SKILL.md=openclaw-config/agents/shared/skills/self-improving/SKILL.md
+      - shared-skill-self-improving-skill-security-policy.md=openclaw-config/agents/shared/skills/self-improving/references/skill-security-policy.md
       # qa_engineer
       - qa_engineer-AGENTS.md=openclaw-config/qa_engineer/AGENTS.md
       - qa_engineer-BOOT.md=openclaw-config/qa_engineer/BOOT.md

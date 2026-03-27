@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Any, Optional, cast
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from app.core.config import get_settings
@@ -29,11 +29,11 @@ pwd_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return cast(bool, pwd_context.verify(plain, hashed))
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return cast(str, pwd_context.hash(password))
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -42,13 +42,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    return cast(str, jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm))
 
 
 def decode_token(token: str | None) -> Optional[dict]:
     if not token:
         return None
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        payload: Any = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return payload if isinstance(payload, dict) else None
     except JWTError:
         return None

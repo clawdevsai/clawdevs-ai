@@ -26,11 +26,12 @@ tier-based budgets per agent and task.
 """
 
 import logging
-from typing import Optional, Dict, Tuple
+from typing import Any, Optional, Dict, Tuple
 from uuid import UUID
 from datetime import datetime, timedelta
 
-from sqlmodel import Session, select
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.task import Task
 from app.models.agent import Agent
 from app.core.config import get_settings
@@ -41,7 +42,7 @@ logger = logging.getLogger(__name__)
 class CostTracker:
     """Track and enforce cost budgets."""
 
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
 
     async def estimate_task_cost(
@@ -91,7 +92,7 @@ class CostTracker:
             tokens_used: Number of tokens consumed
             model: Model used
         """
-        task = self.db_session.exec(select(Task).where(Task.id == task_id)).first()
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
         if not task:
             logger.warning(f"Task {task_id} not found for cost tracking")
             return
@@ -102,7 +103,7 @@ class CostTracker:
         logger.info(f"Task {task_id}: {tokens_used} tokens on {model} = ${cost:.4f}")
 
         self.db_session.add(task)
-        self.db_session.commit()
+        await self.db_session.commit()
 
     async def check_budget_available(
         self,
@@ -119,7 +120,7 @@ class CostTracker:
         Returns:
             (is_available, warning_message)
         """
-        agent = self.db_session.exec(select(Agent).where(Agent.id == agent_id)).first()
+        agent = (await self.db_session.exec(select(Agent).where(Agent.id == agent_id))).first()
 
         if not agent:
             return False, "Agent not found"
@@ -127,12 +128,12 @@ class CostTracker:
         # Get agent's tasks from this month
         month_ago = datetime.utcnow() - timedelta(days=30)
         statement = select(Task).where(
-            (Task.assigned_agent_id == agent_id)
-            & (Task.created_at >= month_ago)
-            & (Task.actual_cost is not None)
+            (col(Task.assigned_agent_id) == agent_id)
+            & (col(Task.created_at) >= month_ago)
+            & (col(Task.actual_cost).is_not(None))
         )
 
-        tasks = self.db_session.exec(statement).all()
+        tasks = (await self.db_session.exec(statement)).all()
         total_spent = sum(float(t.actual_cost or 0) for t in tasks)
 
         settings = get_settings()
@@ -165,7 +166,7 @@ class CostTracker:
         Returns:
             Warning message if overrun detected
         """
-        task = self.db_session.exec(select(Task).where(Task.id == task_id)).first()
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
         if not task or not task.estimated_cost or not task.actual_cost:
             return None
 
@@ -198,12 +199,12 @@ class CostTracker:
         """
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         statement = select(Task).where(
-            (Task.assigned_agent_id == agent_id)
-            & (Task.created_at >= cutoff_date)
-            & (Task.actual_cost is not None)
+            (col(Task.assigned_agent_id) == agent_id)
+            & (col(Task.created_at) >= cutoff_date)
+            & (col(Task.actual_cost).is_not(None))
         )
 
-        tasks = self.db_session.exec(statement).all()
+        tasks = (await self.db_session.exec(statement)).all()
 
         spending = {
             "local": 0.0,
@@ -235,10 +236,10 @@ class CostTracker:
         """
         cutoff_date = datetime.utcnow() - timedelta(days=days)
         statement = select(Task).where(
-            (Task.created_at >= cutoff_date) & (Task.actual_cost is not None)
+            (col(Task.created_at) >= cutoff_date) & (col(Task.actual_cost).is_not(None))
         )
 
-        tasks = self.db_session.exec(statement).all()
+        tasks = (await self.db_session.exec(statement)).all()
 
         spending = {
             "local": 0.0,
@@ -280,7 +281,7 @@ class CostTracker:
         self,
         task_type: str,
         complexity: str,
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Get cost recommendation for task.
 

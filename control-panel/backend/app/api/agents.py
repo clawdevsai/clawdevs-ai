@@ -21,7 +21,7 @@
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 

@@ -29,7 +29,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from sqlmodel import Session
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 
 from app.core.database import get_session
@@ -63,7 +63,7 @@ class MultiRepoChangeRequest(BaseModel):
 @router.post("/validate/task-creation")
 async def validate_task_creation(
     request: TaskValidationRequest,
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Validate task creation against CONSTITUTION rules.
@@ -98,7 +98,7 @@ async def validate_task_creation(
 @router.post("/validate/code-change")
 async def validate_code_change(
     request: CodeChangeRequest,
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Validate code change against CONSTITUTION rules.
@@ -137,7 +137,7 @@ async def validate_code_change(
 @router.post("/validate/multi-repo")
 async def validate_multi_repo_change(
     request: MultiRepoChangeRequest,
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Validate multi-repo coordination.
@@ -177,7 +177,7 @@ async def validate_multi_repo_change(
 async def estimate_cost(
     task_type: str = Query(...),
     complexity: str = Query(..., regex="^(simple|medium|complex)$"),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Estimate cost for task before execution.
@@ -207,7 +207,7 @@ async def track_cost(
     task_id: UUID,
     tokens_used: int = Body(..., ge=1),
     model: str = Body(...),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Track actual cost for completed task.
@@ -238,7 +238,7 @@ async def track_cost(
 async def check_budget(
     agent_id: UUID,
     tier: str = Query("medium", regex="^(local|medium|premium)$"),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Check if agent has budget available for task tier.
@@ -266,7 +266,7 @@ async def check_budget(
 async def get_agent_spending(
     agent_id: UUID,
     days: int = Query(30, ge=1, le=365),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Get agent's spending summary.
@@ -290,7 +290,7 @@ async def get_agent_spending(
 @router.get("/cost/team-spending")
 async def get_team_spending(
     days: int = Query(30, ge=1, le=365),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Get team-wide spending summary.

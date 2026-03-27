@@ -20,8 +20,8 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
@@ -80,7 +80,7 @@ async def list_tasks(
     status: Optional[str] = Query(None),
     label: Optional[str] = Query(None),
 ):
-    query = select(Task).order_by(Task.created_at.desc())
+    query = select(Task).order_by(col(Task.created_at).desc())
     if status:
         query = query.where(Task.status == status)
     if label:

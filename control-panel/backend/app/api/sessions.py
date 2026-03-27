@@ -22,14 +22,14 @@ from typing import Annotated, Optional
 import json
 from pathlib import Path
 from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlmodel import select, func
+from sqlmodel import col, select, func
 from sqlalchemy import case
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
 
-from app.core.database import get_session
+from app.core.database import get_session as get_db_session
 from app.core.config import get_settings
 from app.api.deps import CurrentUser
 from app.models import Session as SessionModel
@@ -70,7 +70,7 @@ class SessionsListResponse(BaseModel):
 @router.get("", response_model=SessionsListResponse)
 async def list_sessions(
     _: CurrentUser,
-    session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
     agent_id: Optional[str] = Query(None),
     agent_slug: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
@@ -82,12 +82,12 @@ async def list_sessions(
     # Build base query
     # Keep active sessions first, then order each group by most recent activity.
     status_priority = case(
-        (SessionModel.status == "active", 0),
+        (col(SessionModel.status) == "active", 0),
         else_=1,
     )
     base_query = select(SessionModel).order_by(
         status_priority.asc(),
-        SessionModel.last_active_at.desc(),
+        col(SessionModel.last_active_at).desc(),
     )
 
     # Filter by agent_slug if provided
@@ -132,7 +132,7 @@ async def list_sessions(
 async def get_session(
     session_id: str,
     _: CurrentUser,
-    db_session: Annotated[AsyncSession, Depends(get_session)],
+    db_session: Annotated[AsyncSession, Depends(get_db_session)],
 ):
     """Get session details including messages from OpenClaw."""
     # First sync to ensure we have the latest

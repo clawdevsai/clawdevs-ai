@@ -90,7 +90,7 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
             # Fetch open issues
             headers = {"Authorization": f"token {settings.github_token}"}
             url = f"https://api.github.com/repos/{target_repo}/issues"
-            params = {
+            params: dict[str, str | int] = {
                 "state": "all",  # Get both open and closed
                 "per_page": 100,
             }

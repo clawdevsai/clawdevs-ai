@@ -21,7 +21,7 @@ def upgrade() -> None:
         batch_op.drop_column("embedding")
         # Add new vector column
         batch_op.add_column(
-            sa.Column("embedding", postgresql.VECTOR(1536), nullable=True)
+            sa.Column("embedding", postgresql.VECTOR(1536), nullable=True)  # type: ignore[attr-defined]
         )
 
 

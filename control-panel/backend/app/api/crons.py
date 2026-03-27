@@ -20,8 +20,8 @@
 
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -84,7 +84,7 @@ async def list_cron_statuses(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(
-        select(Agent).where(Agent.cron_expression is not None).order_by(Agent.slug)
+        select(Agent).where(col(Agent.cron_expression).is_not(None)).order_by(col(Agent.slug))
     )
     agents = result.all()
 
@@ -93,7 +93,7 @@ async def list_cron_statuses(
         exec_result = await session.exec(
             select(CronExecution)
             .where(CronExecution.agent_id == agent.id)
-            .order_by(CronExecution.started_at.desc())
+            .order_by(col(CronExecution.started_at).desc())
             .limit(10)
         )
         executions = exec_result.all()
@@ -139,7 +139,7 @@ async def list_cron_executions(
 
     exec_result = await session.exec(
         select(CronExecution)
-        .order_by(CronExecution.started_at.desc())
+        .order_by(col(CronExecution.started_at).desc())
         .offset(offset)
         .limit(page_size)
     )
@@ -148,23 +148,21 @@ async def list_cron_executions(
     total_result = await session.exec(select(CronExecution))
     total = len(total_result.all())
 
-    items = [
-        CronExecutionResponse(
-            id=str(execution.id),
-            agent_id=str(execution.agent_id),
-            agent_slug=(
-                agent_by_id.get(execution.agent_id).slug
-                if execution.agent_id in agent_by_id
-                else None
-            ),
-            started_at=execution.started_at,
-            finished_at=execution.finished_at,
-            exit_code=execution.exit_code,
-            trigger_type=execution.trigger_type,
-            status=_execution_status(execution),
+    items: list[CronExecutionResponse] = []
+    for execution in executions:
+        agent_lookup = agent_by_id.get(execution.agent_id)
+        items.append(
+            CronExecutionResponse(
+                id=str(execution.id),
+                agent_id=str(execution.agent_id),
+                agent_slug=agent_lookup.slug if agent_lookup else None,
+                started_at=execution.started_at,
+                finished_at=execution.finished_at,
+                exit_code=execution.exit_code,
+                trigger_type=execution.trigger_type,
+                status=_execution_status(execution),
+            )
         )
-        for execution in executions
-    ]
     return CronExecutionsListResponse(items=items, total=total)
 
 

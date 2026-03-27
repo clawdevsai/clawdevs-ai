@@ -29,7 +29,8 @@ import logging
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
-from sqlmodel import Session
+from sqlmodel import col
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.database import get_session
 from app.services.rag_retriever import RAGRetriever
@@ -45,7 +46,7 @@ async def search_memories(
     query: str = Query(..., min_length=3, max_length=1000, description="Search query"),
     top_k: int = Query(5, ge=1, le=20, description="Number of results"),
     agent_slug: Optional[str] = Query(None, description="Filter to specific agent"),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Semantic search across all memories.
@@ -84,7 +85,7 @@ async def get_agent_rag_context(
     agent_slug: str,
     task_description: str = Query(..., min_length=10, max_length=1000),
     max_items: int = Query(5, ge=1, le=20),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Get comprehensive RAG context for an agent's task.
@@ -117,7 +118,7 @@ async def get_agent_rag_context(
 async def search_by_tags(
     tags: List[str] = Query(..., min_items=1, description="Tags to search for"),
     top_k: int = Query(5, ge=1, le=20),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Search memories by tags.
@@ -168,7 +169,7 @@ async def rag_health() -> dict:
 @router.post("/regenerate-embeddings")
 async def regenerate_embeddings(
     limit: int = Query(100, ge=1, le=1000, description="Max memories to regenerate"),
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
     Regenerate embeddings for memories.
@@ -180,7 +181,6 @@ async def regenerate_embeddings(
     from sqlmodel import select
     from app.models.memory_entry import MemoryEntry
     from datetime import datetime
-    import json
 
     RAGRetriever(session)
     embedding_service = EmbeddingService()
@@ -188,11 +188,11 @@ async def regenerate_embeddings(
     # Get memories without embeddings
     statement = (
         select(MemoryEntry)
-        .where((MemoryEntry.embedding is None) & (MemoryEntry.body is not None))
+        .where(col(MemoryEntry.embedding).is_(None) & col(MemoryEntry.body).is_not(None))
         .limit(limit)
     )
 
-    memories = session.exec(statement).all()
+    memories = (await session.exec(statement)).all()
 
     regenerated = 0
     failed = 0
@@ -202,10 +202,10 @@ async def regenerate_embeddings(
             continue
 
         # Generate embedding
-        embedding = embedding_service.generate_embedding(memory.body)
+        embedding = await embedding_service.generate_embedding(memory.body)
 
         if embedding:
-            memory.embedding = json.dumps(embedding)
+            memory.embedding = embedding
             memory.embedding_generated_at = datetime.utcnow()
             regenerated += 1
         else:
@@ -213,7 +213,7 @@ async def regenerate_embeddings(
 
         session.add(memory)
 
-    session.commit()
+    await session.commit()
 
     return {
         "total_memories_processed": len(memories),

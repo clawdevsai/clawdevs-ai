@@ -23,7 +23,7 @@ import pytest
 import json
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.services.agent_sync import (
     parse_identity,

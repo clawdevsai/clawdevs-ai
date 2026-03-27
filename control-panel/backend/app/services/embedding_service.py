@@ -27,7 +27,7 @@ No API keys or external dependencies required.
 
 import logging
 import httpx
-from typing import List, Optional
+from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -75,15 +75,15 @@ class EmbeddingService:
                 )
 
                 if response.status_code == 200:
-                    data = response.json()
-                    embedding = data.get("embedding")
+                    data: Any = response.json()
+                    embedding = data.get("embedding") if isinstance(data, dict) else None
 
-                    if embedding:
+                    if isinstance(embedding, list):
                         logger.debug(
                             f"Generated embedding ({len(embedding)} dims) "
                             f"for text ({len(text)} chars)"
                         )
-                        return embedding
+                        return [float(v) for v in embedding]
                     else:
                         logger.warning("No embedding in response")
                         return None
@@ -210,12 +210,8 @@ class EmbeddingService:
             True if service is healthy, False otherwise
         """
         try:
-            import requests
-
-            response = requests.get(
-                f"{self.base_url}/api/tags",
-                timeout=5.0,
-            )
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(f"{self.base_url}/api/tags")
 
             if response.status_code == 200:
                 data = response.json()

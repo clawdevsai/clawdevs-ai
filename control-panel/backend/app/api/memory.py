@@ -21,8 +21,8 @@
 from typing import Annotated, Optional
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Depends, Query, Response
-from sqlmodel import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select, func
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
@@ -83,7 +83,7 @@ async def list_memory(
     # Best-effort sync from OpenClaw files before serving memory.
     await sync_memory_entries(session)
 
-    query = select(MemoryEntry).order_by(MemoryEntry.created_at.desc())
+    query = select(MemoryEntry).order_by(col(MemoryEntry.created_at).desc())
     count_query = select(func.count(MemoryEntry.id))
 
     if agent_id:
@@ -98,8 +98,8 @@ async def list_memory(
         count_query = count_query.where(MemoryEntry.entry_type == entry_type)
     if search:
         pattern = f"%{search}%"
-        query = query.where(MemoryEntry.body.ilike(pattern))
-        count_query = count_query.where(MemoryEntry.body.ilike(pattern))
+        query = query.where(col(MemoryEntry.body).ilike(pattern))
+        count_query = count_query.where(col(MemoryEntry.body).ilike(pattern))
 
     total = (await session.exec(count_query)).one() or 0
     query = query.offset((page - 1) * page_size).limit(page_size)

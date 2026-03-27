@@ -29,7 +29,8 @@ from uuid import UUID
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import Session, select
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.database import get_session
 from app.models.task import Task
@@ -67,7 +68,7 @@ class HealthSummaryResponse:
 @router.get("/tasks/{task_id}")
 async def get_task_health(
     task_id: UUID,
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """Get health status of a specific task.
 
@@ -94,10 +95,10 @@ async def get_task_health(
 
 @router.get("/summary")
 async def get_health_summary(
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
 ) -> dict:
     """Get overall health summary across all tasks."""
-    tasks = session.exec(select(Task)).all()
+    tasks = (await session.exec(select(Task))).all()
 
     healthy_count = 0
     unhealthy_count = 0
@@ -127,21 +128,21 @@ async def get_health_summary(
 
 @router.get("/failures")
 async def get_failed_tasks(
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
 ) -> dict:
     """Get list of failed/unhealthy tasks."""
     statement = (
         select(Task)
-        .where(Task.failure_count > 0)
-        .order_by(Task.last_failed_at.desc())
+        .where(col(Task.failure_count) > 0)
+        .order_by(col(Task.last_failed_at).desc())
         .offset(offset)
         .limit(limit)
     )
 
-    tasks = session.exec(statement).all()
-    total = session.exec(select(Task).where(Task.failure_count > 0)).all()
+    tasks = (await session.exec(statement)).all()
+    total = (await session.exec(select(Task).where(col(Task.failure_count) > 0))).all()
 
     return {
         "total": len(total),
@@ -167,21 +168,19 @@ async def get_failed_tasks(
 
 @router.get("/escalations")
 async def get_escalated_tasks(
-    session: Session = Depends(get_session),
+    session: AsyncSession = Depends(get_session),
     limit: int = Query(100, ge=1, le=1000),
 ) -> dict:
     """Get list of escalated tasks."""
     statement = (
         select(Task)
-        .where(Task.escalated_to_agent_id is not None)
-        .order_by(Task.escalated_at.desc())
+        .where(col(Task.escalated_to_agent_id).is_not(None))
+        .order_by(col(Task.escalated_at).desc())
         .limit(limit)
     )
 
-    tasks = session.exec(statement).all()
-    total = session.exec(
-        select(Task).where(Task.escalated_to_agent_id is not None)
-    ).all()
+    tasks = (await session.exec(statement)).all()
+    total = (await session.exec(select(Task).where(col(Task.escalated_to_agent_id).is_not(None)))).all()
 
     return {
         "total": len(total),

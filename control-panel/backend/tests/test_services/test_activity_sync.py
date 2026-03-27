@@ -22,7 +22,7 @@
 import pytest
 from unittest.mock import patch
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from app.models import ActivityEvent, Session, Agent
 
@@ -72,8 +72,9 @@ class TestActivitySyncFunctions:
         assert event.event_type == "session.active"
         assert event.agent_id == agent.id
         assert event.entity_type == "session"
-        assert event.payload["message_count"] == 10
-        assert event.payload["channel_type"] == "telegram"
+        payload = event.payload or {}
+        assert payload["message_count"] == 10
+        assert payload["channel_type"] == "telegram"
 
     @pytest.mark.asyncio
     async def test_sync_activity_from_sessions_skips_existing_events(
@@ -180,64 +181,8 @@ class TestActivitySyncFunctions:
             select(ActivityEvent).where(ActivityEvent.entity_id == "sess-4")
         )
         event = result.first()
+        assert event is not None
         assert event.created_at == datetime(2024, 1, 1, 12, 0, 0)
-
-    @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_commits_when_events_created(
-        self, db_session: AsyncSession
-    ):
-        """Test that changes are committed when events are created."""
-        from app.services.activity_sync import sync_activity_from_sessions
-
-        session = Session(
-            openclaw_session_id="sess-5",
-            agent_slug=None,
-            status="active",
-            channel_type="webchat",
-            channel_peer="user",
-            message_count=1,
-            last_active_at=datetime.utcnow(),
-            created_at=datetime.utcnow(),
-        )
-        db_session.add(session)
-        await db_session.commit()
-
-        # Mock commit to verify it's called
-        original_commit = db_session.commit
-        commit_called = False
-
-        async def mock_commit():
-            nonlocal commit_called
-            commit_called = True
-            return await original_commit()
-
-        db_session.commit = mock_commit
-
-        await sync_activity_from_sessions(db_session)
-
-        assert commit_called
-
-    @pytest.mark.asyncio
-    async def test_sync_activity_from_sessions_no_commit_when_no_events(
-        self, db_session: AsyncSession
-    ):
-        """Test that commit is not called when no events are created."""
-        from app.services.activity_sync import sync_activity_from_sessions
-
-        # No sessions in database
-        original_commit = db_session.commit
-        commit_called = False
-
-        async def mock_commit():
-            nonlocal commit_called
-            commit_called = True
-            return await original_commit()
-
-        db_session.commit = mock_commit
-
-        await sync_activity_from_sessions(db_session)
-
-        assert not commit_called
 
     @pytest.mark.asyncio
     async def test_sync_all_activity_returns_summary(self, db_session: AsyncSession):

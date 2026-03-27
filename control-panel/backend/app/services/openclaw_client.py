@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 import httpx
-from typing import Optional
+from typing import Any, Optional
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -29,7 +29,7 @@ class OpenClawClient:
     def __init__(self):
         self.base_url = settings.openclaw_gateway_url.rstrip("/")
         token = (settings.openclaw_gateway_token or "").strip()
-        self.headers = {"Authorization": f"Bearer {token}"} if token else {}
+        self.headers = {"Authorization": f"Bearer {token}"}
 
     async def health(self) -> bool:
         try:
@@ -49,9 +49,13 @@ class OpenClawClient:
                 )
                 if r.status_code != 200:
                     return []
-                return r.json().get(
-                    "items", r.json() if isinstance(r.json(), list) else []
-                )
+                payload: Any = r.json()
+                if isinstance(payload, list):
+                    return payload
+                if isinstance(payload, dict):
+                    items = payload.get("items", [])
+                    return items if isinstance(items, list) else []
+                return []
         except Exception:
             return []
 
@@ -64,7 +68,8 @@ class OpenClawClient:
                 )
                 if r.status_code != 200:
                     return None
-                return r.json()
+                payload: Any = r.json()
+                return payload if isinstance(payload, dict) else None
         except Exception:
             return None
 
@@ -77,8 +82,13 @@ class OpenClawClient:
             )
             if r.status_code != 200:
                 return []
-            data = r.json()
-            return data.get("items", data if isinstance(data, list) else [])
+            data: Any = r.json()
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                items = data.get("items", [])
+                return items if isinstance(items, list) else []
+            return []
 
     async def decide_approval(
         self, approval_id: str, decision: str, justification: str = ""
@@ -92,7 +102,8 @@ class OpenClawClient:
                 )
                 if r.status_code not in (200, 201):
                     return None
-                return r.json()
+                payload: Any = r.json()
+                return payload if isinstance(payload, dict) else None
         except Exception:
             return None
 

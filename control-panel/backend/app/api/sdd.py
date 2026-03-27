@@ -20,8 +20,8 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
@@ -74,7 +74,7 @@ async def list_artifacts(
     artifact_type: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
 ):
-    query = select(SddArtifact).order_by(SddArtifact.created_at.desc())
+    query = select(SddArtifact).order_by(col(SddArtifact.created_at).desc())
     if artifact_type:
         query = query.where(SddArtifact.artifact_type == artifact_type.upper())
     if status:

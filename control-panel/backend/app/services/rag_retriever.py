@@ -26,9 +26,11 @@ provides context for agent decision-making.
 """
 
 import logging
-from typing import List, Optional
+import json
+from typing import Any, List, Optional, cast
 
-from sqlmodel import Session, select
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.memory_entry import MemoryEntry
 from app.services.embedding_service import EmbeddingService
 
@@ -39,7 +41,9 @@ class RAGRetriever:
     """Retrieve relevant memories using semantic search."""
 
     def __init__(
-        self, db_session: Session, embedding_service: Optional[EmbeddingService] = None
+        self,
+        db_session: AsyncSession,
+        embedding_service: Optional[EmbeddingService] = None,
     ):
         self.db_session = db_session
         self.embedding_service = embedding_service or EmbeddingService()
@@ -70,19 +74,19 @@ class RAGRetriever:
 
         # Fetch all memories with valid embeddings
         statement = select(MemoryEntry).where(
-            MemoryEntry.embedding.isnot(None),  # Only memories with embeddings
-            MemoryEntry.entry_type.in_(
+            col(MemoryEntry.embedding).is_not(None),  # Only memories with embeddings
+            col(MemoryEntry.entry_type).in_(
                 ["active", "global"]
             ),  # Skip archived/candidates
         )
 
         if agent_slug:
             statement = statement.where(
-                (MemoryEntry.agent_slug == agent_slug)
-                | (MemoryEntry.agent_slug is None)  # Include shared memories
+                (col(MemoryEntry.agent_slug) == agent_slug)
+                | (col(MemoryEntry.agent_slug).is_(None))  # Include shared memories
             )
 
-        memories = self.db_session.exec(statement).all()
+        memories = (await self.db_session.exec(statement)).all()
 
         if not memories:
             logger.info("No embeddings found for similarity search")
@@ -92,7 +96,7 @@ class RAGRetriever:
         results = []
         for memory in memories:
             # memory.embedding is already a list[float] from pgvector
-            embedding = memory.embedding
+            embedding = self._normalize_embedding(memory.embedding)
             if not embedding:
                 continue
 
@@ -116,7 +120,10 @@ class RAGRetriever:
                 )
 
         # Sort by similarity (highest first) and return top-k
-        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        results.sort(
+            key=lambda x: cast(float, x["similarity_score"]),
+            reverse=True,
+        )
         return results[:top_k]
 
     async def retrieve_for_agent(
@@ -170,11 +177,11 @@ class RAGRetriever:
         # This requires PostgreSQL ARRAY operations
         # Using basic filtering for now
         statement = select(MemoryEntry).where(
-            MemoryEntry.embedding.isnot(None),
-            MemoryEntry.entry_type.in_(["active", "global"]),
+            col(MemoryEntry.embedding).is_not(None),
+            col(MemoryEntry.entry_type).in_(["active", "global"]),
         )
 
-        memories = self.db_session.exec(statement).all()
+        memories = (await self.db_session.exec(statement)).all()
 
         results = []
         for memory in memories:
@@ -264,6 +271,29 @@ class RAGRetriever:
 
         return found_tags
 
+    def chunk_text(self, text: str, chunk_size: int = 512, overlap: int = 64) -> List[str]:
+        """Compatibility wrapper around embedding chunking."""
+        return self.embedding_service.chunk_text(
+            text=text,
+            chunk_size=chunk_size,
+            overlap=overlap,
+        )
+
+    def _normalize_embedding(self, value: Any) -> Optional[List[float]]:
+        """Accept list embeddings and tolerate JSON-string legacy test fixtures."""
+        if value is None:
+            return None
+        if isinstance(value, list):
+            return [float(v) for v in value]
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                if isinstance(parsed, list):
+                    return [float(v) for v in parsed]
+            except (TypeError, ValueError, json.JSONDecodeError):
+                return None
+        return None
+
     async def rerank_results(
         self,
         results: List[dict],
@@ -286,5 +316,8 @@ class RAGRetriever:
                     result["similarity_score"] += 0.2  # Boost score
 
         # Re-sort
-        results.sort(key=lambda x: x["similarity_score"], reverse=True)
+        results.sort(
+            key=lambda x: cast(float, x["similarity_score"]),
+            reverse=True,
+        )
         return results

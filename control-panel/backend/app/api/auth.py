@@ -22,7 +22,7 @@ from typing import Annotated
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 
 from app.core.auth import verify_password, create_access_token

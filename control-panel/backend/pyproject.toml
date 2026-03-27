@@ -44,6 +44,8 @@ dependencies = [
     "rq-scheduler==0.14.0",
     "python-multipart==0.0.22",
     "pydantic-settings==2.8.1",
+    "trio (>=0.30.0,<0.31.0)",
+    "anyio (==4.9.0)",
 ]
 
 [project.optional-dependencies]
@@ -54,6 +56,7 @@ dev = [
     "pytest-cov==6.1.0",
     "anyio==4.9.0",
     "aiosqlite==0.20.0",
+    "types-requests==2.32.0.20250328",
 ]
 
 [tool.pytest.ini_options]
@@ -66,3 +69,14 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = ["migrations.*"]
+ignore_errors = true

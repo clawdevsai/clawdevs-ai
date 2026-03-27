@@ -32,7 +32,8 @@ import re
 from typing import Optional, List, Tuple
 from uuid import UUID
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from app.models.task import Task
 from app.models.agent import Agent
 
@@ -42,7 +43,7 @@ logger = logging.getLogger(__name__)
 class GovernanceEngine:
     """Validates agent actions against CONSTITUTION and policies."""
 
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
         self.constitution_rules = self._load_constitution_rules()
         self.cost_tiers = self._load_cost_tiers()
@@ -212,9 +213,10 @@ class GovernanceEngine:
         """
         # Self-healing rules
         if action == "escalate_task":
-            agent = self.db_session.exec(
+            agent_result = await self.db_session.exec(
                 select(Agent).where(Agent.slug == agent_slug)
-            ).first()
+            )
+            agent = agent_result.first()
             if agent and not agent.can_escalate:
                 return False, f"Agent {agent_slug} cannot escalate tasks"
 
@@ -222,9 +224,10 @@ class GovernanceEngine:
         if action == "retry_task":
             task_id = context.get("task_id")
             if task_id:
-                task = self.db_session.exec(
+                task_result = await self.db_session.exec(
                     select(Task).where(Task.id == task_id)
-                ).first()
+                )
+                task = task_result.first()
                 if task and task.consecutive_failures >= 3:
                     return (
                         False,

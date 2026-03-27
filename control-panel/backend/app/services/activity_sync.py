@@ -22,7 +22,7 @@
 Generates activity events from existing sessions and other data sources
 to populate the Recent Activity feed.
 """
-from sqlmodel import select
+from sqlmodel import col, select
 from app.models import ActivityEvent, Session, Agent
 
 
@@ -37,7 +37,7 @@ async def sync_activity_from_sessions(db_session) -> int:
 
     # Get recent sessions
     result = await db_session.exec(
-        select(Session).order_by(Session.last_active_at.desc()).limit(50)
+        select(Session).order_by(col(Session.last_active_at).desc()).limit(50)
     )
     sessions = result.all()
 
@@ -48,7 +48,7 @@ async def sync_activity_from_sessions(db_session) -> int:
         existing = await db_session.exec(
             select(ActivityEvent).where(
                 ActivityEvent.entity_id == session.openclaw_session_id,
-                ActivityEvent.event_type.in_(["session.created", "session.active"]),
+                col(ActivityEvent.event_type).in_(["session.created", "session.active"]),
             )
         )
         if existing.first():

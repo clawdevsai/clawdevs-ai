@@ -31,7 +31,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
-from sqlmodel import Session, select
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.task import Task
 from app.models.agent import Agent
@@ -61,10 +62,20 @@ SENIOR_AGENTS = {
 class FailureDetector:
     """Detects and responds to repeated task failures."""
 
-    def __init__(self, db_session: Session):
+    def __init__(self, db_session: AsyncSession):
         self.db_session = db_session
         self.failure_threshold = 3  # Escalate after 3 consecutive failures
         self.backoff_base = 1.5  # Exponential backoff multiplier
+        self.domain_escalation_routing = {
+            "backend": "arquiteto",
+            "front_end": "arquiteto",
+            "mobile": "arquiteto",
+            "tests": "arquiteto",
+            "devops": "arquiteto",
+            "dba": "arquiteto",
+            "security": "arquiteto",
+            "ux": "arquiteto",
+        }
 
     async def record_failure(
         self,
@@ -109,7 +120,7 @@ class FailureDetector:
         error_message: str,
     ) -> None:
         """Escalate a failed task to appropriate senior agent."""
-        task = self.db_session.exec(select(Task).where(Task.id == task_id)).first()
+        task = (await self.db_session.exec(select(Task).where(Task.id == task_id))).first()
         if not task:
             logger.warning(f"Cannot escalate: task {task_id} not found")
             return

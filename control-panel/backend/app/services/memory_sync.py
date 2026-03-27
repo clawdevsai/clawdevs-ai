@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from sqlmodel import select
+from sqlmodel import col, select
 
 from app.core.config import get_settings
 from app.models import MemoryEntry
@@ -74,9 +74,9 @@ async def sync_memory_entries(db_session) -> None:
         title = _extract_title(content, f"{slug} memory")
         result_entry = await db_session.exec(
             select(MemoryEntry)
-            .where(MemoryEntry.agent_slug == slug)
-            .where(MemoryEntry.entry_type == "active")
-            .order_by(MemoryEntry.updated_at.desc())
+            .where(col(MemoryEntry.agent_slug) == slug)
+            .where(col(MemoryEntry.entry_type) == "active")
+            .order_by(col(MemoryEntry.updated_at).desc())
         )
         existing = result_entry.first()
 
@@ -113,9 +113,9 @@ async def sync_memory_entries(db_session) -> None:
             title = _extract_title(content, "Shared memory")
             shared_result = await db_session.exec(
                 select(MemoryEntry)
-                .where(MemoryEntry.agent_slug.is_(None))
-                .where(MemoryEntry.entry_type == "global")
-                .order_by(MemoryEntry.updated_at.desc())
+                .where(col(MemoryEntry.agent_slug).is_(None))
+                .where(col(MemoryEntry.entry_type) == "global")
+                .order_by(col(MemoryEntry.updated_at).desc())
             )
             shared_existing = shared_result.first()
 

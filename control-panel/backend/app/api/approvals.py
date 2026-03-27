@@ -20,8 +20,8 @@
 
 from typing import Annotated, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlmodel import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import col, select
+from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -70,7 +70,7 @@ async def list_approvals(
     session: Annotated[AsyncSession, Depends(get_session)],
     status: Optional[str] = Query(None),
 ):
-    query = select(Approval).order_by(Approval.created_at.desc())
+    query = select(Approval).order_by(col(Approval.created_at).desc())
     if status:
         query = query.where(Approval.status == status)
     result = await session.exec(query)

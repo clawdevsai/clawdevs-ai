@@ -24,6 +24,7 @@ import re
 from pathlib import Path
 from datetime import datetime, timezone
 from functools import lru_cache
+from typing import Any, cast
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -104,25 +105,28 @@ AVATAR_URL_MAP = {
 
 
 @lru_cache(maxsize=1)
-def _get_openclaw_config() -> dict:
+def _get_openclaw_config() -> dict[str, Any]:
     """Load OpenClaw configuration from JSON file."""
     config_path = Path(settings.openclaw_data_path) / "openclaw.json"
     try:
         if config_path.exists():
             with open(config_path, "r", encoding="utf-8") as f:
-                return json.load(f)
+                payload = json.load(f)
+                if isinstance(payload, dict):
+                    return cast(dict[str, Any], payload)
     except (OSError, json.JSONDecodeError):
         pass
     return {}
 
 
-def _get_agent_config(slug: str) -> dict:
+def _get_agent_config(slug: str) -> dict[str, Any]:
     """Get agent configuration from openclaw.json."""
     config = _get_openclaw_config()
-    agents = config.get("agents", {}).get("list", [])
+    agents_group = config.get("agents", {})
+    agents = agents_group.get("list", []) if isinstance(agents_group, dict) else []
     for agent in agents:
-        if agent.get("id") == slug:
-            return agent
+        if isinstance(agent, dict) and agent.get("id") == slug:
+            return cast(dict[str, Any], agent)
     return {}
 
 
