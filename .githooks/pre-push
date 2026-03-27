@@ -98,7 +98,12 @@ if git diff origin/main...HEAD --name-only | grep -q "control-panel/backend"; th
     # Check if pytest-cov is installed
     if ! $POETRY run python -c "import pytest_cov" 2>/dev/null; then
         echo -e "${YELLOW}⚠ pytest-cov not installed. Installing dev dependencies...${NC}"
-        $POETRY install --with dev --no-interaction 2>/dev/null || echo -e "${YELLOW}⚠ Could not install dev dependencies (run: poetry install --with dev)${NC}"
+        # Try to install, and if lock file is outdated, update it
+        if ! $POETRY install --with dev --no-interaction 2>/dev/null; then
+            echo -e "${YELLOW}⚠ Lock file may be outdated. Running poetry lock...${NC}"
+            $POETRY lock --no-interaction 2>/dev/null || true
+            $POETRY install --with dev --no-interaction --no-root 2>/dev/null || echo -e "${YELLOW}⚠ Could not install dev dependencies${NC}"
+        fi
     fi
 
     # Run coverage check
