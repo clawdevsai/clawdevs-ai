@@ -74,7 +74,7 @@ DOCKER_IMAGES_PROJECT := $(shell docker images --filter=reference=*clawdevs* --f
 .PHONY: clawdevs-up clawdevs-down reset-all destroy-all
 .PHONY: ollama-apply ollama-volume-apply ollama-logs ollama-sign ollama-list
 .PHONY: openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs openclaw-dashboard
-.PHONY: panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward services-expose services-stop
+.PHONY: panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward panel-forward-stop services-expose services-stop
 .PHONY: stack-apply stack-status
 .PHONY: net-allow-egress net-test-openclaw
 .PHONY: dashboard dashboard-url
@@ -408,8 +408,23 @@ panel-restart:
 panel-destroy:
 	kubectl delete -k k8s/base/control-panel/ || true
 
-panel-forward:
-	minikube service clawdevs-panel-frontend --url -p clawdevs-ai
+panel-forward: panel-forward-stop
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo "  Abrindo servicos do Painel via Minikube..."
+	@echo "════════════════════════════════════════════════════════════════"
+	@echo ""
+	@echo "Abrindo Control Panel e Control UI em novas janelas..."
+	@echo "Para parar: feche as janelas ou use make panel-forward-stop"
+	@echo ""
+	@powershell -Command "Start-Process powershell -ArgumentList '-NoProfile -Command \"minikube service clawdevs-panel-frontend -p clawdevs-ai\"'"
+	@powershell -Command "Start-Sleep -Seconds 2"
+	@powershell -Command "Start-Process powershell -ArgumentList '-NoProfile -Command \"minikube service clawdevs-ai -p clawdevs-ai\"'"
+	@echo "✔ Janelas abertas! Aguarde o Minikube iniciar os tuneis."
+
+panel-forward-stop:
+	@echo "Parando servicos do painel..."
+	-taskkill /F /FI "WINDOWTITLE eq minikube*" 2>/dev/null || taskkill /F /IM minikube.exe 2>/dev/null || true
+	@echo "✔ Servicos parados."
 
 services-expose:
 	@echo "════════════════════════════════════════════════════════════════"
