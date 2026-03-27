@@ -22,7 +22,7 @@ import json
 import os
 import re
 from pathlib import Path
-from datetime import datetime, timezone, UTC
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, cast
 from app.core.config import get_settings
@@ -32,7 +32,7 @@ settings = get_settings()
 
 def _now_utc_naive() -> datetime:
     """Return current UTC time as naive datetime for DB-compatible comparisons."""
-    return datetime.now(UTC).replace(tzinfo=None)
+    return datetime.utcnow()
 
 
 AGENT_SLUGS = [

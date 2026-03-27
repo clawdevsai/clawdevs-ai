@@ -27,7 +27,7 @@ and domain-specific escalation routing.
 """
 
 import logging
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -96,8 +96,8 @@ class FailureDetector:
         task.consecutive_failures += 1
         task.last_error = error_message
         task.error_reason = error_type
-        task.last_failed_at = datetime.now(UTC)
-        task.updated_at = datetime.now(UTC)
+        task.last_failed_at = datetime.utcnow()
+        task.updated_at = datetime.utcnow()
 
         # Create activity event for failure
         await self._create_failure_event(task_id, error_type, error_message)
@@ -185,7 +185,7 @@ class FailureDetector:
             task.escalation_reason = (
                 f"Failed {task.consecutive_failures}x: {error_type}"
             )
-            task.escalated_at = datetime.now(UTC)
+            task.escalated_at = datetime.utcnow()
             escalation_agent.escalations_handled += 1
 
             await self._create_escalation_event(
@@ -217,7 +217,7 @@ class FailureDetector:
         ).first()
         if task:
             task.consecutive_failures = 0
-            task.updated_at = datetime.now(UTC)
+            task.updated_at = datetime.utcnow()
             self.db_session.add(task)
             await self.db_session.commit()
             logger.info(f"Reset consecutive failures for task {task_id}")
@@ -243,7 +243,7 @@ class FailureDetector:
             details={
                 "error_type": error_type,
                 "error_message": error_message,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
             },
         )
         self.db_session.add(event)
@@ -264,7 +264,7 @@ class FailureDetector:
             details={
                 "escalated_to_agent_id": str(agent_id),
                 "reason": reason,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
             },
         )
         self.db_session.add(event)
