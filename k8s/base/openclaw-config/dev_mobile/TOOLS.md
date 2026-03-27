@@ -40,22 +40,22 @@
 ## usage_rules
 - `read/write` only on `/data/openclaw/**`.
 - Block destructive commands (`rm -rf`, `git push -f`, etc.).
-- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GIT_REPOSITORY"')`.
 - Validate `active_repository.env` before any gh/git action.
 - Control panel queue poll 1x per hour:
   - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=mobile&page_size=20"`
 - When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
 - At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
-- Process `mobile` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Process `mobile` label only. TASK_GIT_REPO = field `github_repo` of the task.
 - `sessions_spawn` allowed for: `arquiteto`, `qa_engineer`.
 
 ## github_permissions
 - **Type:** `read+write`
 - **Own label:** `mobile` — automatically created at boot if it does not exist:
-  `gh label create "mobile" --color "#e4e669" --description "Mobile tasks — routed to Dev_Mobile" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+  `gh label create "mobile" --color "#e4e669" --description "Mobile tasks — routed to Dev_Mobile" --repo "$ACTIVE_GIT_REPOSITORY" 2>/dev/null || true`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GIT_REPO"` only)
 - **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
-- **Active repo:** use `$TASK_GITHUB_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GITHUB_REPOSITORY`
+- **Active repo:** use `$TASK_GIT_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GIT_REPOSITORY`
 
 ## comandos_adicionais_mobile
 - `expo`: `npx expo start`, `npx expo lint`, `eas build`, `eas submit`

@@ -40,23 +40,23 @@
 ## usage_rules
 - `read/write` only on `/data/openclaw/**`.
 - Block destructive commands without explicit TASK.
-- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GIT_REPOSITORY"')`.
 - Validate `active_repository.env` before taking any action.
 - `sessions_spawn` allowed for: `arquiteto`, `dev_backend`, `devops_sre`.
 - Control panel queue poll 1x per hour:
   - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=dba&page_size=20"`
 - When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
 - At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
-- Process `dba` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Process `dba` label only. TASK_GIT_REPO = field `github_repo` of the task.
 - Internet: full access allowed for technical research, bank CVEs, benchmarks and skills updating.
 
 ## github_permissions
 - **Type:** `read+write`
 - **Own label:** `dba` — automatically created at boot if it doesn't exist:
-  `gh label create "dba" --color "#0052cc" --description "Database tasks — routed to DBA_DataEngineer" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+  `gh label create "dba" --color "#0052cc" --description "Database tasks — routed to DBA_DataEngineer" --repo "$ACTIVE_GIT_REPOSITORY" 2>/dev/null || true`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GIT_REPO"` only)
 - **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
-- **Active repo:** use `$TASK_GITHUB_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GITHUB_REPOSITORY`
+- **Active repo:** use `$TASK_GIT_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GIT_REPOSITORY`
 
 ## autonomia_de_pesquisa_e_aprendizado
 - Full internet access permission for research, updating skills and discovering better alternatives.

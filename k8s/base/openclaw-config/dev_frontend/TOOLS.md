@@ -40,13 +40,13 @@
 ## usage_rules
 - `read/write` only on `/data/openclaw/**`.
 - Block destructive commands (`rm -rf`, `git push -f`, etc.).
-- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GIT_REPOSITORY"')`.
 - Validate `/data/openclaw/contexts/active_repository.env` before any gh/git action.
 - Control panel queue poll 1x per hour:
   - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=front_end&page_size=20"`
 - When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
 - At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
-- Process `front_end` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Process `front_end` label only. TASK_GIT_REPO = field `github_repo` of the task.
 - Always run tests before reporting completion.
 - Always document Core Web Vitals and bundle size in the PR comment.
 - If task brings `## Comandos`, use these commands instead of the defaults.
@@ -56,10 +56,10 @@
 ## github_permissions
 - **Type:** `read+write`
 - **Own label:** `front_end` — automatically created at boot if it does not exist:
-  `gh label create "front_end" --color "#0e8a16" --description "Frontend tasks — routed to Dev_Frontend" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+  `gh label create "front_end" --color "#0e8a16" --description "Frontend tasks — routed to Dev_Frontend" --repo "$ACTIVE_GIT_REPOSITORY" 2>/dev/null || true`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GIT_REPO"` only)
 - **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
-- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
+- **Active repo:** use `$TASK_GIT_REPO` (task field `github_repo`) instead of `$ACTIVE_GIT_REPOSITORY`
 
 ## comandos_adicionais_frontend
 - `npx next build`: Next.js build with bundle analysis

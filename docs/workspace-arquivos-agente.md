@@ -34,7 +34,7 @@ Objetivo de cada arquivo no workspace (como neste repositório), alinhado à doc
 
 | Arquivo | Objetivo |
 |---------|----------|
-| `AGENTS.md` | Instruções operacionais: missão, capabilities, regras, matriz de responsabilidade, constraints. Carregado no início da sessão; neste manifest recebe substituição de placeholders (`__GITHUB_ORG__`, repo ativo, etc.). [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
+| `AGENTS.md` | Instruções operacionais: missão, capabilities, regras, matriz de responsabilidade, constraints. Carregado no início da sessão; neste manifest recebe substituição de placeholders (`__GIT_ORG__`, repo ativo, etc.). [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `BOOT.md` | Checklist opcional de arranque: ordem de carregamento (`IDENTITY` → `AGENTS` → …), healthchecks, variáveis. Na OpenClaw: em restart do gateway quando hooks internos habilitados; deve ser curto. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace) |
 | `BOOTSTRAP.md` | Ritual de primeira execução / contexto inicial. Na OpenClaw costuma ser one-shot e apagado depois; no pod, só o workspace do **CEO** remove `BOOTSTRAP.md` após o bootstrap (`rm -f .../workspace-ceo/BOOTSTRAP.md` em `openclaw-pod.yaml`); os outros agentes mantêm o arquivo copiado do ConfigMap. |
 | `HEARTBEAT.md` | Lista curta para execuções periódicas (heartbeat), para poupar tokens. Ex.: sessões, filas, limites de research, GitHub, pipeline docs/issue. [Agent workspace](https://docs.openclaw.ai/concepts/agent-workspace); ver também [Cron vs Heartbeat](https://docs.openclaw.ai/automation/cron-vs-heartbeat) no [índice llms.txt](https://docs.openclaw.ai/llms.txt). |

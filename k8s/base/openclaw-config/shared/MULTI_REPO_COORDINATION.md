@@ -126,7 +126,7 @@ All cross-repo changes MUST log:
 
 ## GitHub Organization
 
-- Default org: Configured via `GITHUB_ORG` env var
+- Default org: Configured via `GIT_ORG` env var
 - All repos must be in the same org for automatic coordination
 - Use GitHub Teams for permission management
 

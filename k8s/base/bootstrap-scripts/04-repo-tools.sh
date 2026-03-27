@@ -23,7 +23,7 @@ cat > "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 : "${OPENCLAW_STATE_DIR:=/data/openclaw}"
-: "${GITHUB_ORG:=}"
+: "${GIT_ORG:=}"
 CONTEXT_FILE="${OPENCLAW_STATE_DIR}/contexts/active_repository.env"
 load_repo_context() {
   if [ -f "${CONTEXT_FILE}" ]; then
@@ -34,7 +34,7 @@ normalize_repo_ref() {
   input="$1"
   case "${input}" in
     */*) printf '%s\n' "${input}" ;;
-    *) printf '%s/%s\n' "${GITHUB_ORG}" "${input}" ;;
+    *) printf '%s/%s\n' "${GIT_ORG}" "${input}" ;;
   esac
 }
 resolve_repo_id() {
@@ -51,8 +51,8 @@ write_repo_context_file() {
   repo_context_dir="${OPENCLAW_STATE_DIR}/contexts/repos/${repo_safe}"
   mkdir -p "${repo_context_dir}/logs" "${repo_context_dir}/history"
   cat > "${CONTEXT_FILE}" <<CTX
-GITHUB_ORG=${GITHUB_ORG}
-ACTIVE_GITHUB_REPOSITORY=${ref}
+GIT_ORG=${GIT_ORG}
+ACTIVE_GIT_REPOSITORY=${ref}
 ACTIVE_REPOSITORY_BRANCH=${branch}
 ACTIVE_REPOSITORY_ID=${repo_id}
 OPENCLAW_SESSION_ID=${OPENCLAW_SESSION_ID:-unknown}
@@ -67,9 +67,9 @@ set -euo pipefail
 . "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh"
 filter="${1:-}"
 if [ -n "${filter}" ]; then
-  gh repo list "${GITHUB_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq --arg f "${filter}" '.[] | select(.nameWithOwner | test($f;"i")) | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
+  gh repo list "${GIT_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq --arg f "${filter}" '.[] | select(.nameWithOwner | test($f;"i")) | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
 else
-  gh repo list "${GITHUB_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq '.[] | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
+  gh repo list "${GIT_ORG}" --limit 200 --json nameWithOwner,isPrivate,description --jq '.[] | [.nameWithOwner, (if .isPrivate then "private" else "public" end), (.description // "")] | @tsv'
 fi
 EOF
 cat > "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" <<'EOF'
@@ -130,7 +130,7 @@ for workspace in "${OPENCLAW_STATE_DIR}/workspace-ceo" "${OPENCLAW_STATE_DIR}/wo
   fi
   cat > "${workspace}/REPOSITORY_CONTEXT.md" <<CTX
 # REPOSITORY_CONTEXT
-- organization: ${GITHUB_ORG}
+- organization: ${GIT_ORG}
 - active_repository: ${target_ref}
 - repository_id: ${repo_id}
 - active_branch: ${branch}

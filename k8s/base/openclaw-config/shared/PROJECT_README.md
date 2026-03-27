@@ -97,11 +97,11 @@ make clawdevs-up
 
 ## GitHub
 
-- The default organization for agents' GitHub shares comes from `GITHUB_ORG`.
-- Optionally, `GITHUB_DEFAULT_REPOSITORY` defines the first active repository in bootstrap.
-- The token comes from `GITHUB_TOKEN`.
-- The active session repository is at `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GITHUB_REPOSITORY`).
-- For `gh` commands outside of local checkout, use `--repo "$ACTIVE_GITHUB_REPOSITORY"` (or `"$GITHUB_REPOSITORY"` for compatibility).
+- The default organization for agents' GitHub shares comes from `GIT_ORG`.
+- Optionally, `GIT_DEFAULT_REPOSITORY` defines the first active repository in bootstrap.
+- The token comes from `GIT_TOKEN`.
+- The active session repository is at `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
+- For `gh` commands outside of local checkout, use `--repo "$ACTIVE_GIT_REPOSITORY"` (or `"$GIT_REPOSITORY"` for compatibility).
 
 ## K8s Structure
 

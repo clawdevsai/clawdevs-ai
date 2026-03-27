@@ -35,8 +35,8 @@
 agent:
   id: devops_sre
   name: DevOps_SRE
-  github_org: "__GITHUB_ORG__"
-  active_repository: "__ACTIVE_GITHUB_REPOSITORY__"
+  github_org: "__GIT_ORG__"
+  active_repository: "__ACTIVE_GIT_REPOSITORY__"
   active_repository_id: "__ACTIVE_REPOSITORY_ID__"
   active_branch: "__ACTIVE_REPOSITORY_BRANCH__"
   session_id: "__OPENCLAW_SESSION_ID__"
@@ -133,7 +133,7 @@ capabilities:
   - name: github_integration
     description: "Update issues/PRs and manage workflows"
     quality_gates:
-      - "Use gh with `--repo \\"$ACTIVE_GITHUB_REPOSITORY\\"`"
+      - "Use gh with `--repo \\"$ACTIVE_GIT_REPOSITORY\\"`"
 
   - name: report_status
     description: "Report to Architect (or CEO in P0) with objective status"
@@ -151,7 +151,7 @@ project_workflow:
 
     2_check_github:
       action: "Check if repository exists on GitHub"
-      command: "gh repo view <GITHUB_ORG>/<name>"
+      command: "gh repo view <GIT_ORG>/<name>"
 
     3a_exists:
       condition: "repository exists locally AND on GitHub"
@@ -162,18 +162,18 @@ project_workflow:
     3b_clone_only:
       condition: "repository exists on GitHub but not locally"
       actions:
-        - "git clone git@github.com:<GITHUB_ORG>/<name>.git /data/openclaw/projects/<nome>"
+        - "git clone git@github.com:<GIT_ORG>/<name>.git /data/openclaw/projects/<nome>"
         - "Initialize structure: mkdir -p /data/openclaw/projects/<nome>/docs/backlogs/{status,idea,specs,user_story,tasks,briefs,implementation,session_finished,ux,security/scans,database}"
         - "Report to CEO: 'repo_exists: <name> cloned into /data/openclaw/projects/<nome>'"
 
     3c_create:
       condition: "repository does NOT exist either locally or on GitHub"
       actions:
-        - "gh repo create <GITHUB_ORG>/<name> --private --description 'Project <name>' --confirm"
-        - "git clone git@github.com:<GITHUB_ORG>/<name>.git /data/openclaw/projects/<nome>"
+        - "gh repo create <GIT_ORG>/<name> --private --description 'Project <name>' --confirm"
+        - "git clone git@github.com:<GIT_ORG>/<name>.git /data/openclaw/projects/<nome>"
         - "Initialize structure: mkdir -p /data/openclaw/projects/<nome>/docs/backlogs/{status,idea,specs,user_story,tasks,briefs,implementation,session_finished,ux,security/scans,database}"
         - "Initial commit: cd /data/openclaw/projects/<nome> && git commit --allow-empty -m 'init: repository created by DevOps_SRE'"
-        - "Report to CEO: 'repo_created: <name> created in org <GITHUB_ORG> and available at /data/openclaw/projects/<nome>'"4_on_error:
+        - "Report to CEO: 'repo_created: <name> created in org <GIT_ORG> and available at /data/openclaw/projects/<nome>'"4_on_error:
       condition: "fails on any step"
       actions:
         - "Report to CEO: 'repo_error: <error-description>'"

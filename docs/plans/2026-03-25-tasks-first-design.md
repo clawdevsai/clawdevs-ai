@@ -214,7 +214,7 @@ PANEL_TOKEN: <jwt-30-dias gerado via /auth/agent-token>
 
 **Antes:**
 ```bash
-gh issue create --repo "$ACTIVE_GITHUB_REPOSITORY" \
+gh issue create --repo "$ACTIVE_GIT_REPOSITORY" \
   --title "TASK-XXX: ..." --label "back_end,task,P1" --body-file /tmp/task.md
 ```
 
@@ -224,7 +224,7 @@ TASK_BODY=$(cat /tmp/task.md)
 curl -s -X POST \
   -H "Authorization: Bearer $PANEL_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"title\":\"TASK-XXX: ...\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GITHUB_REPOSITORY\",\"description\":\"$TASK_BODY\"}" \
+  -d "{\"title\":\"TASK-XXX: ...\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GIT_REPOSITORY\",\"description\":\"$TASK_BODY\"}" \
   "$PANEL_API_URL/tasks"
 ```
 
@@ -235,7 +235,7 @@ Manter: `gh pr create`, `gh label`, `gh workflow`, `gh run view`.
 
 **Poll de fila — Antes:**
 ```bash
-gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"
+gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GIT_REPOSITORY"
 ```
 
 **Poll de fila — Depois:**
@@ -246,7 +246,7 @@ curl -s -H "Authorization: Bearer $PANEL_TOKEN" \
 
 **Marcar em andamento — Antes:**
 ```bash
-gh issue edit <number> --add-label "in-progress" --repo "$ACTIVE_GITHUB_REPOSITORY"
+gh issue edit <number> --add-label "in-progress" --repo "$ACTIVE_GIT_REPOSITORY"
 ```
 
 **Marcar em andamento — Depois:**
@@ -260,7 +260,7 @@ curl -s -X PATCH \
 
 **Concluir — Antes:**
 ```bash
-gh issue close <number> --repo "$ACTIVE_GITHUB_REPOSITORY"
+gh issue close <number> --repo "$ACTIVE_GIT_REPOSITORY"
 ```
 
 **Concluir — Depois:**
@@ -274,7 +274,7 @@ curl -s -X PATCH \
 
 **Repo ativo — fonte de verdade:**
 O campo `github_repo` da task substitui `active_repository.env`.
-Agentes leem `task.github_repo` e usam em todos os comandos `gh --repo "$TASK_GITHUB_REPO"`.
+Agentes leem `task.github_repo` e usam em todos os comandos `gh --repo "$TASK_GIT_REPO"`.
 
 ### Labels por agente (mapeamento)
 

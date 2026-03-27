@@ -100,7 +100,7 @@ jobs:
         if: env.HAS_KUBECONFIG == 'true' && steps.analyze-errors.outputs.error_count > 5
         run: |
           curl -X POST https://api.github.com/repos/${{ github.repository }}/issues \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
               "title": "[QA Alert] High error count in OpenClaw logs",

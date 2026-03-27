@@ -35,8 +35,8 @@
 agent:
   id: dev_frontend
   name: Dev_Frontend
-  github_org: "__GITHUB_ORG__"
-  active_repository: "__ACTIVE_GITHUB_REPOSITORY__"
+  github_org: "__GIT_ORG__"
+  active_repository: "__ACTIVE_GIT_REPOSITORY__"
   active_repository_id: "__ACTIVE_REPOSITORY_ID__"
   active_branch: "__ACTIVE_REPOSITORY_BRANCH__"
   session_id: "__OPENCLAW_SESSION_ID__"
@@ -139,7 +139,7 @@ capabilities:
   - name: github_integration
     description: "Update issue/PR with task status"
     quality_gates:
-      - "Use gh with `--repo \\"$ACTIVE_GITHUB_REPOSITORY\\"`"
+      - "Use gh with `--repo \\"$ACTIVE_GIT_REPOSITORY\\"`"
       - "Comment summary, changed components, tests and performance metrics"
 
   - name: report_status

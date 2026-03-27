@@ -13,6 +13,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Generate k8s/.env from secrets
+        run: |
+          cat > k8s/.env <<ENVEOF
+          OPENCLAW_GATEWAY_TOKEN=${{ secrets.OPENCLAW_GATEWAY_TOKEN }}
+          TELEGRAM_BOT_TOKEN_CEO=${{ secrets.TELEGRAM_BOT_TOKEN_CEO }}
+          TELEGRAM_CHAT_ID_CEO=${{ secrets.TELEGRAM_CHAT_ID_CEO }}
+          GIT_TOKEN=${{ secrets.GIT_TOKEN }}
+          GIT_ORG=${{ secrets.GIT_ORG }}
+          GIT_DEFAULT_REPOSITORY=${{ secrets.GIT_DEFAULT_REPOSITORY }}
+          DIRECTORS_NAME=${{ secrets.DIRECTORS_NAME }}
+          OLLAMA_API_KEY=${{ secrets.OLLAMA_API_KEY }}
+          PROVEDOR_LLM=ollama
+          OPENCLAW_LOG_LEVEL=info
+          DEBUG_LOG_ENABLED=false
+          PUSH_IMAGE=remote
+          PANEL_SECRET_KEY=${{ secrets.PANEL_SECRET_KEY }}
+          PANEL_ADMIN_USERNAME=admin
+          PANEL_ADMIN_PASSWORD=${{ secrets.PANEL_ADMIN_PASSWORD }}
+          PANEL_DB_PASSWORD=${{ secrets.PANEL_DB_PASSWORD }}
+          PANEL_REDIS_PASSWORD=${{ secrets.PANEL_REDIS_PASSWORD }}
+          SEARXNG_SECRET=${{ secrets.SEARXNG_SECRET }}
+          ENVEOF
+
       - name: Validate Kustomize manifests
         run: kubectl kustomize k8s
 

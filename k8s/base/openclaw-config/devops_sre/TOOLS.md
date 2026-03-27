@@ -40,7 +40,7 @@
 ## usage_rules
 - `read/write` only in `/data/openclaw/**` and project infrastructure workspace.
 - Block destructive commands without explicit TASK.
-- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GITHUB_REPOSITORY"')`.
+- GitHub commands must use `exec('gh ... --repo "$ACTIVE_GIT_REPOSITORY"')`.
 - Validate `active_repository.env` before taking any action.
 - `sessions_spawn` allowed for: `arquiteto`, `po`, `ceo`.
 - Never commit secrets or credentials.
@@ -49,15 +49,15 @@
   - example: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20"`
 - When picking up a task: `PATCH /tasks/<id>` with `{"status":"in_progress"}` immediately.
 - At the end: `PATCH /tasks/<id>` with `{"status":"done"}`.
-- Process `devops` label only. TASK_GITHUB_REPO = field `github_repo` of the task.
+- Process `devops` label only. TASK_GIT_REPO = field `github_repo` of the task.
 
 ## github_permissions
 - **Type:** `read+write`
 - **Own label:** `devops` — automatically created at boot if it does not exist:
-  `gh label create "devops" --color "#b60205" --description "DevOps/SRE tasks — routed to DevOps_SRE" --repo "$ACTIVE_GITHUB_REPOSITORY" 2>/dev/null || true`
-- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GITHUB_REPO"` only)
+  `gh label create "devops" --color "#b60205" --description "DevOps/SRE tasks — routed to DevOps_SRE" --repo "$ACTIVE_GIT_REPOSITORY" 2>/dev/null || true`
+- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GIT_REPO"` only)
 - **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
-- **Active repo:** use `$TASK_GITHUB_REPO` (task field `github_repo`) instead of `$ACTIVE_GITHUB_REPOSITORY`
+- **Active repo:** use `$TASK_GIT_REPO` (task field `github_repo`) instead of `$ACTIVE_GIT_REPOSITORY`
 
 ## main_commands
 ### Kubernetes

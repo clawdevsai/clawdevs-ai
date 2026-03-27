@@ -67,22 +67,22 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: GITHUB_TOKEN
-            - name: GITHUB_TOKEN
+                  key: GIT_TOKEN
+            - name: GIT_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: GITHUB_TOKEN
-            - name: GITHUB_ORG
+                  key: GIT_TOKEN
+            - name: GIT_ORG
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: GITHUB_ORG
-            - name: GITHUB_DEFAULT_REPOSITORY
+                  key: GIT_ORG
+            - name: GIT_DEFAULT_REPOSITORY
               valueFrom:
                 secretKeyRef:
                   name: openclaw-auth
-                  key: GITHUB_DEFAULT_REPOSITORY
+                  key: GIT_DEFAULT_REPOSITORY
                   optional: true
             - name: OLLAMA_API_KEY
               valueFrom:

@@ -443,11 +443,11 @@ Segredos → `make clawdevs-up` → (primeira vez) `make panel-db-migrate` → v
 
 ## GitHub (gh CLI)
 
-- A organização padrão para ações GitHub dos agentes deve vir de `GITHUB_ORG` (definido em `k8s/.env` e injetado no pod).
-- Opcionalmente, `GITHUB_DEFAULT_REPOSITORY` define o primeiro repositório ativo na inicialização.
-- O token deve vir de `GITHUB_TOKEN` (também definido em `k8s/.env` e injetado no pod).
-- O repositório ativo por sessão fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GITHUB_REPOSITORY`).
-- Para comandos `gh` fora de um checkout local, usar `--repo "$ACTIVE_GITHUB_REPOSITORY"` (ou `"$GITHUB_REPOSITORY"` para compatibilidade).
+- A organização padrão para ações GitHub dos agentes deve vir de `GIT_ORG` (definido em `k8s/.env` e injetado no pod).
+- Opcionalmente, `GIT_DEFAULT_REPOSITORY` define o primeiro repositório ativo na inicialização.
+- O token deve vir de `GIT_TOKEN` (também definido em `k8s/.env` e injetado no pod).
+- O repositório ativo por sessão fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
+- Para comandos `gh` fora de um checkout local, usar `--repo "$ACTIVE_GIT_REPOSITORY"` (ou `"$GIT_REPOSITORY"` para compatibilidade).
 - Utilitários de contexto multi-repo no pod:
   - `claw-repo-discover [filtro]` para descobrir repositórios da organização
   - `claw-repo-ensure <repo> [--create]` para validar existência e criar quando autorizado

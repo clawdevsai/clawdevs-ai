@@ -32,13 +32,13 @@ if [ -n "${GH_TOKEN:-}" ]; then
 else
   echo "GH_TOKEN ausente: GitHub CLI iniciara sem autenticacao persistida" >/tmp/gh-auth-status.log
 fi
-if ! gh api "repos/${GITHUB_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
-  discovered_repo="$(gh repo list "${GITHUB_ORG}" --limit 1 --json nameWithOwner --jq '.[0].nameWithOwner' 2>/dev/null || true)"
+if ! gh api "repos/${GIT_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
+  discovered_repo="$(gh repo list "${GIT_ORG}" --limit 1 --json nameWithOwner --jq '.[0].nameWithOwner' 2>/dev/null || true)"
   if [ -n "${discovered_repo}" ]; then
-    GITHUB_DEFAULT_REPOSITORY="${discovered_repo}"
+    GIT_DEFAULT_REPOSITORY="${discovered_repo}"
   fi
 fi
-if ! gh api "repos/${GITHUB_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
-  GITHUB_DEFAULT_REPOSITORY="${GITHUB_ORG}/user-api"
+if ! gh api "repos/${GIT_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
+  GIT_DEFAULT_REPOSITORY="${GIT_ORG}/user-api"
 fi
-write_repository_context "${GITHUB_DEFAULT_REPOSITORY}" "${ACTIVE_REPOSITORY_BRANCH}"
+write_repository_context "${GIT_DEFAULT_REPOSITORY}" "${ACTIVE_REPOSITORY_BRANCH}"

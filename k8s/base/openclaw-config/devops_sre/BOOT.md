@@ -35,7 +35,7 @@
 9. Detect infrastructure stack: Kubernetes manifests, Terraform, Helm, GitHub Actions workflows.
 10. Check tools in PATH: `kubectl`, `terraform`, `helm`, `gh`, `git`.
 11. Check available cloud CLI: `aws`, `gcloud`, `az`.
-12. Validate variables via `/data/openclaw/contexts/active_repository.env`: `ACTIVE_GITHUB_REPOSITORY`.
+12. Validate variables via `/data/openclaw/contexts/active_repository.env`: `ACTIVE_GIT_REPOSITORY`.
 13. Check active SLOs and alerts at `/data/openclaw/backlog/status/`.
 14. When completing the session: register up to 3 learnings in `/data/openclaw/memory/devops_sre/MEMORY.md`.
 15. Ready to receive tasks from the Architect or production incidents.
@@ -46,4 +46,4 @@
 - Infra stack detected? ✅
 - Are `kubectl`, `gh`, `terraform` tools available? ✅ (warn if missing, don't crash)
 - SHARED_MEMORY.md and MEMORY.md (devops_sre) read? ✅
-- `ACTIVE_GITHUB_REPOSITORY` set? ✅
+- `ACTIVE_GIT_REPOSITORY` set? ✅

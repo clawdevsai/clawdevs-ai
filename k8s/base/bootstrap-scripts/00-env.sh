@@ -27,7 +27,7 @@ fi
 trap 'status=$?; echo "[bootstrap][error] line=${LINENO} cmd=${BASH_COMMAND} exit=${status}" >&2' ERR
 echo "[bootstrap] log file: ${BOOTSTRAP_LOG_FILE}"
 echo "[bootstrap] debug mode: ${DEBUG_LOG_ENABLED}"
-for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GITHUB_TOKEN GITHUB_ORG OLLAMA_API_KEY; do
+for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID GIT_TOKEN GIT_ORG OLLAMA_API_KEY; do
   if [ -n "${!var_name:-}" ]; then
     echo "[bootstrap] ${var_name}=set"
   else
@@ -35,13 +35,13 @@ for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID G
   fi
 done
 # Garantir fallback de org/repositorio default
-export GITHUB_ORG="${GITHUB_ORG:-lukeware-ai}"
-export GITHUB_DEFAULT_REPOSITORY="${GITHUB_DEFAULT_REPOSITORY:-${GITHUB_REPOSITORY:-${GITHUB_ORG}/user-api}}"
-case "${GITHUB_DEFAULT_REPOSITORY}" in
+export GIT_ORG="${GIT_ORG:-lukeware-ai}"
+export GIT_DEFAULT_REPOSITORY="${GIT_DEFAULT_REPOSITORY:-${GIT_REPOSITORY:-${GIT_ORG}/user-api}}"
+case "${GIT_DEFAULT_REPOSITORY}" in
   */*) ;;
-  *) GITHUB_DEFAULT_REPOSITORY="${GITHUB_ORG}/${GITHUB_DEFAULT_REPOSITORY}" ;;
+  *) GIT_DEFAULT_REPOSITORY="${GIT_ORG}/${GIT_DEFAULT_REPOSITORY}" ;;
 esac
-export ACTIVE_GITHUB_REPOSITORY="${GITHUB_DEFAULT_REPOSITORY}"
+export ACTIVE_GIT_REPOSITORY="${GIT_DEFAULT_REPOSITORY}"
 export ACTIVE_REPOSITORY_BRANCH="${ACTIVE_REPOSITORY_BRANCH:-main}"
 export OPENCLAW_SESSION_ID="${OPENCLAW_SESSION_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(cat /proc/sys/kernel/random/uuid | cut -d- -f1)}"
 # Fallback para quando DIRECTORS_NAME nao estiver definido no Secret
@@ -49,7 +49,7 @@ export DIRECTORS_NAME="${DIRECTORS_NAME:-Director}"
 # Idioma padrao dos agentes (sobrescrito via LANGUAGE no .env)
 export LANGUAGE="${LANGUAGE:-pt-BR}"
 # Alinhar GH CLI caso GH_TOKEN venha em outro nome
-export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+export GH_TOKEN="${GH_TOKEN:-${GIT_TOKEN:-}}"
 mkdir -p "${OPENCLAW_STATE_DIR}/contexts/repos"
 write_repository_context() {
   repo_ref="$1"
@@ -63,43 +63,43 @@ write_repository_context() {
   repo_context_dir="${OPENCLAW_STATE_DIR}/contexts/repos/${repo_safe}"
   mkdir -p "${repo_context_dir}/logs" "${repo_context_dir}/history"
   cat > "${OPENCLAW_STATE_DIR}/contexts/active_repository.env" <<EOF
-GITHUB_ORG=${GITHUB_ORG}
-ACTIVE_GITHUB_REPOSITORY=${repo_ref}
+GIT_ORG=${GIT_ORG}
+ACTIVE_GIT_REPOSITORY=${repo_ref}
 ACTIVE_REPOSITORY_BRANCH=${repo_branch}
 ACTIVE_REPOSITORY_ID=${repo_id}
 OPENCLAW_SESSION_ID=${OPENCLAW_SESSION_ID}
 REPOSITORY_CONTEXT_DIR=${repo_context_dir}
 EOF
-  export ACTIVE_GITHUB_REPOSITORY="${repo_ref}"
-  export GITHUB_REPOSITORY="${repo_ref}"
+  export ACTIVE_GIT_REPOSITORY="${repo_ref}"
+  export GIT_REPOSITORY="${repo_ref}"
   export GH_REPO="${repo_ref}"
   export ACTIVE_REPOSITORY_BRANCH="${repo_branch}"
   export ACTIVE_REPOSITORY_ID="${repo_id}"
   export REPOSITORY_CONTEXT_DIR="${repo_context_dir}"
-  echo "[bootstrap] repository context active=${ACTIVE_GITHUB_REPOSITORY} id=${ACTIVE_REPOSITORY_ID} branch=${ACTIVE_REPOSITORY_BRANCH} session=${OPENCLAW_SESSION_ID}"
+  echo "[bootstrap] repository context active=${ACTIVE_GIT_REPOSITORY} id=${ACTIVE_REPOSITORY_ID} branch=${ACTIVE_REPOSITORY_BRANCH} session=${OPENCLAW_SESSION_ID}"
 }
 render_agent_context() {
   agent_workspace="$1"
   [ -f "${OPENCLAW_STATE_DIR}/contexts/active_repository.env" ] && . "${OPENCLAW_STATE_DIR}/contexts/active_repository.env"
-  GITHUB_ORG_ESCAPED="$(printf '%s' "${GITHUB_ORG}" | sed -e 's/[\\/&]/\\&/g')"
-  ACTIVE_GITHUB_REPOSITORY_ESCAPED="$(printf '%s' "${ACTIVE_GITHUB_REPOSITORY}" | sed -e 's/[\\/&]/\\&/g')"
+  GIT_ORG_ESCAPED="$(printf '%s' "${GIT_ORG}" | sed -e 's/[\\/&]/\\&/g')"
+  ACTIVE_GIT_REPOSITORY_ESCAPED="$(printf '%s' "${ACTIVE_GIT_REPOSITORY}" | sed -e 's/[\\/&]/\\&/g')"
   ACTIVE_REPOSITORY_BRANCH_ESCAPED="$(printf '%s' "${ACTIVE_REPOSITORY_BRANCH}" | sed -e 's/[\\/&]/\\&/g')"
   OPENCLAW_SESSION_ID_ESCAPED="$(printf '%s' "${OPENCLAW_SESSION_ID}" | sed -e 's/[\\/&]/\\&/g')"
   ACTIVE_REPOSITORY_ID_ESCAPED="$(printf '%s' "${ACTIVE_REPOSITORY_ID}" | sed -e 's/[\\/&]/\\&/g')"
   LANGUAGE_ESCAPED="$(printf '%s' "${LANGUAGE}" | sed -e 's/[\\/&]/\\&/g')"
   if [ -f "${agent_workspace}/AGENTS.md" ]; then
-    sed -i "s|__GITHUB_ORG__|${GITHUB_ORG_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
-    sed -i "s|__ACTIVE_GITHUB_REPOSITORY__|${ACTIVE_GITHUB_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+    sed -i "s|__GIT_ORG__|${GIT_ORG_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+    sed -i "s|__ACTIVE_GIT_REPOSITORY__|${ACTIVE_GIT_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
     sed -i "s|__ACTIVE_REPOSITORY_BRANCH__|${ACTIVE_REPOSITORY_BRANCH_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
     sed -i "s|__OPENCLAW_SESSION_ID__|${OPENCLAW_SESSION_ID_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
     sed -i "s|__ACTIVE_REPOSITORY_ID__|${ACTIVE_REPOSITORY_ID_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
-    sed -i "s|__GITHUB_REPOSITORY__|${ACTIVE_GITHUB_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
+    sed -i "s|__GIT_REPOSITORY__|${ACTIVE_GIT_REPOSITORY_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
     sed -i "s|__LANGUAGE__|${LANGUAGE_ESCAPED}|g" "${agent_workspace}/AGENTS.md"
   fi
   cat > "${agent_workspace}/REPOSITORY_CONTEXT.md" <<EOF
 # REPOSITORY_CONTEXT
-- organization: ${GITHUB_ORG}
-- active_repository: ${ACTIVE_GITHUB_REPOSITORY}
+- organization: ${GIT_ORG}
+- active_repository: ${ACTIVE_GIT_REPOSITORY}
 - repository_id: ${ACTIVE_REPOSITORY_ID}
 - active_branch: ${ACTIVE_REPOSITORY_BRANCH}
 - session_id: ${OPENCLAW_SESSION_ID}

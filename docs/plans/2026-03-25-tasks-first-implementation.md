@@ -1050,11 +1050,11 @@ Substituir por:
 
 Localizar:
 ```
-- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Operações permitidas:** `gh issue`, `gh pr`, `gh label`, `gh workflow` (somente `--repo "$ACTIVE_GIT_REPOSITORY"`)
 ```
 Substituir por:
 ```markdown
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$ACTIVE_GITHUB_REPOSITORY"`)
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$ACTIVE_GIT_REPOSITORY"`)
 - **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
 ```
 
@@ -1072,7 +1072,7 @@ TASK_BODY=$(cat /data/openclaw/backlog/implementation/TASK-XXX.md | python3 -c "
 TASK_RESPONSE=$(curl -s -X POST \
   -H "Authorization: Bearer $PANEL_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"title\":\"TASK-XXX: <slug>\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GITHUB_REPOSITORY\",\"description\":$TASK_BODY}" \
+  -d "{\"title\":\"TASK-XXX: <slug>\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GIT_REPOSITORY\",\"description\":$TASK_BODY}" \
   "$PANEL_API_URL/tasks")
 
 TASK_ID=$(echo "$TASK_RESPONSE" | jq -r '.id')
@@ -1093,7 +1093,7 @@ grep -n "gh issue create" k8s/base/openclaw-config/arquiteto/SKILL.md
 Padrão de substituição:
 ```bash
 # ANTES:
-gh issue create --repo "$GITHUB_REPOSITORY" \
+gh issue create --repo "$GIT_REPOSITORY" \
   --title "TASK-XXX: ..." \
   --label "back_end,task,P1" \
   --body-file /tmp/task.md
@@ -1103,7 +1103,7 @@ TASK_BODY=$(cat /tmp/task.md | python3 -c "import sys,json; print(json.dumps(sys
 curl -s -X POST \
   -H "Authorization: Bearer $PANEL_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "{\"title\":\"TASK-XXX: ...\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GITHUB_REPOSITORY\",\"description\":$TASK_BODY}" \
+  -d "{\"title\":\"TASK-XXX: ...\",\"label\":\"back_end\",\"github_repo\":\"$ACTIVE_GIT_REPOSITORY\",\"description\":$TASK_BODY}" \
   "$PANEL_API_URL/tasks"
 ```
 
@@ -1200,7 +1200,7 @@ Para `dev_backend`:
 ```markdown
 # ANTES:
 - Poll de fila GitHub 1x por hora:
-  - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GITHUB_REPOSITORY"`
+  - exemplo: `gh issue list --state open --label back_end --limit 20 --repo "$ACTIVE_GIT_REPOSITORY"`
 - Processar somente label `back_end`.
 
 # DEPOIS:
@@ -1208,7 +1208,7 @@ Para `dev_backend`:
   - exemplo: `curl -s -H "Authorization: Bearer $PANEL_TOKEN" "$PANEL_API_URL/tasks?status=inbox&label=back_end&page_size=20"`
 - Ao pegar uma task: `PATCH /tasks/<id>` com `{"status":"in_progress"}` imediatamente.
 - Ao concluir: `PATCH /tasks/<id>` com `{"status":"done"}`.
-- Processar somente label `back_end`. TASK_GITHUB_REPO = campo `github_repo` da task.
+- Processar somente label `back_end`. TASK_GIT_REPO = campo `github_repo` da task.
 ```
 
 Mapeamento de label por agente:
@@ -1231,9 +1231,9 @@ Para todos os agentes executores, localizar:
 ```
 Substituir por:
 ```markdown
-- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GITHUB_REPO"`)
+- **Operações permitidas:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (somente `--repo "$TASK_GIT_REPO"`)
 - **Proibido:** `gh issue create`, `gh issue edit`, `gh issue close` — usar control panel API
-- **Repo ativo:** usar `$TASK_GITHUB_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GITHUB_REPOSITORY`
+- **Repo ativo:** usar `$TASK_GIT_REPO` (campo `github_repo` da task) em vez de `$ACTIVE_GIT_REPOSITORY`
 ```
 
 **Step 4: Atualizar AGENTS.md de cada executor**
@@ -1300,7 +1300,7 @@ stringData:
 
 **Step 2: Abrir `k8s/base/openclaw-pod.yaml`**
 
-Localizar o bloco `env:` do container principal do pod OpenClaw (onde estão as variáveis `GH_TOKEN`, `GITHUB_ORG`, etc.).
+Localizar o bloco `env:` do container principal do pod OpenClaw (onde estão as variáveis `GH_TOKEN`, `GIT_ORG`, etc.).
 
 Adicionar as duas variáveis após as existentes:
 ```yaml

@@ -53,8 +53,8 @@ Chaves que devem estar preenchidas em `k8s/.env`:
 - `OPENCLAW_GATEWAY_TOKEN`
 - `TELEGRAM_BOT_TOKEN_CEO`
 - `TELEGRAM_CHAT_ID_CEO`
-- `GITHUB_TOKEN`
-- `GITHUB_ORG`
+- `GIT_TOKEN`
+- `GIT_ORG`
 - `OLLAMA_API_KEY`
 
 Demais variáveis: ver `k8s/.env.example`.

@@ -47,4 +47,4 @@
 - Frontend framework detected? ✅
 - Are `read`, `write`, `exec`, `git` tools available? ✅
 - SHARED_MEMORY.md and MEMORY.md (dev_frontend) read? ✅
-- `ACTIVE_GITHUB_REPOSITORY` defined? ✅
+- `ACTIVE_GIT_REPOSITORY` defined? ✅

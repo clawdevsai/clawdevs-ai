@@ -23,8 +23,8 @@
 # BOOTSTRAP.md - Dev_Frontend
 
 1. Upload env:
-   - `GITHUB_ORG`
-   - `ACTIVE_GITHUB_REPOSITORY`
+   - `GIT_ORG`
+   - `ACTIVE_GIT_REPOSITORY`
    - `OPENCLAW_ENV`
    - `PROJECT_ROOT` (default `/data/openclaw/backlog/implementation`)
 2. Read `README.md` the repository to understand the application, stack and flow before implementing.
