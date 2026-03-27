@@ -346,13 +346,13 @@ ollama-apply: preflight image-mode-prepare ollama-volume-apply
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/ollama-pod.yaml --server-side --force-conflicts
 
 ollama-logs:
-	kubectl --context=$(KUBE_CONTEXT) logs -f pod/ollama
+	kubectl --context=$(KUBE_CONTEXT) logs -l app=ollama -f --tail=100
 
 ollama-sign:
-	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama signin
+	kubectl --context=$(KUBE_CONTEXT) exec -it deployment/ollama -- ollama signin
 
 ollama-list:
-	kubectl --context=$(KUBE_CONTEXT) exec -it pod/ollama -- ollama list
+	kubectl --context=$(KUBE_CONTEXT) exec -it deployment/ollama -- ollama list
 
 # ────────────────────────────────────────────────────────────────────────────
 # OpenClaw
