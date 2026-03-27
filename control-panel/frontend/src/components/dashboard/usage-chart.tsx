@@ -48,16 +48,19 @@ interface UsageChartProps {
 interface CustomTooltipProps {
   active?: boolean
   payload?: Array<{ value: number }>
-  label?: string
+  label?: number
 }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
+  const labelDate = typeof label === "number" ? new Date(label) : null
   return (
     <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--popover))] px-3 py-2 shadow-lg">
-      <p className="text-xs text-[hsl(var(--muted-foreground))] mb-1">{label}</p>
+      <p className="text-xs text-[hsl(var(--muted-foreground))] mb-1">
+        {labelDate ? format(labelDate, "MMM d, HH:mm") : "—"}
+      </p>
       <p className="text-sm font-semibold text-[hsl(var(--primary))]">
-        {payload[0].value} sessions
+        {payload[0].value} active sessions
       </p>
     </div>
   )
@@ -65,7 +68,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export function UsageChart({ metrics, loading = false }: UsageChartProps) {
   const data = metrics.map((m) => ({
-    date: format(parseISO(m.period_start), "MMM d"),
+    timestamp: parseISO(m.period_start).getTime(),
     value: m.value,
   }))
 
@@ -73,7 +76,7 @@ export function UsageChart({ metrics, loading = false }: UsageChartProps) {
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-[hsl(var(--foreground))]">Session Usage</h3>
-        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Last 7 days</p>
+        <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Active sessions, last 24 hours (1-min)</p>
       </div>
       {loading ? (
         <Skeleton className="h-48 w-full" />
@@ -92,7 +95,12 @@ export function UsageChart({ metrics, loading = false }: UsageChartProps) {
               vertical={false}
             />
             <XAxis
-              dataKey="date"
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
+              tickFormatter={(value) => format(new Date(value), "HH:mm")}
+              minTickGap={42}
               tick={{ fill: "hsl(0 0% 55%)", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -111,8 +119,8 @@ export function UsageChart({ metrics, loading = false }: UsageChartProps) {
               stroke="hsl(153 100% 50%)"
               strokeWidth={2}
               fill="url(#primaryGradient)"
-              dot={{ r: 3, fill: "hsl(153 100% 50%)", strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: "hsl(153 100% 50%)", strokeWidth: 0 }}
+              dot={false}
+              activeDot={{ r: 4, fill: "hsl(153 100% 50%)", strokeWidth: 0 }}
             />
           </AreaChart>
         </ResponsiveContainer>

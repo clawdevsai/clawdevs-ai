@@ -53,14 +53,17 @@ class OpenClawClient:
             return []
 
     async def get_session(self, session_id: str) -> Optional[dict]:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(
-                f"{self.base_url}/v1/sessions/{session_id}",
-                headers=self.headers,
-            )
-            if r.status_code != 200:
-                return None
-            return r.json()
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                r = await client.get(
+                    f"{self.base_url}/v1/sessions/{session_id}",
+                    headers=self.headers,
+                )
+                if r.status_code != 200:
+                    return None
+                return r.json()
+        except Exception:
+            return None
 
     async def get_approvals(self, status: str = "pending") -> list:
         async with httpx.AsyncClient(timeout=10.0) as client:

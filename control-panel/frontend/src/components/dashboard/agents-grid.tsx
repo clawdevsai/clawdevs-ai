@@ -26,6 +26,7 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { AgentAvatar } from "@/components/agents/agent-avatar"
 import { cn } from "@/lib/utils"
 
 interface Agent {
@@ -33,6 +34,7 @@ interface Agent {
   slug: string
   display_name: string
   role: string
+  avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
   model?: string | null
   current_model?: string | null
@@ -43,15 +45,6 @@ interface Agent {
 interface AgentsGridProps {
   agents: Agent[]
   loading?: boolean
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(/[\s_-]+/)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2)
 }
 
 function statusBadgeVariant(status: string) {
@@ -109,12 +102,12 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
           className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group"
         >
           <div className="flex items-center gap-3">
-            {/* Avatar */}
-            <div className="h-10 w-10 rounded-full bg-[hsl(var(--primary)/0.15)] border border-[hsl(var(--primary)/0.3)] flex items-center justify-center shrink-0">
-              <span className="text-xs font-bold text-[hsl(var(--primary))]">
-                {getInitials(agent.display_name)}
-              </span>
-            </div>
+            <AgentAvatar
+              slug={agent.slug}
+              displayName={agent.display_name}
+              avatarUrl={agent.avatar_url}
+              size="md"
+            />
             <div className="flex flex-col gap-0.5 flex-1 min-w-0">
               <span className="text-sm font-semibold text-[hsl(var(--foreground))] truncate group-hover:text-[hsl(var(--primary))] transition-colors">
                 {agent.display_name}

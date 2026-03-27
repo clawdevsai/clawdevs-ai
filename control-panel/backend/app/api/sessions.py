@@ -19,6 +19,8 @@
 # SOFTWARE.
 
 from typing import Annotated, Optional
+import json
+from pathlib import Path
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import select, func
 from sqlalchemy import case
@@ -28,12 +30,14 @@ from datetime import datetime
 from uuid import UUID
 
 from app.core.database import get_session
+from app.core.config import get_settings
 from app.api.deps import CurrentUser
 from app.models import Session as SessionModel
 from app.services.session_sync import sync_sessions
 from app.services.openclaw_client import openclaw_client
 
 router = APIRouter()
+settings = get_settings()
 
 
 class MessageResponse(BaseModel):
@@ -165,6 +169,13 @@ async def get_session(
         if msgs and isinstance(msgs, list):
             messages = [_parse_message(m) for m in msgs if isinstance(m, dict)]
 
+    # Fallback: read messages from local OpenClaw session JSONL when gateway is unavailable.
+    if messages is None:
+        messages = _read_messages_from_local_session_file(
+            agent_slug=db_session_obj.agent_slug,
+            openclaw_session_id=db_session_obj.openclaw_session_id,
+        )
+
     return SessionResponse(
         id=str(db_session_obj.id),
         agent_slug=db_session_obj.agent_slug,
@@ -214,3 +225,44 @@ def _parse_message(msg: dict) -> MessageResponse:
                 })
 
     return MessageResponse(role=role, content=content, tool_calls=tool_calls)
+
+
+def _read_messages_from_local_session_file(
+    agent_slug: str | None,
+    openclaw_session_id: str,
+) -> list[MessageResponse]:
+    if not agent_slug:
+        return []
+
+    session_path = (
+        Path(settings.openclaw_data_path)
+        / "agents"
+        / agent_slug
+        / "sessions"
+        / f"{openclaw_session_id}.jsonl"
+    )
+    if not session_path.exists():
+        return []
+
+    parsed: list[MessageResponse] = []
+    try:
+        with open(session_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    evt = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                if not isinstance(evt, dict) or evt.get("type") != "message":
+                    continue
+                message_obj = evt.get("message")
+                if not isinstance(message_obj, dict):
+                    continue
+                parsed.append(_parse_message(message_obj))
+    except OSError:
+        return []
+
+    return parsed

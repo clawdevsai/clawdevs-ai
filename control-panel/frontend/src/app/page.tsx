@@ -95,7 +95,7 @@ const fetchMetrics = () =>
   customInstance<PaginatedResponse<Metric>>({
     url: "/metrics",
     method: "GET",
-    params: { metric_type: "sessions", days: 7 },
+    params: { metric_type: "active_sessions", hours: 24, interval_minutes: 1 },
   })
 
 // ---- Page -----------------------------------------------------------------
@@ -134,9 +134,9 @@ export default function DashboardPage() {
   })
 
   const { data: metricsData, isLoading: metricsLoading } = useQuery({
-    queryKey: ["metrics", "sessions", 7],
+    queryKey: ["metrics", "active_sessions", 24, 1],
     queryFn: fetchMetrics,
-    refetchInterval: 30000,
+    refetchInterval: 60000,
   })
 
   // Subscribe to dashboard WebSocket channel and refetch all dashboard queries on new messages

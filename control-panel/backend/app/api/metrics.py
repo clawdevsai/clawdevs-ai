@@ -60,6 +60,8 @@ async def list_metrics(
     session: Annotated[AsyncSession, Depends(get_session)],
     metric_type: Optional[str] = Query(None),
     days: int = Query(7, ge=1, le=90),
+    hours: int = Query(24, ge=1, le=168),
+    interval_minutes: int = Query(1, ge=1, le=60),
     agent_id: Optional[str] = Query(None),
 ):
     since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
@@ -98,6 +100,66 @@ async def list_metrics(
                 )
             )
             cursor = cursor + timedelta(days=1)
+
+        return MetricsListResponse(items=items, total=len(items))
+
+    # Real-time active sessions time series (last N hours, bucketed by minute interval).
+    if metric_type == "active_sessions":
+        bucket = timedelta(minutes=interval_minutes)
+        now = datetime.now(timezone.utc).replace(tzinfo=None, second=0, microsecond=0)
+        series_start = now - timedelta(hours=hours)
+        points = int((now - series_start) / bucket) + 1
+
+        # We only need sessions that could intersect the window.
+        session_query = select(Session).where(
+            func.coalesce(Session.last_active_at, Session.created_at) >= (series_start - timedelta(hours=24))
+        )
+        session_rows = (await session.exec(session_query)).all()
+
+        diffs = [0] * (points + 1)
+
+        def _to_index(ts: datetime) -> int:
+            return int((ts - series_start).total_seconds() // (interval_minutes * 60))
+
+        for sess in session_rows:
+            start = sess.started_at or sess.created_at or sess.last_active_at
+            if start is None:
+                continue
+
+            if sess.status == "active":
+                end = now
+            else:
+                end = sess.ended_at or sess.last_active_at or start
+
+            if end < series_start or start > now:
+                continue
+
+            start_clamped = max(start, series_start)
+            end_clamped = min(end, now)
+            start_idx = max(0, min(points - 1, _to_index(start_clamped)))
+            end_idx = max(0, min(points - 1, _to_index(end_clamped)))
+
+            if start_idx > end_idx:
+                continue
+
+            diffs[start_idx] += 1
+            if end_idx + 1 < len(diffs):
+                diffs[end_idx + 1] -= 1
+
+        items: list[MetricResponse] = []
+        current = 0
+        for i in range(points):
+            current += diffs[i]
+            period_start = series_start + (bucket * i)
+            items.append(
+                MetricResponse(
+                    metric_type="active_sessions",
+                    value=float(max(current, 0)),
+                    period_start=period_start,
+                    period_end=period_start + bucket,
+                    agent_id=None,
+                )
+            )
 
         return MetricsListResponse(items=items, total=len(items))
 
