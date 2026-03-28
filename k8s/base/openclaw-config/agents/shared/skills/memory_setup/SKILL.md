@@ -22,12 +22,12 @@
 
 ---
 name: memory_setup
-description: Enable and configure Moltbot/Clawdbot memory search for persistent context. Use when setting up memory, fixing "goldfish brain," or helping users configure memorySearch in their config. Covers MEMORY.md, daily logs, and vector search setup.
+description: Enable and configure OpenClaw memory search for persistent context. Use when setting up memory, fixing "goldfish brain," or helping users configure memorySearch. Covers canonical MEMORY.md paths, SHARED_MEMORY.md, and vector search setup.
 ---
 
 # Memory Setup Skill
 
-Transform your agent from goldfish to elephant. This skill helps configure persistent memory for Moltbot/Clawdbot.
+Transform your agent from goldfish to elephant. This skill helps configure persistent memory for OpenClaw.
 
 ## Security Guardrails
 
@@ -40,7 +40,7 @@ Transform your agent from goldfish to elephant. This skill helps configure persi
 
 ### 1. Enable Memory Search in Config
 
-Add to `~/.clawdbot/clawdbot.json` (or `moltbot.json`):
+Add to `/data/openclaw/openclaw.json`:
 
 ```json
 {
@@ -57,24 +57,21 @@ Add to `~/.clawdbot/clawdbot.json` (or `moltbot.json`):
 
 ### 2. Create Memory Structure
 
-In your workspace, create:
+In the shared OpenClaw PVC, use this canonical layout:
 
 ```
-workspace/
-├── MEMORY.md              # Long-term curated memory
+/data/openclaw/
 └── memory/
-    ├── logs/              # Daily logs (YYYY-MM-DD.md)
-    ├── projects/          # Project-specific context
-    ├── groups/            # Group chat context
-    └── system/            # Preferences, setup notes
+    ├── <agent_slug>/MEMORY.md
+    └── shared/SHARED_MEMORY.md
 ```
 
-### 3. Initialize MEMORY.md
+### 3. Initialize Agent MEMORY.md
 
-Create `MEMORY.md` in workspace root:
+Create `/data/openclaw/memory/<agent_slug>/MEMORY.md`:
 
 ```markdown
-# MEMORY.md — Long-Term Memory
+# MEMORY.md - Long-Term Memory
 
 ## About [User Name]
 - Key facts, preferences, context
@@ -108,24 +105,22 @@ Create `MEMORY.md` in workspace root:
 - `local` — Local embeddings (no API needed)
 
 ### Source Options
-- `memory` — MEMORY.md + memory/*.md files
+- `memory` - `/data/openclaw/memory/<agent_slug>/MEMORY.md` + `/data/openclaw/memory/shared/SHARED_MEMORY.md`
 - `sessions` — Past conversation transcripts
 - `both` — Full context (recommended)
 
-## Daily Log Format
+## Shared Memory Format
 
-Create `memory/logs/YYYY-MM-DD.md` daily:
+Create `/data/openclaw/memory/shared/SHARED_MEMORY.md`:
 
 ```markdown
-# YYYY-MM-DD — Daily Log
+# SHARED MEMORY - Team Defaults
 
-## [Time] — [Event/Task]
-- What happened
-- Decisions made
-- Follow-ups needed
+## Active Patterns
+- [GLOBAL] <pattern> | Promoted: YYYY-MM-DD | Source: agent_a, agent_b, agent_c
 
-## [Time] — [Another Event]
-- Details
+## Archived
+- [ARCHIVED] <pattern> | Archived: YYYY-MM-DD | Reason: replaced
 ```
 
 ## Agent Instructions (AGENTS.md)
@@ -144,8 +139,9 @@ Before answering questions about prior work, decisions, dates, people, preferenc
 
 ### Memory search not working?
 1. Check `memorySearch.enabled: true` in config
-2. Verify MEMORY.md exists in workspace root
-3. Restart gateway: `clawdbot gateway restart`
+2. Verify `/data/openclaw/memory/<agent_slug>/MEMORY.md` exists
+3. Verify `/data/openclaw/memory/shared/SHARED_MEMORY.md` exists
+4. Restart gateway if needed
 
 ### Results not relevant?
 - Lower `minScore` to `0.2` for more results
@@ -180,7 +176,7 @@ If agent has no memory, config isn't applied. Restart gateway.
     "minScore": 0.3,
     "maxResults": 20
   },
-  "workspace": "/path/to/your/workspace"
+  "workspace": "/data/openclaw/workspace-<agent_slug>"
 }
 ```
 
@@ -197,4 +193,4 @@ With memory:
 - Tracks project history
 - Builds relationship over time
 
-Goldfish → Elephant. 🐘
+Goldfish to Elephant.
