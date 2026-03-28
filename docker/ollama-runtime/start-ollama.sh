@@ -32,9 +32,12 @@ for i in $(seq 1 60); do
 done
 
 if [ "${OLLAMA_AUTO_PULL_MODELS:-false}" = "true" ]; then
-  for model in ${OLLAMA_BOOT_MODELS:-}; do
-    ollama pull "${model}" || echo "Aviso: pull do modelo ${model} falhou."
-  done
+  # Em background: nao bloqueia o processo principal; o servidor ja responde ao healthcheck.
+  (
+    for model in ${OLLAMA_BOOT_MODELS:-}; do
+      ollama pull "${model}" || echo "Aviso: pull do modelo ${model} falhou."
+    done
+  ) &
 else
   echo "OLLAMA_AUTO_PULL_MODELS=false: iniciando sem pulls automaticos."
 fi

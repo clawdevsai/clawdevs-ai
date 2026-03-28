@@ -75,7 +75,7 @@ services:
       OLLAMA_GPU_MEMORY: "4096"
       CUDA_MEM_POOL_MAX_SPLIT_SIZE_MB: "512"
       OLLAMA_API_KEY: ${OLLAMA_API_KEY}
-      OLLAMA_AUTO_PULL_MODELS: ${OLLAMA_AUTO_PULL_MODELS:-false}
+      OLLAMA_AUTO_PULL_MODELS: ${OLLAMA_AUTO_PULL_MODELS:-true}
       OLLAMA_BOOT_MODELS: ${OLLAMA_BOOT_MODELS:-nomic-embed-text}
     deploy:
       resources:
@@ -84,12 +84,14 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    # Usa o CLI oficial (sempre na imagem); curl/wget pode faltar e falhar o check.
+    # start_period alto: GPU + primeiro pull de modelo podem demorar sem derrubar o servico.
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -sf http://localhost:11434/api/tags || wget -qO- http://localhost:11434/api/tags || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 30s
+      retries: 40
+      start_period: 180s
     restart: unless-stopped
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -164,7 +166,8 @@ services:
     volumes:
       - openclaw-data:/data/openclaw
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8000/docs"]
+      # /docs só existe com debug=true; /healthz está sempre disponível (app.main).
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/healthz"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -212,9 +215,12 @@ services:
   token-init:
     image: curlimages/curl:latest
     container_name: clawdevs-token-init
+    # Imagem curl roda como UID nao-root; volume nomeado e root:root — precisa root para gravar PANEL_TOKEN.
+    user: "0:0"
     networks: [clawdevs]
     depends_on:
-      - panel-backend
+      panel-backend:
+        condition: service_healthy
     environment:
       PANEL_ADMIN_USERNAME: ${PANEL_ADMIN_USERNAME}
       PANEL_ADMIN_PASSWORD: ${PANEL_ADMIN_PASSWORD}
@@ -235,8 +241,10 @@ services:
     ports:
       - "18789:18789"
     depends_on:
+      # service_started evita travar o compose se o healthcheck do Ollama demorar (pull/GPU).
+      # O bootstrap do OpenClaw usa OLLAMA_BASE_URL com retentativas.
       ollama:
-        condition: service_healthy
+        condition: service_started
       token-init:
         condition: service_completed_successfully
     command:
@@ -276,7 +284,7 @@ services:
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-}
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
-      PANEL_API_URL: http://panel-backend:8000/api
+      PANEL_API_URL: http://panel-backend:8000
       NODE_OPTIONS: --max-old-space-size=1024
       OPENCLAW_NO_RESPAWN: "1"
       NODE_COMPILE_CACHE: /var/tmp/openclaw-compile-cache

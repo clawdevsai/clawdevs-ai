@@ -81,7 +81,7 @@ help:
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo ""
 	@echo "┌─ SETUP ────────────────────────────────────────────────────────┐"
-	@echo "│ make up              Sobe toda a stack (CPU)                   │"
+	@echo "│ make up              docker compose --env-file .env up -d      │"
 	@echo "│ make up-gpu          Sobe com suporte a GPU NVIDIA             │"
 	@echo "│ make down            Para e remove os containers               │"
 	@echo "│ make restart         Reinicia todos os containers              │"
@@ -122,8 +122,9 @@ help:
 	@echo "│ make sdd-contract    make sdd-prompts      make sdd-example    │"
 	@echo "└────────────────────────────────────────────────────────────────┘"
 
-## up: Sobe toda a stack ClawDevs AI (CPU, sem GPU)
-up: preflight sync-agent-config
+## up: Equivale a: docker compose --env-file .env up -d (apos preflight; sync opcional)
+up: preflight
+	@if [ -f container/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
 	$(DC_CMD) up -d
 	@echo ""
 	@echo "  Stack iniciada! Acesse:"
@@ -135,8 +136,9 @@ up: preflight sync-agent-config
 	@echo "  Logs em tempo real : make logs"
 	@echo "  Status             : make status"
 
-## up-gpu: Sobe a stack com GPU NVIDIA habilitada no Ollama (requer Docker Desktop com GPU habilitada)
-up-gpu: preflight sync-agent-config
+## up-gpu: Mesmo fluxo que up (GPU no compose quando houver override local)
+up-gpu: preflight
+	@if [ -f container/base/kustomization.yaml ]; then $(MAKE) sync-agent-config; else mkdir -p tmp/agent-config-flat; fi
 	$(DC_CMD) up -d
 	@echo "Stack GPU iniciada. Certifique-se de que Docker Desktop > Settings > Resources > GPU esta habilitado."
 

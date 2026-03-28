@@ -7,13 +7,14 @@
 
 set -e
 
-BACKEND="http://panel-backend:8000/api"
+# Rotas em app.main: /auth/* e /healthz na raiz (sem prefixo /api).
+BACKEND="http://panel-backend:8000"
 MAX_RETRIES=30
 RETRY_DELAY=2
 
-echo "[token-init] Aguardando panel-backend em $BACKEND..."
+echo "[token-init] Aguardando panel-backend em $BACKEND/healthz..."
 i=0
-until curl -sf "$BACKEND/auth/login" > /dev/null 2>&1; do
+until curl -sf "$BACKEND/healthz" > /dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -ge "$MAX_RETRIES" ]; then
     echo "[token-init] ERRO: backend nao respondeu apos $MAX_RETRIES tentativas."
