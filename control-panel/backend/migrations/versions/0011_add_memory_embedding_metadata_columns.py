@@ -34,9 +34,7 @@ def upgrade() -> None:
                 server_default="0",
             )
         )
-        batch_op.add_column(
-            sa.Column("source_file_path", sa.String(), nullable=True)
-        )
+        batch_op.add_column(sa.Column("source_file_path", sa.String(), nullable=True))
         batch_op.add_column(
             sa.Column("embedding_generated_at", sa.DateTime(), nullable=True)
         )
