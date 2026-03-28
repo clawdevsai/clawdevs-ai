@@ -28,11 +28,11 @@ class TestK8sClients:
 
     def test_get_container_clients_no_cluster(self):
         """Test get_container_clients when no cluster config is available."""
-        with patch("app.services.container_client.kubernetes") as mock_k8s:
-            mock_k8s.client = MagicMock()
-            mock_k8s.config = MagicMock()
-            mock_k8s.config.load_incluster_config.side_effect = Exception("No config")
-            mock_k8s.config.load_kube_config.side_effect = Exception("No kubeconfig")
+        with patch("app.services.container_client.kubernetes") as mock_container:
+            mock_container.client = MagicMock()
+            mock_container.config = MagicMock()
+            mock_container.config.load_incluster_config.side_effect = Exception("No config")
+            mock_container.config.load_kube_config.side_effect = Exception("No kubeconfig")
 
             core, apps = __import__(
                 "app.services.container_client", fromlist=["get_container_clients"]
@@ -43,12 +43,12 @@ class TestK8sClients:
 
     def test_get_container_clients_with_cluster(self):
         """Test get_container_clients when cluster config is available."""
-        with patch("app.services.container_client.kubernetes") as mock_k8s:
+        with patch("app.services.container_client.kubernetes") as mock_container:
             mock_core = MagicMock()
             mock_apps = MagicMock()
-            mock_k8s.client.CoreV1Api.return_value = mock_core
-            mock_k8s.client.AppsV1Api.return_value = mock_apps
-            mock_k8s.config.load_incluster_config = MagicMock()
+            mock_container.client.CoreV1Api.return_value = mock_core
+            mock_container.client.AppsV1Api.return_value = mock_apps
+            mock_container.config.load_incluster_config = MagicMock()
 
             core, apps = __import__(
                 "app.services.container_client", fromlist=["get_container_clients"]
@@ -58,7 +58,7 @@ class TestK8sClients:
             assert apps is not None
 
     def test_list_containers_no_core(self):
-        """Test list_containers when k8s client is not available."""
+        """Test list_containers when container client is not available."""
         from app.services.container_client import list_containers
 
         with patch(
@@ -91,7 +91,7 @@ class TestK8sClients:
             assert pods[0]["name"] == "test-pod"
 
     def test_list_events_no_core(self):
-        """Test list_events when k8s client is not available."""
+        """Test list_events when container client is not available."""
         from app.services.container_client import list_events
 
         with patch(
@@ -125,7 +125,7 @@ class TestK8sClients:
             assert events[0]["name"] == "test-event"
 
     def test_list_pvcs_no_core(self):
-        """Test list_pvcs when k8s client is not available."""
+        """Test list_pvcs when container client is not available."""
         from app.services.container_client import list_pvcs
 
         with patch(

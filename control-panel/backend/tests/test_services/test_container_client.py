@@ -31,12 +31,12 @@ class TestContainerClient:
 
     def test_get_container_clients_success(self):
         """Test getting container clients when available."""
-        with patch("app.services.container_client.kubernetes") as mock_k8s:
+        with patch("app.services.container_client.kubernetes") as mock_container:
             mock_core = MagicMock()
             mock_apps = MagicMock()
-            mock_k8s.client.CoreV1Api.return_value = mock_core
-            mock_k8s.client.AppsV1Api.return_value = mock_apps
-            mock_k8s.config.load_incluster_config = MagicMock()
+            mock_container.client.CoreV1Api.return_value = mock_core
+            mock_container.client.AppsV1Api.return_value = mock_apps
+            mock_container.config.load_incluster_config = MagicMock()
 
             core, apps = __import__(
                 "app.services.container_client", fromlist=["get_container_clients"]
@@ -45,17 +45,23 @@ class TestContainerClient:
             assert core is not None
             assert apps is not None
 
+<<<<<<< HEAD
     def test_get_container_clients_fallback_to_config(self):
         """Test fallback to config file when incluster fails."""
         with patch("app.services.container_client.kubernetes") as mock_k8s:
+=======
+    def test_get_container_clients_fallback_to_kubeconfig(self):
+        """Test fallback to kubeconfig when incluster fails."""
+        with patch("app.services.container_client.kubernetes") as mock_container:
+>>>>>>> 3b363068aa95ea545ea20d1f6fe7477d3b65ab78
             mock_core = MagicMock()
             mock_apps = MagicMock()
-            mock_k8s.client.CoreV1Api.return_value = mock_core
-            mock_k8s.client.AppsV1Api.return_value = mock_apps
-            mock_k8s.config.load_incluster_config = MagicMock(
+            mock_container.client.CoreV1Api.return_value = mock_core
+            mock_container.client.AppsV1Api.return_value = mock_apps
+            mock_container.config.load_incluster_config = MagicMock(
                 side_effect=Exception("No incluster config")
             )
-            mock_k8s.config.load_kube_config = MagicMock()
+            mock_container.config.load_kube_config = MagicMock()
 
             core, apps = __import__(
                 "app.services.container_client", fromlist=["get_container_clients"]
@@ -66,12 +72,12 @@ class TestContainerClient:
 
     def test_get_container_clients_not_available(self):
         """Test when container client is not available."""
-        with patch("app.services.container_client.kubernetes") as mock_k8s:
-            mock_k8s.client.CoreV1Api.side_effect = Exception("Container client not available")
-            mock_k8s.config.load_incluster_config = MagicMock(
+        with patch("app.services.container_client.kubernetes") as mock_container:
+            mock_container.client.CoreV1Api.side_effect = Exception("Container client not available")
+            mock_container.config.load_incluster_config = MagicMock(
                 side_effect=Exception("No config")
             )
-            mock_k8s.config.load_kube_config = MagicMock(
+            mock_container.config.load_kube_config = MagicMock(
                 side_effect=Exception("No kubeconfig")
             )
 
