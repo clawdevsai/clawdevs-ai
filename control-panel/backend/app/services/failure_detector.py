@@ -298,4 +298,3 @@ class FailureDetector:
             ),
             "escalation_reason": task.escalation_reason,
         }
-

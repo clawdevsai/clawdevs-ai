@@ -321,4 +321,3 @@ class CostTracker:
                 else None
             ),
         }
-

@@ -31,5 +31,6 @@ class User(SQLModel, table=True):
     password_hash: str
     role: str = Field(default="viewer")  # admin|viewer
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
-
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )

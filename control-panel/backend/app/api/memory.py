@@ -191,4 +191,3 @@ async def promote_entry(
     entry.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
     return {"status": "promoted", "id": entry_id}
-

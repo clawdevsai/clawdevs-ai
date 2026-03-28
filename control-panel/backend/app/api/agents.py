@@ -146,4 +146,3 @@ async def update_agent_status(
     await session.commit()
     await session.refresh(agent)
     return AgentResponse.from_orm(agent)
-

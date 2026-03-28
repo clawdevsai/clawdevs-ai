@@ -36,6 +36,9 @@ class SddArtifact(SQLModel, table=True):
     github_issue_number: Optional[int] = None
     github_issue_url: Optional[str] = None
     file_path: Optional[str] = None  # path on PVC if synced from file
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
-
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )

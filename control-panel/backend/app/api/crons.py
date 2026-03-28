@@ -205,4 +205,3 @@ async def trigger_cron_now(
         started_at=execution.started_at,
         finished_at=execution.finished_at or execution.started_at,
     )
-

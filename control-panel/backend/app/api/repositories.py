@@ -175,4 +175,3 @@ async def delete_repository(
         raise HTTPException(status_code=404, detail="Repository not found")
     await session.delete(repo)
     await session.commit()
-

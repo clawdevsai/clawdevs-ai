@@ -218,4 +218,3 @@ async def sync_tasks(db_session) -> None:
     # await sync_tasks_from_github(db_session, "owner/other-repo")
 
     logger.info("[task_sync] Task synchronization completed")
-

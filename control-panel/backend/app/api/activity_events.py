@@ -137,4 +137,3 @@ async def list_activity_events(
     items = items[:limit]
 
     return ActivityEventsListResponse(items=items, total=total)
-

@@ -142,4 +142,3 @@ async def sync_memory_entries(db_session) -> None:
 
     if changed:
         await db_session.commit()
-

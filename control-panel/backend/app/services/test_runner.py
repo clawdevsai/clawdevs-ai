@@ -382,4 +382,3 @@ class TestRunner:
             violations.extend(test_result.errors)
 
         return len(violations) == 0, violations
-

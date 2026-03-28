@@ -36,5 +36,6 @@ class ActivityEvent(SQLModel, table=True):
     entity_type: Optional[str] = None
     entity_id: Optional[str] = None
     payload: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None), index=True)
-
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None), index=True
+    )
