@@ -36,7 +36,7 @@ spec:
     spec:
       initContainers:
         - name: wait-for-backend
-          image: busybox:1.36
+          image: busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
           command:
             - sh
             - -c
@@ -48,7 +48,7 @@ spec:
               echo "Backend is ready!"
       containers:
         - name: frontend
-          image: clawdevsai/clawdevs-panel-frontend:latest
+          image: clawdevsai/clawdevs-panel-frontend@sha256:c86b2cee8005309bc143fd4506726844c8a94bd862c62da7c0775b5758a8db1b
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

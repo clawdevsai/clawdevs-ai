@@ -47,6 +47,8 @@ configMapGenerator:
       - ceo-USER.md=openclaw-config/ceo/USER.md
       - ceo-TOOLS.md=openclaw-config/ceo/TOOLS.md
       - ceo-skill-ceo_orchestration-SKILL.md=openclaw-config/agents/ceo/skills/ceo_orchestration/SKILL.md
+      - ceo-skill-markdown_converter-SKILL.md=openclaw-config/agents/ceo/skills/markdown_converter/SKILL.md
+      - ceo-skill-market_research-SKILL.md=openclaw-config/agents/ceo/skills/market_research/SKILL.md
       # po
       - po-AGENTS.md=openclaw-config/po/AGENTS.md
       - po-BOOT.md=openclaw-config/po/BOOT.md
@@ -59,6 +61,8 @@ configMapGenerator:
       - po-USER.md=openclaw-config/po/USER.md
       - po-TOOLS.md=openclaw-config/po/TOOLS.md
       - po-skill-po_product_delivery-SKILL.md=openclaw-config/agents/po/skills/po_product_delivery/SKILL.md
+      - po-skill-prompt_engineering_expert-SKILL.md=openclaw-config/agents/po/skills/prompt_engineering_expert/SKILL.md
+      - po-skill-clawddocs-SKILL.md=openclaw-config/agents/po/skills/clawddocs/SKILL.md
       # arquiteto
       - arquiteto-AGENTS.md=openclaw-config/arquiteto/AGENTS.md
       - arquiteto-BOOT.md=openclaw-config/arquiteto/BOOT.md
@@ -136,6 +140,7 @@ configMapGenerator:
       - devops_sre-USER.md=openclaw-config/devops_sre/USER.md
       - devops_sre-TOOLS.md=openclaw-config/devops_sre/TOOLS.md
       - devops_sre-skill-devops_sre_operations-SKILL.md=openclaw-config/agents/devops_sre/skills/devops_sre_operations/SKILL.md
+      - devops_sre-skill-docker_essentials-SKILL.md=openclaw-config/agents/devops_sre/skills/docker_essentials/SKILL.md
       # security_engineer
       - security_engineer-AGENTS.md=openclaw-config/security_engineer/AGENTS.md
       - security_engineer-BOOT.md=openclaw-config/security_engineer/BOOT.md
@@ -206,6 +211,7 @@ configMapGenerator:
       - shared-SDD_CHECKLIST.md=openclaw-config/shared/SDD_CHECKLIST.md
       - shared-SDD_FULL_CYCLE_EXAMPLE.md=openclaw-config/shared/SDD_FULL_CYCLE_EXAMPLE.md
       - shared-SDD_OPERATIONAL_PROMPTS.md=openclaw-config/shared/SDD_OPERATIONAL_PROMPTS.md
+      - shared-SOURCE_VALIDATION.md=openclaw-config/shared/SOURCE_VALIDATION.md
       - shared-PROMPT_CHANGELOG.md=openclaw-config/shared/PROMPT_CHANGELOG.md
       - shared-sdd-initiative-README.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/README.md
       - shared-sdd-initiative-BRIEF.md=openclaw-config/shared/initiatives/internal-sdd-operationalization/BRIEF.md

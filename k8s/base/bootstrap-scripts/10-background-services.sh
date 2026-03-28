@@ -99,6 +99,69 @@ run_security_audit_deep_once() {
   return 0
 }
 
+run_security_audit_deep_recurring() {
+  local audit_log="${OPENCLAW_STATE_DIR}/backlog/status/security-audit-deep.log"
+  local interval_seconds="${OPENCLAW_SECURITY_AUDIT_CRON_INTERVAL_SECONDS:-3600}"
+  local timeout_seconds="${OPENCLAW_SECURITY_AUDIT_TIMEOUT_SECONDS:-45}"
+
+  mkdir -p "$(dirname "${audit_log}")"
+  while true; do
+    sleep "${interval_seconds}"
+    if ! openclaw_gateway_is_ready; then
+      echo "[bootstrap] warning: skipping recurring security audit -- gateway not ready" >> "${audit_log}"
+      continue
+    fi
+    echo "[bootstrap] recurring openclaw security audit --deep" >> "${audit_log}"
+    if timeout "${timeout_seconds}"s openclaw security audit --deep >> "${audit_log}" 2>&1; then
+      echo "[bootstrap] recurring openclaw security audit --deep concluido" >> "${audit_log}"
+    else
+      echo "[bootstrap] warning: recurring openclaw security audit --deep falhou/timeout" >> "${audit_log}"
+    fi
+  done
+}
+
+track_breakglass_audit_events() {
+  local approvals_file="${HOME}/.openclaw/exec-approvals.json"
+  local audit_log="${OPENCLAW_STATE_DIR}/backlog/status/breakglass-audit.jsonl"
+  local seen_log="${OPENCLAW_STATE_DIR}/backlog/status/.breakglass-seen.log"
+  local poll_seconds="${OPENCLAW_BREAKGLASS_AUDIT_INTERVAL_SECONDS:-30}"
+  local ttl_seconds="${OPENCLAW_BREAKGLASS_DEFAULT_TTL_SECONDS:-3600}"
+
+  mkdir -p "$(dirname "${audit_log}")"
+  touch "${audit_log}" "${seen_log}"
+
+  while true; do
+    if [ -f "${approvals_file}" ]; then
+      jq -rc '
+        (.agents // {})
+        | to_entries[]
+        | .key as $agent
+        | (.value.allowlist // [])[]
+        | select((.lastUsedAt // 0) > 0)
+        | {
+            key: ($agent + "|" + ((.lastUsedAt|tostring) // "0") + "|" + (.lastUsedCommand // "")),
+            agent: $agent,
+            lastUsedAt: .lastUsedAt,
+            command: (.lastUsedCommand // "unknown")
+          }
+      ' "${approvals_file}" 2>/dev/null | while IFS= read -r evt; do
+        [ -n "${evt}" ] || continue
+        key="$(printf '%s' "${evt}" | jq -r '.key')"
+        grep -Fxq "${key}" "${seen_log}" 2>/dev/null && continue
+        printf '%s\n' "${key}" >> "${seen_log}"
+        now_iso="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+        expires_iso="$(date -u -d "+${ttl_seconds} seconds" +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%dT%H:%M:%SZ")"
+        agent="$(printf '%s' "${evt}" | jq -r '.agent')"
+        command="$(printf '%s' "${evt}" | jq -r '.command' | sed 's/"/\\"/g')"
+        last_used_at="$(printf '%s' "${evt}" | jq -r '.lastUsedAt')"
+        printf '{"ts":"%s","reason":"panel_break_glass","agent":"%s","command":"%s","lastUsedAt":%s,"expiresAt":"%s"}\n' \
+          "${now_iso}" "${agent}" "${command}" "${last_used_at}" "${expires_iso}" >> "${audit_log}"
+      done
+    fi
+    sleep "${poll_seconds}"
+  done
+}
+
 if [ "${PANEL_PERMISSION_SYNC_ENABLED:-true}" = "true" ]; then
   echo "[bootstrap] enabling panel permission sync for sessions.json"
   ( set +e; ensure_panel_read_permissions ) &
@@ -106,6 +169,16 @@ fi
 
 if [ "${OPENCLAW_SECURITY_AUDIT_DEEP_ON_START:-true}" = "true" ]; then
   ( set +e; run_security_audit_deep_once ) &
+fi
+
+if [ "${OPENCLAW_SECURITY_AUDIT_DEEP_CRON_ENABLED:-true}" = "true" ]; then
+  echo "[bootstrap] enabling recurring openclaw security audit --deep"
+  ( set +e; run_security_audit_deep_recurring ) &
+fi
+
+if [ "${OPENCLAW_BREAKGLASS_AUDIT_ENABLED:-true}" = "true" ]; then
+  echo "[bootstrap] enabling break-glass audit tracker (panel-only flow)"
+  ( set +e; track_breakglass_audit_events ) &
 fi
 
 if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then

@@ -31,8 +31,10 @@ tools:
 rules:
   - validate active repository context before any gh/git action
   - use panel API for task lifecycle (create/update/list)
+  - enforce SOURCE_VALIDATION.md for external-information decisions (>=3 independent sources, >=1 official source, explicit date, confidence)
   - mandatory order: docs -> commit -> panel_task -> validation -> session_finished
   - use sessions_send for agent channels (not message)
+  - persist decision evidence contract: claim, sources, confidence, invalidators
 
 routing_by_label:
   back_end: dev_backend

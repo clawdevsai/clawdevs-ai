@@ -403,7 +403,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-devops_sre",
         "agentDir": "/data/openclaw/agents/devops_sre/agent",
-        "skills": ["devops_sre_operations"],
+        "skills": ["devops_sre_operations", "docker_essentials"],
         "tools": {
           "allow": [
             "read",
@@ -642,30 +642,48 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
-# Garantir elevated habilitado globalmente e por agente (inclui cenarios de config ja existente).
-# Evita erro: "elevated is not available right now (runtime=direct)" em sessoes Telegram.
+# Zero Trust baseline: sandbox global, exec allowlist + prompt on miss + deny fallback.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
-  if jq --arg chat_id "${TELEGRAM_CHAT_ID}" '
-      .tools.elevated = {
-        "enabled": true,
-        "allowFrom": {
-          "telegram": [$chat_id]
-        }
-      }
-      | (.agents.list[]?.tools.elevated) = {
-        "enabled": true,
-        "allowFrom": {
-          "telegram": [$chat_id]
-        }
-      }
+  if jq '
+      .agents.defaults.sandbox.mode = "all"
+      | .agents.defaults.sandbox.sessionToolsVisibility = "all"
+      | .tools.exec.strictInlineEval = true
+      | .agents.list |= map(
+          .tools.exec = (
+            (.tools.exec // {})
+            + {
+              "host": "gateway",
+              "security": "allowlist",
+              "ask": "on-miss",
+              "askFallback": "deny",
+              "strictInlineEval": true
+            }
+          )
+        )
     ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
     mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
     mkdir -p ~/.openclaw
     cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
   else
     rm -f "${_tmp_openclaw_json}"
-    echo "[bootstrap] falha ao aplicar patch de elevated no openclaw.json"
+    echo "[bootstrap] falha ao aplicar baseline zero-trust de sandbox/exec no openclaw.json"
+  fi
+fi
+
+# Zero Trust break-glass: bloquear canal alternativo de elevated fora do painel.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .tools.elevated = { "enabled": false }
+      | (.agents.list[]?.tools.elevated) = { "enabled": false }
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao desabilitar elevated fora do painel"
   fi
 fi
 
@@ -720,33 +738,60 @@ fi
 
 # Cada agente usa seu proprio workspace com identidade isolada (workspace definido por agente no JSON).
 
-# Exec approvals: ask=off para todos os agentes — sem socket (evita erro "approval not enabled on Telegram").
-# Todos os agentes aprovam automaticamente exec sem precisar de UI de aprovacao.
+# Exec approvals zero trust:
+# - allowlist explicita
+# - ask=on-miss
+# - askFallback=deny (sem bypass quando UI de aprovacao indisponivel)
+# - autoAllowSkills=false para evitar trust implicito
 EXEC_APPROVALS_FILE=~/.openclaw/exec-approvals.json
 cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
 {
   "version": 1,
   "defaults": {
-    "ask": "off",
-    "autoAllowSkills": true
+    "security": "allowlist",
+    "ask": "on-miss",
+    "askFallback": "deny",
+    "autoAllowSkills": false,
+    "allowlist": [
+      { "pattern": "/usr/bin/cat" },
+      { "pattern": "/usr/bin/ls" },
+      { "pattern": "/usr/bin/grep" },
+      { "pattern": "/usr/bin/find" },
+      { "pattern": "/usr/bin/sed" },
+      { "pattern": "/usr/bin/awk" },
+      { "pattern": "/usr/bin/jq" },
+      { "pattern": "/usr/bin/head" },
+      { "pattern": "/usr/bin/tail" },
+      { "pattern": "/usr/bin/wc" },
+      { "pattern": "/usr/bin/sort" },
+      { "pattern": "/usr/bin/uniq" },
+      { "pattern": "/usr/bin/cut" },
+      { "pattern": "/usr/bin/xargs" },
+      { "pattern": "/usr/bin/stat" },
+      { "pattern": "/usr/bin/date" },
+      { "pattern": "/usr/bin/env" },
+      { "pattern": "/usr/bin/printenv" },
+      { "pattern": "/usr/bin/tee" },
+      { "pattern": "/usr/bin/tr" }
+    ]
   },
   "agents": {
-    "ceo":              { "ask": "off", "autoAllowSkills": true },
-    "po":               { "ask": "off", "autoAllowSkills": true },
-    "arquiteto":        { "ask": "off", "autoAllowSkills": true },
-    "dev_backend":      { "ask": "off", "autoAllowSkills": true },
-    "dev_frontend":     { "ask": "off", "autoAllowSkills": true },
-    "dev_mobile":       { "ask": "off", "autoAllowSkills": true },
-    "qa_engineer":      { "ask": "off", "autoAllowSkills": true },
-    "security_engineer":{ "ask": "off", "autoAllowSkills": true },
-    "ux_designer":      { "ask": "off", "autoAllowSkills": true },
-    "devops_sre":       { "ask": "off", "autoAllowSkills": true },
-    "dba_data_engineer":  { "ask": "off", "autoAllowSkills": true },
-    "memory_curator":    { "ask": "off", "autoAllowSkills": true }
+    "ceo":               { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "po":                { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "arquiteto":         { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "dev_backend":       { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "dev_frontend":      { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "dev_mobile":        { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "qa_engineer":       { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "security_engineer": { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "ux_designer":       { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "devops_sre":        { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "dba_data_engineer": { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false },
+    "memory_curator":    { "security": "allowlist", "ask": "on-miss", "askFallback": "deny", "autoAllowSkills": false }
   }
 }
 EOFAPPROVALS
-echo "[bootstrap] warning: residual risk accepted for this rollout -> exec-approvals uses autoAllowSkills=true (hardening out of scope)"
+echo "[bootstrap] zero-trust exec approvals aplicadas (allowlist + ask=on-miss + askFallback=deny + autoAllowSkills=false)"
 # Repair agent main sessions when the persisted transcript is missing, invalid,
 # or contains no assistant text messages that the chat UI can render.
 repair_main_session() {

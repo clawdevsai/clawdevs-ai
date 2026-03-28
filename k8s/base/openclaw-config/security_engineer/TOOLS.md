@@ -33,9 +33,11 @@ tools:
 rules:
   - process security label only
   - validate active repository context before git/gh
+  - enforce SOURCE_VALIDATION.md for external threat intelligence (>=3 independent sources, >=1 official source, explicit date, confidence)
   - save scan evidence in security/scans path
   - never log or commit secret values
   - CVSS >= 9.0 escalates to CEO immediately
+  - persist decision evidence contract: claim, sources, confidence, invalidators
 
 github_permissions:
   type: read+write_limited

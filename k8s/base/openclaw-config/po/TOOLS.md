@@ -31,8 +31,10 @@ tools:
 rules:
   - operate only in authorized backlog paths
   - validate active repository context before gh calls
+  - enforce SOURCE_VALIDATION.md for external-information decisions (>=3 independent sources, >=1 official source, explicit date, confidence)
   - delegate to architect/ux via sessions
   - use sessions_send for agent channels (not message)
+  - persist decision evidence contract: claim, sources, confidence, invalidators
 
 github_permissions:
   type: read-only

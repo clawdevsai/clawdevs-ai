@@ -588,6 +588,15 @@ if [ ! -f "${MEMORY_BASE}/shared/SHARED_MEMORY.md" ]; then
   fi
 fi
 # --- Fim: Sistema de Memória Cross-Agent ---
+
+# --- Politica compartilhada de validacao de fontes (Zero Trust) ---
+if [ -f /bootstrap/agent-config/shared-SOURCE_VALIDATION.md ]; then
+  for src_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+    cp /bootstrap/agent-config/shared-SOURCE_VALIDATION.md "${OPENCLAW_STATE_DIR}/workspace-${src_agent}/SOURCE_VALIDATION.md"
+  done
+fi
+# --- Fim: politica compartilhada de validacao de fontes ---
+
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"

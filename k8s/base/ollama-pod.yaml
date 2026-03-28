@@ -39,7 +39,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: ollama
-          image: clawdevsai/ollama-runtime:latest
+          image: clawdevsai/ollama-runtime@sha256:4f07e69e888fa746405b52e4d37500ef1a18cc646d921df1974e8aebc5568327
           imagePullPolicy: IfNotPresent
           resources:
             requests:

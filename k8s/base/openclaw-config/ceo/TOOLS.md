@@ -30,8 +30,10 @@ allowed_tools:
 
 rules:
   - validate active repository context before delegation or gh queries
+  - enforce SOURCE_VALIDATION.md for external-information decisions (>=3 independent sources, >=1 official source, explicit date, confidence)
   - keep one session per initiative (avoid duplicated threads)
   - use sessions_send for agent channels (not message)
+  - persist decision evidence contract: claim, sources, confidence, invalidators
   - if tool fails, register once and continue with fallback
 
 restrictions:

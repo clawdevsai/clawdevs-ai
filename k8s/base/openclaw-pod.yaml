@@ -37,10 +37,20 @@ spec:
       labels:
         app: clawdevs-ai
     spec:
+      automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
       initContainers:
         - name: wait-for-ollama
-          image: busybox:1.36
+          image: busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           command:
             - sh
             - -c
@@ -52,12 +62,14 @@ spec:
               echo "Ollama is ready!"
       containers:
         - name: openclaw
-          image: clawdevsai/openclaw-runtime:latest
+          image: clawdevsai/openclaw-runtime@sha256:3b82cd2207cf8526657192eb68bb21e45793c1afe6e785974c65a314daf98d95
           imagePullPolicy: IfNotPresent
           ports:
             - name: gateway
               containerPort: 18789
           env:
+            - name: HOME
+              value: /data/openclaw
             - name: OLLAMA_BASE_URL
               value: http://ollama:11434
             - name: OPENCLAW_GATEWAY_TOKEN
@@ -136,6 +148,8 @@ spec:
               value: "60"
             - name: OPENCLAW_SECURITY_AUDIT_RETRY_INTERVAL_SECONDS
               value: "5"
+            - name: OPENCLAW_SECURITY_AUDIT_CRON_INTERVAL_SECONDS
+              value: "3600"
             - name: GH_CONFIG_DIR
               value: /data/openclaw/.config/gh
             - name: AGENT_ERROR_ROUTER_ENABLED
@@ -286,7 +300,15 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 6
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: agent-config
               mountPath: /bootstrap/agent-config
@@ -296,6 +318,10 @@ spec:
             - name: bootstrap-scripts
               mountPath: /bootstrap/scripts
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
+            - name: var-tmp
+              mountPath: /var/tmp
           command: ["/bin/bash", "-lc"]
           args:
             - |
@@ -388,6 +414,10 @@ spec:
           configMap:
             name: openclaw-bootstrap-scripts
             defaultMode: 0555
+        - name: tmp
+          emptyDir: {}
+        - name: var-tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

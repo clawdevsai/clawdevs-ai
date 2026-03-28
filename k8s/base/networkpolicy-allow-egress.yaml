@@ -18,13 +18,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# NetworkPolicy: permite egress irrestrito para todos os pods do namespace.
-# Necessário para: HTTPS externo (GitHub, Telegram, Anthropic API), DNS, Ollama, SearXNG.
-# Em produção, considere restringir por pod selector e adicionar ingress policies.
+# Zero Trust: default deny egress for every pod in namespace.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-all-egress
+  name: default-deny-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+---
+# Zero Trust: explicit DNS egress for all pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
   labels:
     app: clawdevs-ai
 spec:
@@ -32,11 +42,211 @@ spec:
   policyTypes:
     - Egress
   egress:
-    # Permite todo tráfego de saída (necessário para APIs externas e DNS)
-    - {}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchExpressions:
+              - key: k8s-app
+                operator: In
+                values: ["kube-dns", "coredns"]
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
 ---
-# NetworkPolicy: permite ingress no gateway OpenClaw apenas de dentro do namespace
-# e do control-panel backend/worker.
+# OpenClaw: allow only required in-cluster service egress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-openclaw-internal-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-ai
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ollama
+      ports:
+        - protocol: TCP
+          port: 11434
+    - to:
+        - podSelector:
+            matchLabels:
+              app: searxng
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-backend
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+# OpenClaw: external HTTPS/HTTP for GitHub, Telegram, model APIs and trusted web providers.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-openclaw-external-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-ai
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# Control panel backend: DB/Redis/Gateway plus HTTPS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-panel-backend-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-panel-backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-db
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-ai
+      ports:
+        - protocol: TCP
+          port: 18789
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+---
+# Control panel worker: DB/Redis/Gateway plus HTTPS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-panel-worker-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: clawdevs-panel-worker
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-db
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-panel-redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    - to:
+        - podSelector:
+            matchLabels:
+              app: clawdevs-ai
+      ports:
+        - protocol: TCP
+          port: 18789
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+---
+# SearXNG: external web fetch only (HTTP/HTTPS).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-searxng-external-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: searxng
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# Ollama: model/runtime pulls over HTTP/HTTPS.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ollama-external-egress
+  labels:
+    app: clawdevs-ai
+spec:
+  podSelector:
+    matchLabels:
+      app: ollama
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+---
+# Ingress hardening: OpenClaw gateway exposed only to panel backend/worker.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
