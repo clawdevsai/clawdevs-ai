@@ -29,7 +29,7 @@ except Exception:  # pragma: no cover
 
 
 def get_container_clients():
-    """Get container management clients (deprecated k8s fallback)."""
+    """Get container management clients (deprecated kubernetes fallback (Docker Compose))."""
     try:
         if kubernetes is None:
             logger.warning("Container management requires kubernetes package")
@@ -47,7 +47,7 @@ def get_container_clients():
 
 
 def list_containers(namespace: str = "default") -> list:
-    """List containers (k8s pods as fallback)."""
+    """List containers (containers as fallback)."""
     core, _ = get_container_clients()
     if core is None:
         return []
