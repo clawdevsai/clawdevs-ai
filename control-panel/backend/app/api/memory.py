@@ -188,6 +188,7 @@ async def promote_entry(
             status_code=400, detail="Only candidate entries can be promoted"
         )
     entry.entry_type = "global"
-    entry.updated_at = datetime.now(UTC)
+    entry.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
     return {"status": "promoted", "id": entry_id}
+

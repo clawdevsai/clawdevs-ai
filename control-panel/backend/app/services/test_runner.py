@@ -344,7 +344,7 @@ class TestRunner:
         else:
             task.description = test_summary
 
-        task.updated_at = datetime.now(UTC)
+        task.updated_at = datetime.now(UTC).replace(tzinfo=None)
         self.db_session.add(task)
         self.db_session.commit()
 
@@ -382,3 +382,4 @@ class TestRunner:
             violations.extend(test_result.errors)
 
         return len(violations) == 0, violations
+

@@ -46,5 +46,6 @@ class Agent(SQLModel, table=True):
     max_escalations: int = Field(default=0)  # Max escalations this agent can handle
     escalations_handled: int = Field(default=0)  # Count of escalations handled
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+

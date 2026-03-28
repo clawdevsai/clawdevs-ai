@@ -142,7 +142,8 @@ async def update_agent_status(
         agent.current_model = body["current_model"]
     from datetime import datetime
 
-    agent.updated_at = datetime.now(UTC)
+    agent.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
     await session.refresh(agent)
     return AgentResponse.from_orm(agent)
+

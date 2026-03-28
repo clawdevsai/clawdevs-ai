@@ -44,4 +44,5 @@ class Approval(SQLModel, table=True):
     )
     justification: Optional[str] = None
     decided_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+

@@ -35,4 +35,5 @@ class Metric(SQLModel, table=True):
     value: float
     period_start: datetime = Field(index=True)
     period_end: datetime
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+

@@ -113,7 +113,7 @@ async def create_repository(
         existing.description = body.description
         existing.default_branch = body.default_branch
         existing.is_active = True
-        existing.updated_at = datetime.now(UTC)
+        existing.updated_at = datetime.now(UTC).replace(tzinfo=None)
         await session.commit()
         await session.refresh(existing)
         response.status_code = status.HTTP_200_OK
@@ -124,7 +124,7 @@ async def create_repository(
         full_name=normalized_full_name,
         description=body.description,
         default_branch=body.default_branch,
-        updated_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC).replace(tzinfo=None),
     )
     session.add(repo)
     await session.commit()
@@ -155,7 +155,7 @@ async def update_repository(
         repo.default_branch = body.default_branch
     if body.is_active is not None:
         repo.is_active = body.is_active
-    repo.updated_at = datetime.now(UTC)
+    repo.updated_at = datetime.now(UTC).replace(tzinfo=None)
     await session.commit()
     await session.refresh(repo)
     return _to_response(repo)
@@ -175,3 +175,4 @@ async def delete_repository(
         raise HTTPException(status_code=404, detail="Repository not found")
     await session.delete(repo)
     await session.commit()
+

@@ -86,7 +86,7 @@ async def sync_memory_entries(db_session) -> None:
                 existing.body = content
                 existing.tags = [slug]
                 existing.source_agents = [slug]
-                existing.updated_at = datetime.now(UTC)
+                existing.updated_at = datetime.now(UTC).replace(tzinfo=None)
                 changed = True
         else:
             db_session.add(
@@ -125,7 +125,7 @@ async def sync_memory_entries(db_session) -> None:
                     shared_existing.body = content
                     shared_existing.tags = ["shared"]
                     shared_existing.source_agents = ["shared"]
-                    shared_existing.updated_at = datetime.now(UTC)
+                    shared_existing.updated_at = datetime.now(UTC).replace(tzinfo=None)
                     changed = True
             else:
                 db_session.add(
@@ -142,3 +142,4 @@ async def sync_memory_entries(db_session) -> None:
 
     if changed:
         await db_session.commit()
+

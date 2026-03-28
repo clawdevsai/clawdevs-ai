@@ -33,5 +33,6 @@ class Repository(SQLModel, table=True):
     description: Optional[str] = None
     default_branch: str = Field(default="main")
     is_active: bool = Field(default=True, index=True)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC).replace(tzinfo=None))
+

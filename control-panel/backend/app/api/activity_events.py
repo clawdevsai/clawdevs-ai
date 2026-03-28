@@ -105,7 +105,7 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
             agent_id=agent_id,
             created_at=session.last_active_at
             or session.created_at
-            or datetime.now(UTC),
+            or datetime.now(UTC).replace(tzinfo=None),
         )
         items.append(event)
 
@@ -137,3 +137,4 @@ async def list_activity_events(
     items = items[:limit]
 
     return ActivityEventsListResponse(items=items, total=total)
+

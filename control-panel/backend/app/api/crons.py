@@ -179,7 +179,7 @@ async def trigger_cron_now(
     if agent is None:
         raise HTTPException(status_code=404, detail=f"Agent '{agent_slug}' not found")
 
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).replace(tzinfo=None)
     execution = CronExecution(
         agent_id=agent.id,
         started_at=now,
@@ -205,3 +205,4 @@ async def trigger_cron_now(
         started_at=execution.started_at,
         finished_at=execution.finished_at or execution.started_at,
     )
+
