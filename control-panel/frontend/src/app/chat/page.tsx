@@ -164,7 +164,7 @@ export default function ChatPage() {
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("panel_token") : null;
-      const res = await fetch("/chat/stream", {
+      const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -323,6 +323,15 @@ export default function ChatPage() {
                       <div className="prose prose-invert prose-sm max-w-none break-words">
                         {msg.content ? (
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        ) : sending && msg.role === "assistant" ? (
+                          <div className="flex items-center gap-1.5">
+                            <span className="flex gap-0.5">
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--muted-foreground))]" style={{ animationDelay: "0ms" }} />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--muted-foreground))]" style={{ animationDelay: "150ms" }} />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[hsl(var(--muted-foreground))]" style={{ animationDelay: "300ms" }} />
+                            </span>
+                            <span className="text-sm text-[hsl(var(--muted-foreground))]">Stream em andamento...</span>
+                          </div>
                         ) : (
                           <span className="text-sm text-[hsl(var(--muted-foreground))]">Pensando...</span>
                         )}

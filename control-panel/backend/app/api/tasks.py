@@ -208,22 +208,42 @@ async def create_task(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    import logging
     from datetime import timezone
 
+    logger = logging.getLogger(__name__)
+
     now = datetime.now(timezone.utc).replace(tzinfo=None)
+    
     ceo_agent = await get_ceo_agent(session)
-    workflow_state = WORKFLOW_QUEUED_TO_CEO if ceo_agent else WORKFLOW_FAILED
-    workflow_error = None if ceo_agent else "Agent with slug 'ceo' was not found"
+    
+    if ceo_agent is None:
+        logger.warning("CEO agent not found, attempting sync_agents...")
+        try:
+            from app.services.agent_sync import sync_agents
+            await sync_agents(session)
+            ceo_agent = await get_ceo_agent(session)
+        except Exception as e:
+            logger.error(f"Failed to sync agents: {e}")
+    
+    if ceo_agent is None:
+        logger.error("CEO agent still not found after sync attempt")
+        raise HTTPException(
+            status_code=503,
+            detail="Agente CEO não encontrado. Verifique se o sync de agentes foi executado.",
+        )
+
+    workflow_state = WORKFLOW_QUEUED_TO_CEO
 
     task = Task(
         title=body.title,
         description=body.description,
         priority=body.priority,
-        assigned_agent_id=ceo_agent.id if ceo_agent else None,
+        assigned_agent_id=ceo_agent.id,
         label=body.label,
         github_repo=body.github_repo,
         workflow_state=workflow_state,
-        workflow_last_error=workflow_error,
+        workflow_last_error=None,
         workflow_attempts=0,
         created_at=now,
         updated_at=now,
@@ -235,36 +255,34 @@ async def create_task(
         task_id=task.id,
         event_type="task.created",
         description="Task criada",
-        to_agent_slug="ceo" if ceo_agent else None,
+        to_agent_slug="ceo",
     )
-    if ceo_agent:
-        await log_task_event(
-            session,
-            task_id=task.id,
-            event_type="task.queued_to_ceo",
-            description="Task enfileirada para despacho via CEO",
-            agent_id=ceo_agent.id,
-            to_agent_slug="ceo",
-        )
+    await log_task_event(
+        session,
+        task_id=task.id,
+        event_type="task.queued_to_ceo",
+        description="Task enfileirada para despacho via CEO",
+        agent_id=ceo_agent.id,
+        to_agent_slug="ceo",
+    )
     await session.commit()
     await session.refresh(task)
 
-    if ceo_agent:
-        queued, error = enqueue_task_for_ceo(task.id)
-        if not queued:
-            task.workflow_state = WORKFLOW_FAILED
-            task.workflow_last_error = error
-            await log_task_event(
-                session,
-                task_id=task.id,
-                event_type="task.failed",
-                description="Falha ao enfileirar task para o CEO",
-                agent_id=ceo_agent.id,
-                to_agent_slug="ceo",
-                payload={"error": error},
-            )
-            await session.commit()
-            await session.refresh(task)
+    queued, error = enqueue_task_for_ceo(task.id)
+    if not queued:
+        task.workflow_state = WORKFLOW_FAILED
+        task.workflow_last_error = error
+        await log_task_event(
+            session,
+            task_id=task.id,
+            event_type="task.failed",
+            description="Falha ao enfileirar task para o CEO",
+            agent_id=ceo_agent.id,
+            to_agent_slug="ceo",
+            payload={"error": error},
+        )
+        await session.commit()
+        await session.refresh(task)
 
     slug_map = await _load_slug_map_for_tasks(session, [task])
     return _to_task_response(task, slug_map)

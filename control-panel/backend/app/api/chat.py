@@ -20,6 +20,7 @@
 
 from typing import Annotated, Any, AsyncGenerator, Optional
 import asyncio
+import httpx
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sse_starlette.sse import EventSourceResponse
@@ -141,8 +142,45 @@ async def _latest_session_for_agent(
     return result.first()
 
 
+async def _wakeup_agent(agent_slug: str) -> bool:
+    """
+    Try to wake up an agent by sending a lightweight request to OpenClaw.
+    This triggers the agent to start if it's idle or stopped.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        session_key = f"agent:{agent_slug}:wakeup"
+        payload = {
+            "model": f"openclaw/{agent_slug}",
+            "messages": [{"role": "system", "content": "__WAKEUP__"}],
+            "stream": False,
+        }
+        headers = {
+            "Authorization": f"Bearer {openclaw_client.headers.get('Authorization', '')}",
+            "Content-Type": "application/json",
+            "x-openclaw-session-key": session_key,
+        }
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.post(
+                f"{openclaw_client.base_url}/v1/chat/completions",
+                headers=headers,
+                json=payload,
+            )
+            if r.status_code in (200, 201, 202):
+                logger.info(f"Wakeup signal sent to agent '{agent_slug}'")
+                return True
+            else:
+                logger.warning(f"Wakeup failed for '{agent_slug}': {r.status_code}")
+                return False
+    except Exception as e:
+        logger.warning(f"Failed to send wakeup to agent '{agent_slug}': {e}")
+        return False
+
+
 async def _wait_for_agent_online(
-    db: AsyncSession, agent_slug: str, timeout_seconds: float = 3.0
+    db: AsyncSession, agent_slug: str, timeout_seconds: float = 5.0
 ) -> bool:
     """
     Wait for agent to come online (poll status).
@@ -160,8 +198,9 @@ async def _wait_for_agent_online(
 
     logger = logging.getLogger(__name__)
     start_time = asyncio.get_event_loop().time()
-    poll_interval = 0.2  # Poll every 200ms
+    poll_interval = 0.3  # Poll every 300ms
     sync_attempted = False
+    wakeup_attempted = False
 
     while True:
         # Sync agent runtime status (reads heartbeats from disk)
@@ -201,9 +240,16 @@ async def _wait_for_agent_online(
         if current_status in ["online", "working"]:
             return True
 
+        # If offline and haven't tried wakeup yet, try to wake the agent
+        if current_status == "offline" and not wakeup_attempted:
+            logger.info(f"Agent '{agent_slug}' is offline, attempting wakeup...")
+            wakeup_attempted = True
+            await _wakeup_agent(agent_slug)
+
         # Check timeout
         elapsed = asyncio.get_event_loop().time() - start_time
         if elapsed >= timeout_seconds:
+            logger.warning(f"Agent '{agent_slug}' did not come online within {timeout_seconds}s")
             return False
 
         # Wait before polling again
