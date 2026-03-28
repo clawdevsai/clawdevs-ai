@@ -102,9 +102,25 @@ async def _ensure_agent(session: AsyncSession, slug: str) -> Agent:
     result = await session.exec(select(Agent).where(Agent.slug == slug))
     agent = result.first()
     if agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
-        )
+        # Try to sync agents (in case bootstrap failed)
+        from app.services.agent_sync import sync_agents
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            logger.info(f"Agent '{slug}' not found, attempting sync_agents...")
+            await sync_agents(session)
+
+            # Try again after sync
+            result = await session.exec(select(Agent).where(Agent.slug == slug))
+            agent = result.first()
+        except Exception as e:
+            logger.error(f"Failed to sync agents: {e}", exc_info=True)
+
+        if agent is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found"
+            )
     return agent
 
 
@@ -139,17 +155,42 @@ async def _wait_for_agent_online(
     Returns:
         True if agent came online, False if timeout
     """
+    import logging
+    from app.services.agent_sync import sync_agents_runtime
+
+    logger = logging.getLogger(__name__)
     start_time = asyncio.get_event_loop().time()
     poll_interval = 0.2  # Poll every 200ms
+    sync_attempted = False
 
     while True:
+        # Sync agent runtime status (reads heartbeats from disk)
+        try:
+            await sync_agents_runtime(db)
+        except Exception as e:
+            logger.warning(f"Failed to sync agent runtime: {e}")
+
         # Get latest agent status
         stmt = select(Agent).where(Agent.slug == agent_slug)
         result = await db.exec(stmt)
         agent = result.first()
 
         if not agent:
-            return False
+            # Try full sync if not found
+            if not sync_attempted:
+                logger.info(f"Agent '{agent_slug}' not found during wait, attempting full sync...")
+                try:
+                    from app.services.agent_sync import sync_agents
+                    await sync_agents(db)
+                    sync_attempted = True
+                    # Retry fetch
+                    result = await db.exec(stmt)
+                    agent = result.first()
+                except Exception as e:
+                    logger.error(f"Failed to sync agents: {e}")
+
+            if not agent:
+                return False
 
         # Calculate current status
         current_status = _status_from_heartbeat(
