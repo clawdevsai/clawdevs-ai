@@ -209,7 +209,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/minimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-po",
         "agentDir": "/data/openclaw/agents/po/agent",
-        "skills": ["po_product_delivery"],
+        "skills": ["po_product_delivery", "prompt_engineering_expert", "clawddocs"],
         "tools": {
           "allow": [
             "read",
