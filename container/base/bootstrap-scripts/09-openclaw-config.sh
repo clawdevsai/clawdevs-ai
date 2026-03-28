@@ -22,17 +22,13 @@
 # desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
 _existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
 _existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
-_node_host_ip="${NODE_HOST_IP:-127.0.0.1}"
-_gateway_nodeport="${OPENCLAW_GATEWAY_NODEPORT:-31879}"
 _allowed_origins_json="${OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON:-}"
 if [ -z "${_allowed_origins_json}" ]; then
   _allowed_origins_json="$(jq -cn \
     --arg o1 "http://127.0.0.1:18789" \
     --arg o2 "http://localhost:18789" \
-    --arg o3 "http://clawdevs-ai:18789" \
-    --arg o4 "http://clawdevs-ai.default.svc.cluster.local:18789" \
-    --arg o5 "http://${_node_host_ip}:${_gateway_nodeport}" \
-    '[$o1,$o2,$o3,$o4,$o5] | unique')"
+    --arg o3 "http://openclaw:18789" \
+    '[$o1,$o2,$o3] | unique')"
 fi
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
@@ -1104,7 +1100,7 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
-        { "pattern": "/usr/bin/kubectl" }
+        { "pattern": "/usr/bin/docker" }
       ]
     },
     "dba_data_engineer": {

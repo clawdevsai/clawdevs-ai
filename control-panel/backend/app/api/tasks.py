@@ -157,11 +157,11 @@ async def list_tasks(
 
 @router.get("/{task_id}/timeline", response_model=TaskTimelineResponse)
 async def task_timeline(
-    task_id: str,
+    task_id: UUID,
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    task = await session.get(Task, UUID(task_id))
+    task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
 
@@ -291,14 +291,14 @@ async def create_task(
 
 @router.patch("/{task_id}", response_model=TaskResponse)
 async def update_task(
-    task_id: str,
+    task_id: UUID,
     body: UpdateTaskRequest,
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     from datetime import timezone
 
-    result = await session.exec(select(Task).where(Task.id == UUID(task_id)))
+    result = await session.exec(select(Task).where(Task.id == task_id))
     task = result.first()
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -351,11 +351,11 @@ async def update_task(
 
 @router.delete("/{task_id}", status_code=204)
 async def delete_task(
-    task_id: str,
+    task_id: UUID,
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    task = await session.get(Task, UUID(task_id))
+    task = await session.get(Task, task_id)
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
 

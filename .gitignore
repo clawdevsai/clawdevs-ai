@@ -1,7 +1,8 @@
 .openclaw-forward.pid
 .env
-k8s/.env
-k8s/.env.local
+container/.env
+container/.env.local
+tmp/
 .worktrees/
 NUL
 .claude
