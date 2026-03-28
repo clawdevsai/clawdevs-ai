@@ -106,6 +106,7 @@ async def _ensure_agent(session: AsyncSession, slug: str) -> Agent:
         # Try to sync agents (in case bootstrap failed)
         from app.services.agent_sync import sync_agents
         import logging
+
         logger = logging.getLogger(__name__)
 
         try:
@@ -148,8 +149,9 @@ async def _wakeup_agent(agent_slug: str) -> bool:
     This triggers the agent to start if it's idle or stopped.
     """
     import logging
+
     logger = logging.getLogger(__name__)
-    
+
     try:
         session_key = f"agent:{agent_slug}:wakeup"
         payload = {
@@ -217,9 +219,12 @@ async def _wait_for_agent_online(
         if not agent:
             # Try full sync if not found
             if not sync_attempted:
-                logger.info(f"Agent '{agent_slug}' not found during wait, attempting full sync...")
+                logger.info(
+                    f"Agent '{agent_slug}' not found during wait, attempting full sync..."
+                )
                 try:
                     from app.services.agent_sync import sync_agents
+
                     await sync_agents(db)
                     sync_attempted = True
                     # Retry fetch
@@ -249,7 +254,9 @@ async def _wait_for_agent_online(
         # Check timeout
         elapsed = asyncio.get_event_loop().time() - start_time
         if elapsed >= timeout_seconds:
-            logger.warning(f"Agent '{agent_slug}' did not come online within {timeout_seconds}s")
+            logger.warning(
+                f"Agent '{agent_slug}' did not come online within {timeout_seconds}s"
+            )
             return False
 
         # Wait before polling again

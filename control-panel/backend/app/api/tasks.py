@@ -214,18 +214,19 @@ async def create_task(
     logger = logging.getLogger(__name__)
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
-    
+
     ceo_agent = await get_ceo_agent(session)
-    
+
     if ceo_agent is None:
         logger.warning("CEO agent not found, attempting sync_agents...")
         try:
             from app.services.agent_sync import sync_agents
+
             await sync_agents(session)
             ceo_agent = await get_ceo_agent(session)
         except Exception as e:
             logger.error(f"Failed to sync agents: {e}")
-    
+
     if ceo_agent is None:
         logger.error("CEO agent still not found after sync attempt")
         raise HTTPException(
