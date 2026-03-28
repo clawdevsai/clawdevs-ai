@@ -62,6 +62,11 @@ class Task(SQLModel, table=True):
     actual_cost: float = Field(default=0.0)
     cost_tier: Optional[str] = Field(default=None)  # local|medium|premium
 
+    # Workflow orchestration fields
+    workflow_state: str = Field(default="queued_to_ceo", index=True)
+    workflow_last_error: Optional[str] = None
+    workflow_attempts: int = Field(default=0)
+
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

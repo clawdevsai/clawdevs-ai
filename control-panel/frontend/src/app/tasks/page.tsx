@@ -24,7 +24,7 @@
 
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { LayoutGrid, List, Plus, X } from "lucide-react"
+import { Clock3, LayoutGrid, List, Plus, Trash2, X } from "lucide-react"
 import { AppLayout } from "@/components/layout/app-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -38,11 +38,30 @@ interface Task {
   description?: string
   status: "inbox" | "in_progress" | "done" | "cancelled"
   priority?: "critical" | "high" | "medium" | "low"
+  assigned_agent_id?: string | null
   assigned_agent_slug?: string
   github_repo?: string
   github_issue_number?: number  // kept for backwards compat but not displayed
   label?: string
+  workflow_state: string
+  workflow_last_error?: string | null
+  workflow_attempts: number
   created_at: string
+}
+
+interface TaskTimelineEvent {
+  id: string
+  event_type: string
+  from_agent_slug?: string | null
+  to_agent_slug?: string | null
+  description: string
+  created_at: string
+  payload?: Record<string, unknown> | null
+}
+
+interface TaskTimelineResponse {
+  items: TaskTimelineEvent[]
+  total: number
 }
 
 interface Repository {
@@ -85,8 +104,14 @@ const fetchTasks = (status?: string, page = 1, pageSize = 50) =>
 const createTask = (payload: CreateTaskPayload) =>
   customInstance<Task>({ url: "/tasks", method: "POST", data: payload })
 
+const deleteTask = (taskId: string) =>
+  customInstance<void>({ url: `/tasks/${taskId}`, method: "DELETE" })
+
 const fetchRepositories = () =>
   customInstance<RepositoriesResponse>({ url: "/repositories", method: "GET" })
+
+const fetchTaskTimeline = (taskId: string) =>
+  customInstance<TaskTimelineResponse>({ url: `/tasks/${taskId}/timeline`, method: "GET" })
 
 // ---- Label constants --------------------------------------------------------
 
@@ -142,6 +167,28 @@ function statusLabel(status: string) {
   return map[status] ?? status
 }
 
+function workflowLabel(workflowState: string) {
+  const map: Record<string, string> = {
+    queued_to_ceo: "Queued CEO",
+    processing_by_ceo: "CEO Routing",
+    forwarded_by_ceo: "Forwarded",
+    completed: "Completed",
+    failed: "Failed",
+  }
+  return map[workflowState] ?? workflowState
+}
+
+function workflowColor(workflowState: string) {
+  const map: Record<string, string> = {
+    queued_to_ceo: "#60A5FA",
+    processing_by_ceo: "#FBBF24",
+    forwarded_by_ceo: "#34D399",
+    completed: "#34D399",
+    failed: "#EF4444",
+  }
+  return map[workflowState] ?? "#9CA3AF"
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     year: "numeric",
@@ -152,16 +199,48 @@ function formatDate(iso: string) {
 
 // ---- Task Card (board) ------------------------------------------------------
 
-function TaskCard({ task }: { task: Task }) {
+function TaskCard({
+  task,
+  isDeleting,
+  onDelete,
+  onOpenTimeline,
+}: {
+  task: Task
+  isDeleting: boolean
+  onDelete: (task: Task) => void
+  onOpenTimeline?: (task: Task) => void
+}) {
+  const wfColor = workflowColor(task.workflow_state)
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 flex flex-col gap-2">
-      <p className="text-sm font-medium text-[hsl(var(--foreground))] leading-snug">
-        {task.title}
-      </p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm font-medium text-[hsl(var(--foreground))] leading-snug">
+          {task.title}
+        </p>
+        <button
+          type="button"
+          onClick={() => onDelete(task)}
+          disabled={isDeleting}
+          aria-label={`Delete task ${task.title}`}
+          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-red-400 hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
       {task.github_repo && (
         <p className="text-[10px] text-[hsl(var(--muted-foreground))] truncate">{task.github_repo}</p>
       )}
       <div className="flex items-center gap-1.5 flex-wrap">
+        <span
+          className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+          style={{
+            backgroundColor: `${wfColor}1A`,
+            color: wfColor,
+            border: `1px solid ${wfColor}33`,
+          }}
+        >
+          {workflowLabel(task.workflow_state)}
+        </span>
         {task.priority && (
           <Badge variant={priorityVariant(task.priority)} className="text-[10px] px-1.5 py-0">
             {task.priority}
@@ -177,18 +256,29 @@ function TaskCard({ task }: { task: Task }) {
         <span className="text-[11px] text-[hsl(var(--muted-foreground))]">
           {formatDate(task.created_at)}
         </span>
-        {task.label && (
-          <span
-            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-            style={{
-              backgroundColor: `${LABEL_COLORS[task.label] ?? "#9CA3AF"}1A`,
-              color: LABEL_COLORS[task.label] ?? "#9CA3AF",
-              border: `1px solid ${LABEL_COLORS[task.label] ?? "#9CA3AF"}33`,
-            }}
+        <div className="flex items-center gap-2">
+          {task.label && (
+            <span
+              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                backgroundColor: `${LABEL_COLORS[task.label] ?? "#9CA3AF"}1A`,
+                color: LABEL_COLORS[task.label] ?? "#9CA3AF",
+                border: `1px solid ${LABEL_COLORS[task.label] ?? "#9CA3AF"}33`,
+              }}
+            >
+              {task.label}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => onOpenTimeline?.(task)}
+            disabled={!onOpenTimeline}
+            className="inline-flex items-center gap-1 text-[10px] text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {task.label}
-          </span>
-        )}
+            <Clock3 className="h-3 w-3" />
+            Timeline
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -196,7 +286,21 @@ function TaskCard({ task }: { task: Task }) {
 
 // ---- Board column -----------------------------------------------------------
 
-function BoardColumn({ status, tasks, loading }: { status: string; tasks: Task[]; loading: boolean }) {
+function BoardColumn({
+  status,
+  tasks,
+  loading,
+  deletingTaskId,
+  onDelete,
+  onOpenTimeline,
+}: {
+  status: string
+  tasks: Task[]
+  loading: boolean
+  deletingTaskId: string | null
+  onDelete: (task: Task) => void
+  onOpenTimeline?: (task: Task) => void
+}) {
   const color = statusColor(status)
   return (
     <div className="flex flex-col flex-1 min-w-[200px]">
@@ -230,7 +334,15 @@ function BoardColumn({ status, tasks, loading }: { status: string; tasks: Task[]
             <p className="text-xs text-[hsl(var(--muted-foreground))]">Empty</p>
           </div>
         ) : (
-          tasks.map((t) => <TaskCard key={t.id} task={t} />)
+          tasks.map((t) => (
+            <TaskCard
+              key={t.id}
+              task={t}
+              isDeleting={deletingTaskId === t.id}
+              onDelete={onDelete}
+              onOpenTimeline={onOpenTimeline}
+            />
+          ))
         )}
       </div>
     </div>
@@ -358,12 +470,69 @@ function CreateTaskDialog({ onClose, onSuccess }: { onClose: () => void; onSucce
   )
 }
 
+function TimelineDialog({ task, onClose }: { task: Task; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["task-timeline", task.id],
+    queryFn: () => fetchTaskTimeline(task.id),
+  })
+  const events = data?.items ?? []
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-2xl rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-xl max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-base font-semibold text-[hsl(var(--foreground))]">Task Timeline</h2>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{task.title}</p>
+          </div>
+          <button onClick={onClose} className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="overflow-y-auto pr-1">
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="rounded-lg border border-[hsl(var(--border))] p-3">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/2 mt-2" />
+                </div>
+              ))}
+            </div>
+          ) : events.length === 0 ? (
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">No timeline events found.</p>
+          ) : (
+            <div className="space-y-2">
+              {events.map((event) => (
+                <div key={event.id} className="rounded-lg border border-[hsl(var(--border))] p-3">
+                  <div className="flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))] mb-1">
+                    <span>{event.event_type}</span>
+                    <span>•</span>
+                    <span>{new Date(event.created_at).toLocaleString()}</span>
+                  </div>
+                  <p className="text-sm text-[hsl(var(--foreground))]">{event.description}</p>
+                  {(event.from_agent_slug || event.to_agent_slug) && (
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                      {event.from_agent_slug ? `@${event.from_agent_slug}` : "System"} →{" "}
+                      {event.to_agent_slug ? `@${event.to_agent_slug}` : "System"}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ---- List view row skeleton -------------------------------------------------
 
 function ListRowSkeleton() {
   return (
     <tr className="border-b border-[hsl(var(--border))]">
-      {Array.from({ length: 7 }).map((_, i) => (
+      {Array.from({ length: 9 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <Skeleton className="h-4 w-full" />
         </td>
@@ -381,6 +550,8 @@ export default function TasksPage() {
   const [view, setView] = useState<"board" | "list">("board")
   const [showCreate, setShowCreate] = useState(false)
   const [listPage, setListPage] = useState(1)
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null)
+  const [timelineTask, setTimelineTask] = useState<Task | null>(null)
 
   // Board: fetch all statuses (four separate hooks — no conditional/loop hooks)
   const inboxQuery = useQuery({
@@ -420,6 +591,21 @@ export default function TasksPage() {
 
   function invalidateAll() {
     queryClient.invalidateQueries({ queryKey: ["tasks"] })
+  }
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteTask,
+    onMutate: (taskId) => setDeletingTaskId(taskId),
+    onSettled: () => {
+      setDeletingTaskId(null)
+      invalidateAll()
+    },
+  })
+
+  function handleDeleteTask(task: Task) {
+    if (deleteMutation.isPending) return
+    if (!confirm(`Excluir a task "${task.title}"?`)) return
+    deleteMutation.mutate(task.id)
   }
 
   return (
@@ -479,6 +665,9 @@ export default function TasksPage() {
                 status={status}
                 tasks={boardQueries[status].data?.items ?? []}
                 loading={boardQueries[status].isLoading}
+                deletingTaskId={deletingTaskId}
+                onDelete={handleDeleteTask}
+                onOpenTimeline={setTimelineTask}
               />
             ))}
           </div>
@@ -505,6 +694,9 @@ export default function TasksPage() {
                         Agent
                       </th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                        Workflow
+                      </th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
                         Label
                       </th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
@@ -512,6 +704,9 @@ export default function TasksPage() {
                       </th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
                         Created
+                      </th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-[hsl(var(--muted-foreground))] uppercase tracking-wide">
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -521,7 +716,7 @@ export default function TasksPage() {
                     ) : listItems.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={7}
+                          colSpan={9}
                           className="px-4 py-12 text-center text-sm text-[hsl(var(--muted-foreground))]"
                         >
                           No tasks found.
@@ -561,6 +756,25 @@ export default function TasksPage() {
                             {task.assigned_agent_slug ?? "—"}
                           </td>
                           <td className="px-4 py-3">
+                            <div className="flex flex-col gap-1">
+                              <span
+                                className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium w-fit"
+                                style={{
+                                  backgroundColor: `${workflowColor(task.workflow_state)}1A`,
+                                  color: workflowColor(task.workflow_state),
+                                  border: `1px solid ${workflowColor(task.workflow_state)}33`,
+                                }}
+                              >
+                                {workflowLabel(task.workflow_state)}
+                              </span>
+                              {task.workflow_last_error && (
+                                <span className="text-[10px] text-red-400 truncate max-w-[180px]" title={task.workflow_last_error}>
+                                  {task.workflow_last_error}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
                             {task.label ? (
                               <span
                                 className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
@@ -581,6 +795,27 @@ export default function TasksPage() {
                           </td>
                           <td className="px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
                             {formatDate(task.created_at)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setTimelineTask(task)}
+                                className="inline-flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
+                              >
+                                <Clock3 className="h-3.5 w-3.5" />
+                                Timeline
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteTask(task)}
+                                disabled={deleteMutation.isPending}
+                                className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {deletingTaskId === task.id ? "Excluindo..." : "Excluir"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -624,6 +859,9 @@ export default function TasksPage() {
           onClose={() => setShowCreate(false)}
           onSuccess={invalidateAll}
         />
+      )}
+      {timelineTask && (
+        <TimelineDialog task={timelineTask} onClose={() => setTimelineTask(null)} />
       )}
     </AppLayout>
   )

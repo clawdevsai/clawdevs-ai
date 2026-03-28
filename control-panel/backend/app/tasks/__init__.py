@@ -23,7 +23,15 @@
 from app.tasks.periodic_sync import (
     run_sync_agents,
     run_sync_sessions,
+    run_sync_tasks,
     schedule_periodic_tasks,
 )
+from app.tasks.task_orchestration import process_task_via_ceo
 
-__all__ = ["run_sync_agents", "run_sync_sessions", "schedule_periodic_tasks"]
+__all__ = [
+    "run_sync_agents",
+    "run_sync_sessions",
+    "run_sync_tasks",
+    "schedule_periodic_tasks",
+    "process_task_via_ceo",
+]

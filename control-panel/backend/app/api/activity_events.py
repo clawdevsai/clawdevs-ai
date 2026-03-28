@@ -27,7 +27,7 @@ from datetime import datetime, UTC
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
-from app.models import Agent, Session
+from app.models import ActivityEvent, Agent, Session
 
 router = APIRouter()
 
@@ -112,6 +112,31 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
     return items
 
 
+async def _load_persisted_activity(db_session) -> list[ActivityEventResponse]:
+    result = await db_session.exec(
+        select(ActivityEvent).order_by(col(ActivityEvent.created_at).desc()).limit(100)
+    )
+    events = result.all()
+    items: list[ActivityEventResponse] = []
+    for event in events:
+        payload = event.payload or {}
+        description = (
+            payload.get("description")
+            if isinstance(payload, dict) and payload.get("description")
+            else event.event_type
+        )
+        items.append(
+            ActivityEventResponse(
+                id=str(event.id),
+                event_type=event.event_type,
+                description=description,
+                agent_id=str(event.agent_id) if event.agent_id else None,
+                created_at=event.created_at,
+            )
+        )
+    return items
+
+
 @router.get("", response_model=ActivityEventsListResponse)
 async def list_activity_events(
     _: CurrentUser,
@@ -121,8 +146,10 @@ async def list_activity_events(
     event_type: Optional[str] = Query(None),
 ):
     """List recent activity events generated from sessions and other sources."""
-    # Generate activity from sessions (in-memory approach - no DB table needed)
-    items = await _generate_activity_from_sessions(session)
+    session_items = await _generate_activity_from_sessions(session)
+    persisted_items = await _load_persisted_activity(session)
+    items = persisted_items + session_items
+    items.sort(key=lambda item: item.created_at, reverse=True)
 
     # Apply agent filter if specified
     if agent_id:

@@ -43,16 +43,24 @@ interface ActivityFeedProps {
 function getEventIcon(event_type: string) {
   switch (event_type) {
     case "approval_approved":
+    case "approval.approved":
     case "task_completed":
+    case "task.completed":
       return { Icon: CheckCircle, color: "text-green-400" }
     case "approval_rejected":
+    case "approval.rejected":
     case "task_failed":
+    case "task.failed":
       return { Icon: AlertCircle, color: "text-red-400" }
     case "agent_started":
     case "agent_stopped":
       return { Icon: Bot, color: "text-[hsl(var(--primary))]" }
     case "session_created":
     case "session_ended":
+    case "task.queued_to_ceo":
+    case "task.sent_to_ceo":
+    case "task.forwarded":
+    case "task.processing":
       return { Icon: Zap, color: "text-blue-400" }
     case "cron_triggered":
       return { Icon: Clock, color: "text-purple-400" }

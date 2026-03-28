@@ -153,5 +153,63 @@ class OpenClawClient:
         except Exception as exc:  # noqa: BLE001
             yield {"event": "error", "data": str(exc)}
 
+    async def run_agent_turn(self, agent_slug: str, message: str) -> str:
+        """Run a non-streaming turn and return plain text output."""
+        session_key = f"agent:{agent_slug}:main"
+        payload = {
+            "model": f"openclaw/{agent_slug}",
+            "messages": [{"role": "user", "content": message}],
+            "stream": False,
+        }
+        headers = {
+            **self.headers,
+            "Content-Type": "application/json",
+            "x-openclaw-session-key": session_key,
+        }
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(
+                f"{self.base_url}/v1/chat/completions",
+                headers=headers,
+                json=payload,
+            )
+            response.raise_for_status()
+            body: Any = response.json()
+            return _extract_openclaw_text(body)
+
+
+def _extract_openclaw_text(body: Any) -> str:
+    if isinstance(body, dict):
+        if isinstance(body.get("output_text"), str):
+            return body["output_text"]
+        choices = body.get("choices")
+        if isinstance(choices, list) and choices:
+            first = choices[0]
+            if isinstance(first, dict):
+                message = first.get("message")
+                if isinstance(message, dict):
+                    content = message.get("content")
+                    return _normalize_content(content)
+                text = first.get("text")
+                if isinstance(text, str):
+                    return text
+    return str(body)
+
+
+def _normalize_content(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+                continue
+            if isinstance(item, dict):
+                text = item.get("text")
+                if isinstance(text, str):
+                    parts.append(text)
+        return "\n".join(parts)
+    return str(content)
+
 
 openclaw_client = OpenClawClient()

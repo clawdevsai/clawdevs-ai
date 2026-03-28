@@ -177,6 +177,43 @@ class TestUpdateTask:
         assert response.status_code == 404  # Task not found
 
 
+class TestDeleteTask:
+    """Test DELETE /api/tasks/{task_id} endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_delete_task_not_found(self, client: AsyncClient, auth_headers: dict):
+        """Test deleting a non-existent task."""
+        task_id = str(uuid4())
+        response = await client.delete(f"/tasks/{task_id}", headers=auth_headers)
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_delete_task_success(
+        self,
+        client: AsyncClient,
+        db_session: AsyncSession,
+        auth_headers: dict,
+    ):
+        """Test deleting an existing task."""
+        task = Task(
+            title="Delete me",
+            description="Task to delete",
+            status="inbox",
+            priority="medium",
+        )
+        db_session.add(task)
+        await db_session.commit()
+        await db_session.refresh(task)
+
+        response = await client.delete(f"/tasks/{task.id}", headers=auth_headers)
+        assert response.status_code == 204
+
+        list_response = await client.get("/tasks", headers=auth_headers)
+        assert list_response.status_code == 200
+        data = list_response.json()
+        assert all(item["id"] != str(task.id) for item in data["items"])
+
+
 class TestTasksResponseModels:
     """Test Tasks response model structure."""
 
@@ -192,10 +229,14 @@ class TestTasksResponseModels:
             priority="medium",
             label=None,
             assigned_agent_id=None,
+            assigned_agent_slug=None,
             github_issue_number=None,
             github_issue_url=None,
             github_repo=None,
             due_at=None,
+            workflow_state="queued_to_ceo",
+            workflow_last_error=None,
+            workflow_attempts=0,
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
         )

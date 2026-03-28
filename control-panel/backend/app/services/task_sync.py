@@ -31,6 +31,13 @@ from sqlmodel import select
 
 from app.models import Task, Agent
 from app.core.config import get_settings
+from app.services.task_workflow import (
+    WORKFLOW_QUEUED_TO_CEO,
+    enqueue_task_for_ceo,
+    get_ceo_agent,
+    log_task_event,
+    should_enqueue_task,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -101,10 +108,26 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
             issues = response.json()
             logger.info(f"[task_sync] Found {len(issues)} issues in GitHub")
 
+            ceo_agent = await get_ceo_agent(session)
+            new_task_ids: list = []
             for issue in issues:
-                await _sync_issue_to_task(session, issue, target_repo)
+                new_task_id = await _sync_issue_to_task(
+                    session=session,
+                    issue=issue,
+                    repo=target_repo,
+                    ceo_agent=ceo_agent,
+                )
+                if new_task_id:
+                    new_task_ids.append(new_task_id)
 
             await session.commit()
+
+            for task_id in new_task_ids:
+                queued, error = enqueue_task_for_ceo(task_id)
+                if not queued:
+                    logger.error(
+                        "[task_sync] Failed to enqueue synced task %s: %s", task_id, error
+                    )
             logger.info("[task_sync] Task sync completed")
 
     except Exception as e:
@@ -112,7 +135,7 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
         raise
 
 
-async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
+async def _sync_issue_to_task(session, issue: dict, repo: str, ceo_agent: Agent | None):
     """Sync a single GitHub issue to a Task.
 
     Args:
@@ -187,6 +210,7 @@ async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
         if assigned_agent_id:
             existing.assigned_agent_id = assigned_agent_id
         logger.debug(f"[task_sync] Updated task for issue #{issue_number}")
+        return None
     else:
         # Create new task
         new_task = Task(
@@ -194,14 +218,36 @@ async def _sync_issue_to_task(session, issue: dict, repo: str) -> None:
             description=description,
             status=status,
             priority="medium",  # Default priority
-            assigned_agent_id=assigned_agent_id,
+            assigned_agent_id=ceo_agent.id if ceo_agent else assigned_agent_id,
             github_issue_number=issue_number,
             github_issue_url=issue_url,
             github_repo=repo,
             label=task_label,
+            workflow_state=WORKFLOW_QUEUED_TO_CEO if ceo_agent else "failed",
+            workflow_last_error=(
+                None if ceo_agent else "Agent with slug 'ceo' was not found"
+            ),
         )
         session.add(new_task)
+        await log_task_event(
+            session,
+            task_id=new_task.id,
+            event_type="task.created",
+            description="Task criada via sync de GitHub",
+            to_agent_slug="ceo" if ceo_agent else None,
+            payload={"source": "github_sync", "issue_number": issue_number},
+        )
+        if ceo_agent and should_enqueue_task(new_task):
+            await log_task_event(
+                session,
+                task_id=new_task.id,
+                event_type="task.queued_to_ceo",
+                description="Task do GitHub enfileirada para despacho via CEO",
+                agent_id=ceo_agent.id,
+                to_agent_slug="ceo",
+            )
         logger.info(f"[task_sync] Created new task for issue #{issue_number}: {title}")
+        return new_task.id
 
 
 async def sync_tasks(db_session) -> None:
