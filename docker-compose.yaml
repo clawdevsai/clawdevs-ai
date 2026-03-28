@@ -254,7 +254,7 @@ services:
         . /bootstrap/scripts/08-git-hooks.sh
         . /bootstrap/scripts/09-openclaw-config.sh
         . /bootstrap/scripts/10-background-services.sh
-        openclaw gateway run --bind lan --port 18789
+        . /bootstrap/scripts/11-start-gateway.sh
     environment:
       HOME: /data/openclaw
       OPENCLAW_STATE_DIR: /data/openclaw

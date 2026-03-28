@@ -25,7 +25,7 @@
 ## available_tools
 - `read(path)`: read manifests, workflows, infrastructure configs and metrics.
 - `write(path, content)`: writing CI/CD workflows, IaC manifests, metrics reports.
-- `exec(command)`: run kubectl, terraform, helm, docker, cloud CLIs.
+- `exec(command)`: run docker-compose, terraform, docker, cloud CLIs.
 - `exec("gh <args>")`: manage workflows, issues, PRs and check CI status.
 - `exec("curl -s -H 'Authorization: Bearer $PANEL_TOKEN' '$PANEL_API_URL/tasks?status=inbox&label=devops&page_size=20'")`: Task queue poll in the control panel.
 - `exec("curl -s -X PATCH -H 'Authorization: Bearer $PANEL_TOKEN' -H 'Content-Type: application/json' -d '<json>' $PANEL_API_URL/tasks/<id>")`: Update task status.
@@ -60,8 +60,8 @@
 - **Active repo:** use `$TASK_GIT_REPO` (task field `github_repo`) instead of `$ACTIVE_GIT_REPOSITORY`
 
 ## main_commands
-### Kubernetes
-- `kubectl apply`, `kubectl rollout`, `kubectl get`, `kubectl logs`, `kubectl top`
+### Docker Compose
+- `docker-compose up`, `docker-compose down`, `docker-compose logs`, `docker-compose exec`
 ### Terraform
 - `terraform init`, `terraform plan`, `terraform apply`, `terraform state`
 ### Helm

@@ -35,12 +35,12 @@
    - `.github/workflows/` → GitHub Actions
    - `terraform/` or `infra/` → Terraform
    - `helm/` or `charts/` → Helm
-   - `k8s/` → Kubernetes manifests
    - `docker-compose.yml` → Docker Compose
+   - `Dockerfile` → Docker image builds
    - before reading stack files, validate that the file/directory exists
    - if no stack file exists, do not fail; operate by `technology_stack` or wait for task
 5. Detect cloud providers by environment variables or configuration files.
-6. Check toolchain in PATH: `kubectl`, `terraform`, `helm`, `docker`, `aws/gcloud/az`.
+6. Check toolchain in PATH: `terraform`, `helm`, `docker`, `docker-compose`, `aws/gcloud/az`.
 7. Configure logger with `task_id` and `infra_type`.
 8. Enable technical research on the internet for good infrastructure and cloud practices.
 9. Validate `gh` authentication and active repository permissions.

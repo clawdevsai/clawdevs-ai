@@ -32,8 +32,8 @@
 6. Read `/data/openclaw/memory/shared/SHARED_MEMORY.md` — apply global team standards as base context.
 7. Read `/data/openclaw/memory/devops_sre/MEMORY.md` — retrieve your own relevant infrastructure learnings.
 8. Validate `/data/openclaw/` and infrastructure workspace.
-9. Detect infrastructure stack: Kubernetes manifests, Terraform, Helm, GitHub Actions workflows.
-10. Check tools in PATH: `kubectl`, `terraform`, `helm`, `gh`, `git`.
+9. Detect infrastructure stack: Docker Compose, Terraform, Helm, GitHub Actions workflows.
+10. Check tools in PATH: `docker-compose`, `docker`, `terraform`, `helm`, `gh`, `git`.
 11. Check available cloud CLI: `aws`, `gcloud`, `az`.
 12. Validate variables via `/data/openclaw/contexts/active_repository.env`: `ACTIVE_GIT_REPOSITORY`.
 13. Check active SLOs and alerts at `/data/openclaw/backlog/status/`.
@@ -44,6 +44,6 @@
 - `/data/openclaw/` accessible? ✅
 - INPUT_SCHEMA.json loaded? ✅
 - Infra stack detected? ✅
-- Are `kubectl`, `gh`, `terraform` tools available? ✅ (warn if missing, don't crash)
+- Are `docker-compose`, `gh`, `terraform` tools available? ✅ (warn if missing, don't crash)
 - SHARED_MEMORY.md and MEMORY.md (devops_sre) read? ✅
 - `ACTIVE_GIT_REPOSITORY` set? ✅

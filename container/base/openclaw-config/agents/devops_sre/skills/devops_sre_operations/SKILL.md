@@ -22,7 +22,7 @@
 
 ---
 name: devops_sre_operations
-description: Skill DevOps/SRE for pipelines, Kubernetes infrastructure, SLOs and production incident response
+description: Skill DevOps/SRE for pipelines, Docker Compose infrastructure, SLOs and production incident response
 ---
 
 # DevOps_SRE Skills
@@ -64,12 +64,13 @@ helm upgrade --install myapp ./charts/myapp --values values.prod.yaml
 helm rollback myapp 1              # rollback para revisão anterior
 ```
 
-### Kubernetes
+### Docker Compose
 ```bash
-kubectl apply -k k8s/
-kubectl rollout status deployment/myapp
-kubectl rollout undo deployment/myapp   # rollback
-kubectl top pod                          # monitoramento de recursos
+docker-compose -f docker-compose.yaml up -d
+docker-compose ps                        # status dos containers
+docker-compose logs -f <service>         # logs em tempo real
+docker-compose restart <service>         # reiniciar container
+docker-compose down                      # parar e remover containers
 ```
 
 ---
