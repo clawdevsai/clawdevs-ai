@@ -130,7 +130,9 @@ async def _load_slug_map_for_tasks(
     tasks: list[Task],
 ) -> dict[str, str]:
     agent_ids = {t.assigned_agent_id for t in tasks if t.assigned_agent_id}
-    return await get_agent_slug_map(session, {agent_id for agent_id in agent_ids if agent_id})
+    return await get_agent_slug_map(
+        session, {agent_id for agent_id in agent_ids if agent_id}
+    )
 
 
 @router.get("", response_model=TasksListResponse)
@@ -183,8 +185,14 @@ async def task_timeline(
             TaskTimelineEventResponse(
                 id=str(event.id),
                 event_type=event.event_type,
-                from_agent_slug=payload.get("from_agent_slug") if isinstance(payload, dict) else None,
-                to_agent_slug=payload.get("to_agent_slug") if isinstance(payload, dict) else None,
+                from_agent_slug=(
+                    payload.get("from_agent_slug")
+                    if isinstance(payload, dict)
+                    else None
+                ),
+                to_agent_slug=(
+                    payload.get("to_agent_slug") if isinstance(payload, dict) else None
+                ),
                 description=description,
                 created_at=event.created_at,
                 payload=payload if isinstance(payload, dict) else None,

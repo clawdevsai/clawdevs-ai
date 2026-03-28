@@ -26,7 +26,9 @@ def upgrade() -> None:
                 server_default="queued_to_ceo",
             )
         )
-        batch_op.add_column(sa.Column("workflow_last_error", sa.String(), nullable=True))
+        batch_op.add_column(
+            sa.Column("workflow_last_error", sa.String(), nullable=True)
+        )
         batch_op.add_column(
             sa.Column(
                 "workflow_attempts",

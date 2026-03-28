@@ -126,7 +126,9 @@ async def sync_tasks_from_github(session, repo: Optional[str] = None) -> None:
                 queued, error = enqueue_task_for_ceo(task_id)
                 if not queued:
                     logger.error(
-                        "[task_sync] Failed to enqueue synced task %s: %s", task_id, error
+                        "[task_sync] Failed to enqueue synced task %s: %s",
+                        task_id,
+                        error,
                     )
             logger.info("[task_sync] Task sync completed")
 

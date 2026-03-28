@@ -57,7 +57,11 @@ async def _process_task_via_ceo(task_id: str) -> None:
                 return
 
             if task.workflow_state in {WORKFLOW_COMPLETED, WORKFLOW_FORWARDED_BY_CEO}:
-                logger.info("Task %s already processed with state=%s", task_id, task.workflow_state)
+                logger.info(
+                    "Task %s already processed with state=%s",
+                    task_id,
+                    task.workflow_state,
+                )
                 return
 
             ceo_agent = await get_ceo_agent(session)
