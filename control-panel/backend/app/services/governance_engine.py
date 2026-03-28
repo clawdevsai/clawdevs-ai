@@ -371,10 +371,10 @@ class GovernanceEngine:
             allowed: Whether action was allowed
             reason: Reason for decision
         """
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         audit_entry = {
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "agent_id": str(agent_id),
             "action": action,
             "resource": resource,

@@ -180,7 +180,7 @@ async def regenerate_embeddings(
     """
     from sqlmodel import select
     from app.models.memory_entry import MemoryEntry
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     RAGRetriever(session)
     embedding_service = EmbeddingService()
@@ -208,7 +208,7 @@ async def regenerate_embeddings(
 
         if embedding:
             memory.embedding = embedding
-            memory.embedding_generated_at = datetime.now(UTC)
+            memory.embedding_generated_at = datetime.now(timezone.utc)
             regenerated += 1
         else:
             failed += 1
