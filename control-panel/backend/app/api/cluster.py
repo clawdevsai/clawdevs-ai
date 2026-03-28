@@ -21,39 +21,39 @@
 from fastapi import APIRouter, HTTPException, status
 from app.api.deps import CurrentUser
 from app.core.config import get_settings
-from app.services import k8s_client
+from app.services import container_client
 
 settings = get_settings()
 router = APIRouter()
 
 
-def _ensure_k8s_available() -> None:
-    core, _ = k8s_client.get_k8s_clients()
+def _ensure_container_client_available() -> None:
+    core, _ = container_client.get_container_clients()
     if core is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Kubernetes client unavailable in backend container. Verify backend image dependencies.",
+            detail="Container client unavailable. Verify that Kubernetes client is available or deployment configuration.",
         )
 
 
 @router.get("/pods")
 async def get_pods(_: CurrentUser):
-    _ensure_k8s_available()
-    return k8s_client.list_pods(namespace=settings.k8s_namespace)
+    _ensure_container_client_available()
+    return container_client.list_containers(namespace=settings.container_namespace)
 
 
 @router.get("/info")
 async def get_cluster_info(_: CurrentUser):
-    return k8s_client.get_cluster_info(namespace=settings.k8s_namespace)
+    return container_client.get_cluster_info(namespace=settings.container_namespace)
 
 
 @router.get("/events")
 async def get_events(_: CurrentUser):
-    _ensure_k8s_available()
-    return k8s_client.list_events(namespace=settings.k8s_namespace)
+    _ensure_container_client_available()
+    return container_client.list_events(namespace=settings.container_namespace)
 
 
 @router.get("/pvcs")
 async def get_pvcs(_: CurrentUser):
-    _ensure_k8s_available()
-    return k8s_client.list_pvcs(namespace=settings.k8s_namespace)
+    _ensure_container_client_available()
+    return container_client.list_pvcs(namespace=settings.container_namespace)
