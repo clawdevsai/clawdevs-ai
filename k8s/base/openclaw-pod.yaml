@@ -113,7 +113,15 @@ spec:
                   key: LANGUAGE
                   optional: true
             - name: NODE_OPTIONS
-              value: --max-old-space-size=2048
+              value: --max-old-space-size=1024
+            - name: OPENCLAW_NO_RESPAWN
+              value: "1"
+            - name: NODE_COMPILE_CACHE
+              value: /var/tmp/openclaw-compile-cache
+            - name: OPENCLAW_CRON_LIST_TIMEOUT_SECONDS
+              value: "8"
+            - name: OPENCLAW_CRON_LIST_LOCK_WAIT_SECONDS
+              value: "15"
             - name: GH_CONFIG_DIR
               value: /data/openclaw/.config/gh
             - name: AGENT_ERROR_ROUTER_ENABLED

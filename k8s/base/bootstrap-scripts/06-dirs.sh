@@ -21,6 +21,7 @@
 mkdir -p "${OPENCLAW_STATE_DIR}"
 mkdir -p ~/.openclaw
 mkdir -p "${OPENCLAW_STATE_DIR}/projects"
+mkdir -p /var/tmp/openclaw-compile-cache
 
 # Funcao para inicializar estrutura de backlog de um projeto.
 # Chamada pelo DevOps apos validar/criar repositorio.

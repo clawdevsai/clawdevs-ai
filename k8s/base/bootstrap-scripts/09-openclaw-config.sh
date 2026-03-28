@@ -22,8 +22,7 @@
 # desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
 _existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
 _existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
-_existing_host_fallback="$(jq -r '.gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
-if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ] && [ "${_existing_host_fallback}" = "true" ]; then
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
   cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
@@ -37,7 +36,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
     "port": 18789,
     "controlUi": {
       "dangerouslyAllowHostHeaderOriginFallback": true,
-      "dangerouslyDisableDeviceAuth": true,
+      "dangerouslyDisableDeviceAuth": false,
       "allowedOrigins": [
         "*"
       ]
@@ -602,6 +601,21 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   else
     rm -f "${_tmp_openclaw_json}"
     echo "[bootstrap] falha ao remover campos depreciados do openclaw.json"
+  fi
+fi
+
+# Hardening minimo: manter autenticacao de dispositivo habilitada no Control UI.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .gateway.controlUi.dangerouslyDisableDeviceAuth = false
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar hardening de device auth no openclaw.json"
   fi
 fi
 

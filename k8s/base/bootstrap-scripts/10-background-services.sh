@@ -45,6 +45,31 @@ ensure_panel_read_permissions() {
   done
 }
 
+openclaw_gateway_is_ready() {
+  curl -fsS --max-time "${OPENCLAW_HEALTHCHECK_TIMEOUT_SECONDS:-2}" \
+    "http://127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}/healthz" >/dev/null 2>&1
+}
+
+openclaw_cron_list_json() {
+  local output_file="$1"
+  local lock_file="/tmp/openclaw-cron-list.lock"
+  local lock_wait_seconds="${OPENCLAW_CRON_LIST_LOCK_WAIT_SECONDS:-15}"
+  local timeout_seconds="${OPENCLAW_CRON_LIST_TIMEOUT_SECONDS:-8}"
+
+  openclaw_gateway_is_ready || return 1
+
+  if command -v flock >/dev/null 2>&1; then
+    (
+      exec 9>"${lock_file}"
+      flock -w "${lock_wait_seconds}" 9 || exit 1
+      timeout "${timeout_seconds}"s openclaw cron list --json > "${output_file}" 2>/dev/null
+    )
+    return $?
+  fi
+
+  timeout "${timeout_seconds}"s openclaw cron list --json > "${output_file}" 2>/dev/null
+}
+
 if [ "${PANEL_PERMISSION_SYNC_ENABLED:-true}" = "true" ]; then
   echo "[bootstrap] enabling panel permission sync for sessions.json"
   ( set +e; ensure_panel_read_permissions ) &
@@ -91,7 +116,7 @@ fi
   _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
   for _ in $(seq 1 24); do
     sleep 5
-    if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+    if openclaw_cron_list_json "${_cron_list_json}"; then
       CRON_ID="$(jq -r --arg n "${CEO_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
       if [ -n "${CRON_ID}" ]; then
         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CEO_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ceo_daily.log"
@@ -122,7 +147,7 @@ fi
   _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
   for _ in $(seq 1 24); do
     sleep 5
-    if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+    if openclaw_cron_list_json "${_cron_list_json}"; then
       CRON_ID="$(jq -r --arg n "${ARQ_CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
       if [ -n "${CRON_ID}" ]; then
         echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${ARQ_CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/arquiteto_spec_review.log"
@@ -154,7 +179,7 @@ if [ "${DEV_BACKEND_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_backend_hourly.log"
@@ -187,7 +212,7 @@ if [ "${DEV_FRONTEND_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_frontend_hourly.log"
@@ -220,7 +245,7 @@ if [ "${DEV_MOBILE_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dev_mobile_hourly.log"
@@ -253,7 +278,7 @@ if [ "${QA_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/qa_engineer_hourly.log"
@@ -286,7 +311,7 @@ if [ "${SECURITY_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/security_engineer.log"
@@ -319,7 +344,7 @@ if [ "${DEVOPS_SRE_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/devops_sre.log"
@@ -352,7 +377,7 @@ if [ "${UX_DESIGNER_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/ux_designer.log"
@@ -385,7 +410,7 @@ if [ "${DBA_DATA_ENGINEER_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/dba_data_engineer.log"
@@ -418,7 +443,7 @@ if [ "${MEMORY_CURATOR_CRON_ENABLED:-false}" = "true" ]; then
     _cron_list_json="/tmp/openclaw-cron-${BASHPID}.json"
     for _ in $(seq 1 24); do
       sleep 5
-      if openclaw cron list --json > "${_cron_list_json}" 2>/dev/null; then
+      if openclaw_cron_list_json "${_cron_list_json}"; then
         CRON_ID="$(jq -r --arg n "${CRON_NAME}" '.jobs[]? | select(.name == $n) | .jobId' "${_cron_list_json}" | head -n1)"
         if [ -n "${CRON_ID}" ]; then
           echo "$(date -u +"%Y-%m-%dT%H:%M:%SZ") cron '${CRON_NAME}' ja existe (${CRON_ID})" >> "${OPENCLAW_STATE_DIR}/scheduler/memory_curator.log"
@@ -458,7 +483,7 @@ fi
   CRON_CONFIGS[memory_curator]="${MEMORY_CURATOR_CRON_NAME:-memory_curator_promote}|${MEMORY_CURATOR_CRON_EXPR:-0 2 * * *}|${MEMORY_CURATOR_CRON_TZ:-America/Sao_Paulo}|Executar ciclo de curadoria de memoria: promover padroes cross-agent para SHARED_MEMORY; arquivar nos agentes de origem; logar resultado."
   while true; do
     sleep "${WATCHDOG_INTERVAL}"
-    if openclaw cron list --json > /tmp/openclaw-cron-watchdog.json 2>/dev/null; then
+    if openclaw_cron_list_json /tmp/openclaw-cron-watchdog.json; then
       for agent_name in ceo arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator; do
         count="$(jq -r --arg n "${agent_name}" '[.jobs[]? | select(.name | startswith($n))] | length' /tmp/openclaw-cron-watchdog.json 2>/dev/null || echo 0)"
         if [ "${count}" = "0" ]; then
