@@ -74,7 +74,7 @@ DOCKER_IMAGES_PROJECT := $(shell docker images --filter=reference=*clawdevs* --f
 .PHONY: clawdevs-up clawdevs-down reset-all destroy-all
 .PHONY: ollama-apply ollama-volume-apply ollama-logs ollama-sign ollama-list
 .PHONY: openclaw-apply openclaw-apply-gpu openclaw-restart openclaw-logs openclaw-dashboard
-.PHONY: panel-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward panel-forward-stop services-expose services-stop
+.PHONY: panel-apply panel-backend-apply panel-status panel-logs-backend panel-logs-frontend panel-db-migrate panel-restart panel-destroy panel-url panel-forward panel-forward-stop services-expose services-stop
 .PHONY: stack-apply stack-status
 .PHONY: net-allow-egress net-test-openclaw
 .PHONY: dashboard dashboard-url
@@ -138,6 +138,7 @@ help:
 	@echo "│                                                                │"
 	@echo "│ Control Panel:                                                 │"
 	@echo "│ make panel-apply              - Deploy control panel           │"
+	@echo "│ make panel-backend-apply      - Aplica só deployment backend   │"
 	@echo "│ make panel-url                - Mostra URLs de acesso          │"
 	@echo "│ make panel-forward            - Port-forward para localhost:3000│"
 	@echo "│ make services-expose          - Expoe todos em portas fixas    │"
@@ -381,6 +382,9 @@ openclaw-dashboard:
 
 panel-apply: image-mode-prepare 
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s/base/control-panel/ --server-side --force-conflicts
+
+panel-backend-apply:
+	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/control-panel/backend-deployment.yaml --server-side --force-conflicts
 
 panel-status:
 	kubectl get pods -l app.kubernetes.io/part-of=clawdevs-panel 2>/dev/null || \
