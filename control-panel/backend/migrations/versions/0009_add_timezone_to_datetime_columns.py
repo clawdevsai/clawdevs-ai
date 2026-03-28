@@ -19,7 +19,13 @@ depends_on: Union[str, Sequence[str], None] = None
 # Tables and their datetime columns that need timezone
 tables_with_datetime_columns = {
     "users": ["created_at"],
-    "agents": ["last_heartbeat_at", "cron_last_run_at", "cron_next_run_at", "created_at", "updated_at"],
+    "agents": [
+        "last_heartbeat_at",
+        "cron_last_run_at",
+        "cron_next_run_at",
+        "created_at",
+        "updated_at",
+    ],
     "sessions": ["started_at", "ended_at", "last_active_at", "created_at"],
     "approvals": ["created_at", "decided_at"],
     "tasks": ["created_at", "updated_at", "due_at"],
@@ -47,9 +53,12 @@ def upgrade() -> None:
                 column_name,
                 existing_type=sa.DateTime(),
                 type_=sa.DateTime(timezone=True),
-                existing_nullable=True if column_name not in [
-                    "created_at", "updated_at", "started_at", "period_start"
-                ] else False,
+                existing_nullable=(
+                    True
+                    if column_name
+                    not in ["created_at", "updated_at", "started_at", "period_start"]
+                    else False
+                ),
             )
 
 
@@ -68,7 +77,10 @@ def downgrade() -> None:
                 column_name,
                 existing_type=sa.DateTime(timezone=True),
                 type_=sa.DateTime(),
-                existing_nullable=True if column_name not in [
-                    "created_at", "updated_at", "started_at", "period_start"
-                ] else False,
+                existing_nullable=(
+                    True
+                    if column_name
+                    not in ["created_at", "updated_at", "started_at", "period_start"]
+                    else False
+                ),
             )
