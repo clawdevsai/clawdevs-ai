@@ -97,6 +97,7 @@ async def list_agents(
 ):
     """List all agents."""
     import logging
+
     logger = logging.getLogger(__name__)
 
     await sync_agents_runtime(session)
@@ -169,6 +170,7 @@ async def sync_agents_admin(
     This is useful for debugging if agents aren't appearing.
     """
     import logging
+
     logger = logging.getLogger(__name__)
 
     try:

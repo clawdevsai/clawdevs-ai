@@ -31,15 +31,15 @@ settings = get_settings()
 
 
 def _now_utc_naive() -> datetime:
-    """Return current UTC time as timezone-aware datetime."""
-    return datetime.now(UTC)
+    """Return current UTC time as naive datetime (tzinfo removed)."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
-def _to_utc_aware(value: datetime) -> datetime:
-    """Normalize datetime values to timezone-aware UTC."""
+def _to_utc_naive(value: datetime) -> datetime:
+    """Normalize datetime values to naive UTC."""
     if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
+        return value
+    return value.astimezone(UTC).replace(tzinfo=None)
 
 
 AGENT_SLUGS = [
@@ -146,6 +146,7 @@ def _get_agent_config(slug: str) -> dict[str, Any]:
 def parse_identity(slug: str) -> dict:
     """Try to read IDENTITY.md from the openclaw data path. Fall back to defaults."""
     import logging
+
     logger = logging.getLogger(__name__)
 
     base = Path(settings.openclaw_data_path) / "agents" / slug
@@ -188,7 +189,9 @@ def parse_identity(slug: str) -> dict:
     except Exception as e:
         logger.warning(f"Unexpected error reading identity for {slug}: {e}")
 
-    logger.debug(f"Identity for {slug}: display_name={display_name}, role={role}, model={model}")
+    logger.debug(
+        f"Identity for {slug}: display_name={display_name}, role={role}, model={model}"
+    )
     return {"display_name": display_name, "role": role, "model": model}
 
 
@@ -224,7 +227,9 @@ async def sync_agents(session) -> None:
                     )
                     session.add(agent)
                     created_count += 1
-                    logger.info(f"  ✓ Created agent: {slug} ({identity['display_name']})")
+                    logger.info(
+                        f"  ✓ Created agent: {slug} ({identity['display_name']})"
+                    )
                 else:
                     agent.display_name = identity["display_name"]
                     agent.role = identity["role"]
@@ -233,18 +238,24 @@ async def sync_agents(session) -> None:
                     if not agent.current_model:
                         agent.current_model = identity.get("model")
                     updated_count += 1
-                    logger.info(f"  ✓ Updated agent: {slug} ({identity['display_name']})")
+                    logger.info(
+                        f"  ✓ Updated agent: {slug} ({identity['display_name']})"
+                    )
             except Exception as e:
                 logger.error(f"Error syncing agent {slug}: {e}", exc_info=True)
                 raise
 
-        logger.info(f"Committing {created_count} new agents and {updated_count} updates...")
+        logger.info(
+            f"Committing {created_count} new agents and {updated_count} updates..."
+        )
         await session.commit()
 
         # Verify the sync worked
         result = await session.exec(select(Agent))
         final_agents = result.all()
-        logger.info(f"✓ Agent sync completed: {created_count} created, {updated_count} updated")
+        logger.info(
+            f"✓ Agent sync completed: {created_count} created, {updated_count} updated"
+        )
         logger.info(f"✓ Total agents in database: {len(final_agents)}")
         for agent in final_agents:
             logger.debug(f"  - {agent.slug}: {agent.display_name} ({agent.role})")
@@ -275,7 +286,9 @@ def _pick_latest_runtime_entry(
     if latest_ts is None:
         return None, None
 
-    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc)
+    dt_utc = datetime.fromtimestamp(latest_ts / 1000, tz=timezone.utc).replace(
+        tzinfo=None
+    )
     return latest_item, dt_utc
 
 
@@ -294,7 +307,7 @@ def _status_from_heartbeat(
     if last_heartbeat_at is None:
         return "offline"
 
-    last_heartbeat_at = _to_utc_aware(last_heartbeat_at)
+    last_heartbeat_at = _to_utc_naive(last_heartbeat_at)
 
     age_seconds = (_now_utc_naive() - last_heartbeat_at).total_seconds()
 
@@ -338,7 +351,7 @@ def _has_active_session(payload: dict | None) -> bool:
             try:
                 session_time = datetime.fromtimestamp(
                     updated_at / 1000, tz=timezone.utc
-                )
+                ).replace(tzinfo=None)
                 age_seconds = (_now_utc_naive() - session_time).total_seconds()
                 if age_seconds <= 5 * 60:
                     return True

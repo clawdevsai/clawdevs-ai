@@ -384,6 +384,7 @@ panel-apply: image-mode-prepare
 	kubectl --context=$(KUBE_CONTEXT) apply -k k8s/base/control-panel/ --server-side --force-conflicts
 
 panel-backend-apply:
+	minikube image build -p clawdevs-ai -t clawdevsai/clawdevs-panel-backend:latest control-panel/backend/
 	kubectl --context=$(KUBE_CONTEXT) apply -f k8s/base/control-panel/backend-deployment.yaml --server-side --force-conflicts
 
 panel-status:

@@ -139,7 +139,9 @@ async def list_metrics(
             return int((ts - series_start).total_seconds() // (interval_minutes * 60))
 
         for sess in session_rows:
-            start = _to_naive_utc(sess.started_at or sess.created_at or sess.last_active_at)
+            start = _to_naive_utc(
+                sess.started_at or sess.created_at or sess.last_active_at
+            )
             if start is None:
                 continue
 
