@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from typing import Annotated, Any, AsyncGenerator, Optional
+import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sse_starlette.sse import EventSourceResponse
@@ -29,6 +30,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import CurrentUser
 from app.models import Agent, Session as SessionModel
 from app.services.openclaw_client import openclaw_client
+from app.services.agent_sync import _status_from_heartbeat, _has_active_session
 from app.core.database import get_session
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -123,6 +125,51 @@ async def _latest_session_for_agent(
     return result.first()
 
 
+async def _wait_for_agent_online(
+    db: AsyncSession, agent_slug: str, timeout_seconds: float = 3.0
+) -> bool:
+    """
+    Wait for agent to come online (poll status).
+
+    Args:
+        db: Database session
+        agent_slug: Agent slug
+        timeout_seconds: Max time to wait
+
+    Returns:
+        True if agent came online, False if timeout
+    """
+    start_time = asyncio.get_event_loop().time()
+    poll_interval = 0.2  # Poll every 200ms
+
+    while True:
+        # Get latest agent status
+        stmt = select(Agent).where(Agent.slug == agent_slug)
+        result = await db.exec(stmt)
+        agent = result.first()
+
+        if not agent:
+            return False
+
+        # Calculate current status
+        current_status = _status_from_heartbeat(
+            agent.last_heartbeat_at,
+            has_active_session=False
+        )
+
+        # If online or working, we're good
+        if current_status in ["online", "working"]:
+            return True
+
+        # Check timeout
+        elapsed = asyncio.get_event_loop().time() - start_time
+        if elapsed >= timeout_seconds:
+            return False
+
+        # Wait before polling again
+        await asyncio.sleep(poll_interval)
+
+
 @router.get("/history/{agent_slug}", response_model=ChatHistoryResponse)
 async def chat_history(
     agent_slug: str,
@@ -171,5 +218,21 @@ async def chat_stream(
     _: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_session)],
 ):
-    await _ensure_agent(db, body.agent_slug)
+    agent = await _ensure_agent(db, body.agent_slug)
+
+    # Get current status
+    current_status = _status_from_heartbeat(agent.last_heartbeat_at)
+
+    # If agent is offline or idle, wait for it to come online
+    if current_status in ["offline", "idle"]:
+        agent_came_online = await _wait_for_agent_online(
+            db, body.agent_slug, timeout_seconds=3.0
+        )
+
+        if not agent_came_online:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Agente offline - aguarde e tente novamente",
+            )
+
     return EventSourceResponse(_stream_sse(body.agent_slug, body.message))

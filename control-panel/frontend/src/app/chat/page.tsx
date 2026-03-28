@@ -174,7 +174,14 @@ export default function ChatPage() {
       });
 
       if (!res.ok || !res.body) {
-        throw new Error("Falha ao iniciar streaming");
+        // Better error messages based on status code
+        if (res.status === 503) {
+          throw new Error("Agente offline - aguarde e tente novamente");
+        } else if (res.status === 404) {
+          throw new Error("Agente não encontrado");
+        } else {
+          throw new Error("Falha ao conectar com agente");
+        }
       }
 
       const reader = res.body.getReader();
