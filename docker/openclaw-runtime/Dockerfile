@@ -28,7 +28,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -eux; \
     apt-get update; \
     apt-get upgrade -y; \
-    apt-get install -y --no-install-recommends ca-certificates bash git; \
+    apt-get install -y --no-install-recommends ca-certificates bash git curl jq python3 gh; \
     npm install -g npm@10.9.0; \
     if [ -n "${OPENCLAW_VERSION}" ]; then OPENCLAW_NPM_SPEC="openclaw@${OPENCLAW_VERSION}"; else OPENCLAW_NPM_SPEC="openclaw@latest"; fi; \
     npm install -g --omit=dev "${OPENCLAW_NPM_SPEC}"; \

@@ -49,7 +49,7 @@ spec:
               echo "Backend is ready!"
       containers:
         - name: frontend
-          image: clawdevsai/clawdevs-panel-frontend@sha256:c86b2cee8005309bc143fd4506726844c8a94bd862c62da7c0775b5758a8db1b
+          image: clawdevsai/clawdevs-panel-frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

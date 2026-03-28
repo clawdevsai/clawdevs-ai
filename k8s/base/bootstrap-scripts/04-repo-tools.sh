@@ -142,6 +142,4 @@ done
 printf 'active_repository=%s\nbranch=%s\n' "${target_ref}" "${branch}"
 EOF
 chmod +x "${OPENCLAW_STATE_DIR}/bin/repository-context-lib.sh" "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch"
-ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-discover" /usr/local/bin/claw-repo-discover
-ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-ensure" /usr/local/bin/claw-repo-ensure
-ln -sf "${OPENCLAW_STATE_DIR}/bin/claw-repo-switch" /usr/local/bin/claw-repo-switch
+echo "[bootstrap] claw-repo tools installed in ${OPENCLAW_STATE_DIR}/bin"

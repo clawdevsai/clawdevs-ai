@@ -442,6 +442,8 @@ cp /bootstrap/agent-config/ux_designer-USER.md "${OPENCLAW_STATE_DIR}/workspace-
 cp /bootstrap/agent-config/ux_designer-TOOLS.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/TOOLS.md"
 mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts"
 cp /bootstrap/agent-config/ux_designer-skill-ux_designer_artifacts-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts/SKILL.md"
+mkdir -p "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules"
+cp /bootstrap/agent-config/ux_designer-skill-ux_ui_pro_rules-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules/SKILL.md"
 cp /bootstrap/agent-config/shared-CONSTITUTION.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CONSTITUTION.md"
 cp /bootstrap/agent-config/shared-BRIEF_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/BRIEF_TEMPLATE.md"
 cp /bootstrap/agent-config/shared-CLARIFY_TEMPLATE.md "${OPENCLAW_STATE_DIR}/workspace-ux_designer/CLARIFY_TEMPLATE.md"
@@ -625,6 +627,7 @@ for skill_src_dir in \
   "${OPENCLAW_STATE_DIR}/workspace-devops_sre/skills/devops_sre_operations" \
   "${OPENCLAW_STATE_DIR}/workspace-security_engineer/skills/security_engineer_scan" \
   "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts" \
+  "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules" \
   "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/skills/dba_data_engineer_schema" \
   "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion"; do
   skill_name="$(basename "${skill_src_dir}")"

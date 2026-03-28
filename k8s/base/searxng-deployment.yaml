@@ -37,7 +37,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: searxng
-          image: clawdevsai/searxng-runtime@sha256:d59cc03d02241d3c25d6948c534beb34fdaac51cbf31162b2e9eabeb0fb391bc
+          image: clawdevsai/searxng-runtime:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -81,7 +81,7 @@ spec:
             capabilities:
               drop: ["ALL"]
         - name: searxng-proxy
-          image: clawdevsai/searxng-proxy@sha256:dd8bec8607fdb93fc9417f2494132585e35c955d31be4f50925e55a842c0be2e
+          image: clawdevsai/searxng-proxy:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: proxy

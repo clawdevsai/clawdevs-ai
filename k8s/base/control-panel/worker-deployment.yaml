@@ -54,7 +54,7 @@ spec:
               echo "Redis is ready!"
       containers:
         - name: worker
-          image: clawdevsai/clawdevs-panel-backend@sha256:2264c5e77f50b7307d11184939db56acd967b380649014ac21c8445a1199a819
+          image: clawdevsai/clawdevs-panel-backend:latest
           imagePullPolicy: IfNotPresent
           command: ["python", "-m"]
           args:

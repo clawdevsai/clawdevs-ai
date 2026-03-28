@@ -3,6 +3,7 @@ export DEBIAN_FRONTEND=noninteractive
 export OPENCLAW_NO_ONBOARD=1
 export OPENCLAW_NO_PROMPT=1
 export OPENCLAW_STATE_DIR=/data/openclaw
+export OPENCLAW_BIN_DIR="${OPENCLAW_STATE_DIR}/bin"
 export GH_CONFIG_DIR="${GH_CONFIG_DIR:-${OPENCLAW_STATE_DIR}/.config/gh}"
 export OPENCLAW_LOG_LEVEL="${OPENCLAW_LOG_LEVEL:-info}"
 BOOTSTRAP_LOG_DIR="${OPENCLAW_STATE_DIR}/backlog/status"
@@ -10,6 +11,8 @@ BOOTSTRAP_LOG_FILE="${BOOTSTRAP_LOG_DIR}/openclaw-bootstrap.log"
 mkdir -p "${BOOTSTRAP_LOG_DIR}"
 touch "${BOOTSTRAP_LOG_FILE}"
 mkdir -p "${GH_CONFIG_DIR}"
+mkdir -p "${OPENCLAW_BIN_DIR}"
+export PATH="${OPENCLAW_BIN_DIR}:${PATH}"
 DEBUG_LOG_ENABLED="${DEBUG_LOG_ENABLED:-false}"
 if [ "${DEBUG_LOG_ENABLED}" = "true" ]; then
   export LOG_LEVEL=debug

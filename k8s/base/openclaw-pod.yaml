@@ -62,7 +62,7 @@ spec:
               echo "Ollama is ready!"
       containers:
         - name: openclaw
-          image: clawdevsai/openclaw-runtime@sha256:3b82cd2207cf8526657192eb68bb21e45793c1afe6e785974c65a314daf98d95
+          image: clawdevsai/openclaw-runtime:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: gateway

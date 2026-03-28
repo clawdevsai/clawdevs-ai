@@ -167,6 +167,7 @@ configMapGenerator:
       - ux_designer-USER.md=openclaw-config/ux_designer/USER.md
       - ux_designer-TOOLS.md=openclaw-config/ux_designer/TOOLS.md
       - ux_designer-skill-ux_designer_artifacts-SKILL.md=openclaw-config/agents/ux_designer/skills/ux_designer_artifacts/SKILL.md
+      - ux_designer-skill-ux_ui_pro_rules-SKILL.md=openclaw-config/agents/ux_designer/skills/ux_ui_pro_rules/SKILL.md
       # dba_data_engineer
       - dba_data_engineer-IDENTITY.md=openclaw-config/dba_data_engineer/IDENTITY.md
       - dba_data_engineer-AGENTS.md=openclaw-config/dba_data_engineer/AGENTS.md

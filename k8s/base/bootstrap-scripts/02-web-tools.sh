@@ -18,8 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+WEB_TOOLS_DIR="${OPENCLAW_BIN_DIR:-${OPENCLAW_STATE_DIR}/bin}"
+mkdir -p "${WEB_TOOLS_DIR}"
+
 # --- web-search: pesquisa via SearxNG (self-hosted, cluster-internal) ---
-cat > /usr/local/bin/web-search <<'SCRIPT'
+cat > "${WEB_TOOLS_DIR}/web-search" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
 query="${*}"
@@ -46,9 +49,9 @@ if not results:
     print('Nenhum resultado encontrado.')
 "
 SCRIPT
-chmod +x /usr/local/bin/web-search
+chmod +x "${WEB_TOOLS_DIR}/web-search"
 # --- web-read: leitura de paginas via Jina Reader (API publica gratuita) ---
-cat > /usr/local/bin/web-read <<'SCRIPT'
+cat > "${WEB_TOOLS_DIR}/web-read" <<'SCRIPT'
 #!/usr/bin/env bash
 set -euo pipefail
 url="${1:-}"
@@ -63,5 +66,5 @@ if [ -z "${result}" ]; then
 fi
 echo "${result}"
 SCRIPT
-chmod +x /usr/local/bin/web-read
-echo "[bootstrap] web-search e web-read instalados em /usr/local/bin/"
+chmod +x "${WEB_TOOLS_DIR}/web-read"
+echo "[bootstrap] web-search e web-read instalados em ${WEB_TOOLS_DIR}/"

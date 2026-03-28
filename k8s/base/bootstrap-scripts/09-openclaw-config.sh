@@ -485,7 +485,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/nminimax-m2.7:cloud",
         "workspace": "/data/openclaw/workspace-ux_designer",
         "agentDir": "/data/openclaw/agents/ux_designer/agent",
-        "skills": ["ux_designer_artifacts"],
+        "skills": ["ux_designer_artifacts", "ux_ui_pro_rules"],
         "tools": {
           "allow": [
             "read",
