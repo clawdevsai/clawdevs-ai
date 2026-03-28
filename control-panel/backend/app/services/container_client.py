@@ -169,5 +169,5 @@ def get_cluster_info(namespace: str = "default") -> dict:
 
 
 # Deprecated: maintained for backwards compatibility
-get_k8s_clients = get_container_clients
+get_container_clients = get_container_clients
 list_pods = list_containers

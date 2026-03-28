@@ -28,7 +28,7 @@ except Exception:  # pragma: no cover
     kubernetes = None
 
 
-def get_k8s_clients():
+def get_container_clients():
     try:
         if kubernetes is None:
             raise RuntimeError("kubernetes package not available")
@@ -40,12 +40,12 @@ def get_k8s_clients():
             k8s_config.load_kube_config()
         return client.CoreV1Api(), client.AppsV1Api()
     except Exception as e:
-        logger.warning(f"Kubernetes client not available: {e}")
+        logger.warning(f"Container client not available: {e}")
         return None, None
 
 
 def list_pods(namespace: str = "default") -> list:
-    core, _ = get_k8s_clients()
+    core, _ = get_container_clients()
     if core is None:
         return []
     try:
@@ -78,7 +78,7 @@ def list_pods(namespace: str = "default") -> list:
 
 
 def list_events(namespace: str = "default", limit: int = 50) -> list:
-    core, _ = get_k8s_clients()
+    core, _ = get_container_clients()
     if core is None:
         return []
     try:
@@ -110,7 +110,7 @@ def list_events(namespace: str = "default", limit: int = 50) -> list:
 
 
 def list_pvcs(namespace: str = "default") -> list:
-    core, _ = get_k8s_clients()
+    core, _ = get_container_clients()
     if core is None:
         return []
     try:
@@ -133,7 +133,7 @@ def list_pvcs(namespace: str = "default") -> list:
 
 
 def get_cluster_info(namespace: str = "default") -> dict:
-    core, _ = get_k8s_clients()
+    core, _ = get_container_clients()
     if core is None:
         return {"cluster_name": None, "namespace": namespace, "k8s_version": "unknown"}
 

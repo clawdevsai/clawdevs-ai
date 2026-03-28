@@ -22,7 +22,7 @@ from fastapi import APIRouter
 from app.api.deps import CurrentUser
 from app.core.config import get_settings
 from app.services.openclaw_client import openclaw_client
-from app.services import k8s_client
+from app.services import container_client
 
 settings = get_settings()
 router = APIRouter()
@@ -30,10 +30,10 @@ router = APIRouter()
 
 @router.get("/info")
 async def get_settings_info(_: CurrentUser):
-    cluster_info = k8s_client.get_cluster_info(namespace=settings.k8s_namespace)
+    cluster_info = k8s_client.get_cluster_info(namespace=settings.container_namespace)
     return {
         "gateway_url": settings.openclaw_gateway_url,
-        "cluster_namespace": cluster_info.get("namespace") or settings.k8s_namespace,
+        "cluster_namespace": cluster_info.get("namespace") or settings.container_namespace,
         "k8s_version": cluster_info.get("k8s_version") or "unknown",
     }
 
