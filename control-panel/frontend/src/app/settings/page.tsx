@@ -35,13 +35,13 @@ import { customInstance } from "@/lib/axios-instance"
 interface SettingsInfo {
   gateway_url: string
   cluster_namespace: string
-  k8s_version: string
+  container_version: string
 }
 
 interface ClusterInfo {
   cluster_name?: string
   namespace: string
-  k8s_version: string
+  version: string
 }
 
 interface GatewayHealth {
@@ -602,8 +602,8 @@ export default function SettingsPage() {
               <FieldRow label="Versão Kubernetes">
                 <ReadOnlyValue
                   value={
-                    clusterInfo?.k8s_version ??
-                    settingsInfo?.k8s_version ??
+                    clusterInfo?.version ??
+                    settingsInfo?.container_version ??
                     "—"
                   }
                 />

@@ -201,7 +201,7 @@ services:
     restart: unless-stopped
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # TOKEN INIT (substitui o K8s Job generate-agent-token-job)
+  # TOKEN INIT (substitui o Kubernetes Job generate-agent-token-job)
   # Roda uma vez, gera o PANEL_TOKEN e termina.
   # openclaw aguarda este servico completar antes de iniciar.
   # ─────────────────────────────────────────────────────────────────────────────

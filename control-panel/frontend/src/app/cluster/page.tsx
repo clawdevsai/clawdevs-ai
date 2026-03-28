@@ -52,7 +52,7 @@ interface PVC {
   age: string
 }
 
-interface K8sEvent {
+interface ClusterEvent {
   type: string
   reason: string
   message: string
@@ -126,7 +126,7 @@ const fetchPVCs = async (): Promise<PVC[]> => {
   }))
 }
 
-const fetchEvents = async (): Promise<K8sEvent[]> => {
+const fetchEvents = async (): Promise<ClusterEvent[]> => {
   const data = await customInstance<ApiEvent[] | { items?: ApiEvent[] }>({
     url: "/cluster/events",
     method: "GET",

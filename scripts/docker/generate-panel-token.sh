@@ -1,7 +1,7 @@
 #!/bin/sh
 # Copyright (c) 2026 Diego Silva Morais <lukewaresoftwarehouse@gmail.com>
 #
-# Substitui o K8s Job 'generate-agent-token-job'.
+# Substitui o Kubernetes Job 'generate-agent-token-job'.
 # Roda no container 'token-init' (imagem curlimages/curl).
 # Aguarda o panel-backend, faz login, gera token de agente e salva em volume compartilhado.
 

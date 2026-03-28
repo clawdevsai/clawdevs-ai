@@ -23,7 +23,7 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime, UTC
 
 
-class TestK8sClients:
+class TestContainerClients:
     """Test container_client functions (with mocking)."""
 
     def test_get_container_clients_no_cluster(self):
