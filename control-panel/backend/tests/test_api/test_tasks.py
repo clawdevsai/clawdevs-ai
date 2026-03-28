@@ -137,8 +137,12 @@ class TestCreateTask:
             "label": "back_end",
         }
 
-        with patch("app.api.tasks.enqueue_task_for_ceo", return_value=(True, None)) as mock_enqueue:
-            response = await client.post("/tasks", json=request_body, headers=auth_headers)
+        with patch(
+            "app.api.tasks.enqueue_task_for_ceo", return_value=(True, None)
+        ) as mock_enqueue:
+            response = await client.post(
+                "/tasks", json=request_body, headers=auth_headers
+            )
             assert response.status_code == 201
             data = response.json()
             assert data["title"] == "New Task"
@@ -164,7 +168,9 @@ class TestCreateTask:
         agent_id = str(uuid4())
         request_body = {"title": "Task with Agent", "assigned_agent_id": agent_id}
         with patch("app.api.tasks.enqueue_task_for_ceo", return_value=(True, None)):
-            response = await client.post("/tasks", json=request_body, headers=auth_headers)
+            response = await client.post(
+                "/tasks", json=request_body, headers=auth_headers
+            )
             assert response.status_code == 201
             data = response.json()
             assert data["assigned_agent_id"] == str(ceo.id)
@@ -181,7 +187,9 @@ class TestCreateTask:
         await db_session.commit()
         await db_session.refresh(ceo)
 
-        with patch("app.api.tasks.enqueue_task_for_ceo", return_value=(False, "redis offline")):
+        with patch(
+            "app.api.tasks.enqueue_task_for_ceo", return_value=(False, "redis offline")
+        ):
             response = await client.post(
                 "/tasks",
                 json={"title": "Task with queue failure"},

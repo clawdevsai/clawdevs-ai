@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import CurrentUser
 from app.models import Agent, Session as SessionModel
 from app.services.openclaw_client import openclaw_client
-from app.services.agent_sync import _status_from_heartbeat, _has_active_session
+from app.services.agent_sync import _status_from_heartbeat
 from app.core.database import get_session
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -153,8 +153,7 @@ async def _wait_for_agent_online(
 
         # Calculate current status
         current_status = _status_from_heartbeat(
-            agent.last_heartbeat_at,
-            has_active_session=False
+            agent.last_heartbeat_at, has_active_session=False
         )
 
         # If online or working, we're good
