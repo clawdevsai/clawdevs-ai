@@ -22,17 +22,21 @@
 
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, RefreshCw } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AgentAvatar } from "@/components/agents/agent-avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface Agent {
   slug: string;
   display_name: string;
+  role: string;
+  status?: string;
 }
 
 interface ToolCall {
@@ -117,10 +121,31 @@ export default function ChatPage() {
     }
   }, [messages]);
 
-  const selectedAgentName = useMemo(() => {
-    const match = agents.find((a) => a.slug === selectedAgent);
-    return match?.display_name ?? selectedAgent ?? "";
-  }, [agents, selectedAgent]);
+  const selectedAgentData = useMemo(
+    () => agents.find((a) => a.slug === selectedAgent) ?? null,
+    [agents, selectedAgent]
+  );
+  const selectedAgentName = selectedAgentData?.display_name ?? selectedAgent ?? "";
+  const selectedAgentRole = (selectedAgentData?.role ?? "Profissional").replace(/_/g, " ");
+  const selectedAgentLabel = selectedAgentName
+    ? `${selectedAgentRole} · ${selectedAgentName}`
+    : "";
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (!sending && selectedAgent && input.trim()) {
+        void sendMessage();
+      }
+    }
+  }
+
+  function getMessageAuthor(role: string) {
+    if (role === "assistant") return selectedAgentLabel || "Assistente";
+    if (role === "user") return "Você";
+    if (role === "system") return "Sistema";
+    return role;
+  }
 
   async function sendMessage() {
     if (!selectedAgent || !input.trim()) return;
@@ -201,82 +226,129 @@ export default function ChatPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-4 h-full">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-[hsl(var(--muted-foreground))]">Agente</label>
-            <select
-              value={selectedAgent ?? ""}
-              onChange={(e) => setSelectedAgent(e.target.value)}
-              className="px-3 py-1.5 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-sm"
-            >
-              {agents.map((a) => (
-                <option key={a.slug} value={a.slug}>
-                  {a.display_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={() => selectedAgent && refetchHistory()}
-            className="text-xs px-2 py-1 rounded border border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/30"
-            disabled={!selectedAgent || historyLoading}
-          >
-            Atualizar histórico
-          </button>
-          {historyLoading && <span className="text-xs text-[hsl(var(--muted-foreground))]">Carregando…</span>}
-        </div>
-
-        <div
-          ref={scrollRef}
-          className="flex-1 min-h-[300px] max-h-[60vh] overflow-y-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 space-y-4"
-        >
-          {agentsLoading || historyLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : messages.length === 0 ? (
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Nenhuma mensagem ainda.</p>
-          ) : (
-            messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`rounded-lg px-4 py-3 ${
-                  msg.role === "user"
-                    ? "bg-[hsl(var(--primary)/0.1)] border border-[hsl(var(--primary)/0.3)]"
-                    : "bg-[hsl(var(--muted))]/20 border border-[hsl(var(--border))]"
-                }`}
-              >
-                <p className="text-xs uppercase tracking-wide text-[hsl(var(--muted-foreground))] mb-1">
-                  {msg.role === "assistant" ? selectedAgentName : msg.role}
+      <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4">
+        <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <AgentAvatar
+                slug={selectedAgentData?.slug ?? "agent"}
+                displayName={selectedAgentName || "Profissional"}
+                size="md"
+                className={!selectedAgentData ? "opacity-60" : ""}
+              />
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]">
+                  Profissional em foco
                 </p>
-                <div className="prose prose-invert prose-sm max-w-none">
-                  <ReactMarkdown>{msg.content || ""}</ReactMarkdown>
-                </div>
+                <p className="truncate text-sm font-semibold text-[hsl(var(--foreground))]">
+                  {selectedAgentName || "Selecione um profissional"}
+                </p>
+                <p className="truncate text-xs text-[hsl(var(--muted-foreground))]">{selectedAgentRole}</p>
               </div>
-            ))
-          )}
+              {selectedAgentData?.status ? (
+                <Badge
+                  variant={selectedAgentData.status === "online" ? "success" : "secondary"}
+                  className="ml-1 hidden sm:inline-flex"
+                >
+                  {selectedAgentData.status}
+                </Badge>
+              ) : null}
+            </div>
+
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[auto_minmax(220px,320px)_auto] sm:items-center">
+              <label className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Agente
+              </label>
+              <select
+                value={selectedAgent ?? ""}
+                onChange={(e) => setSelectedAgent(e.target.value)}
+                className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
+              >
+                {agents.map((a) => (
+                  <option key={a.slug} value={a.slug}>
+                    {`${a.role.replace(/_/g, " ")} · ${a.display_name}`}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => selectedAgent && refetchHistory()}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[hsl(var(--border))] px-3 text-xs font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/40 disabled:opacity-50"
+                disabled={!selectedAgent || historyLoading}
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${historyLoading ? "animate-spin" : ""}`} />
+                Histórico
+              </button>
+            </div>
+          </div>
         </div>
 
-        {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
-
-        <div className="flex items-center gap-3">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Mensagem para ${selectedAgentName || "o agente"}`}
-            className="flex-1 min-h-[60px] rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={sending || !selectedAgent || !input.trim()}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] text-sm font-medium hover:opacity-90 disabled:opacity-50"
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,hsla(var(--primary),0.12),transparent_55%)] p-4 sm:p-6"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Enviar
-          </button>
+            {agentsLoading || historyLoading ? (
+              <div className="mx-auto w-full max-w-4xl space-y-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="mx-auto flex h-full min-h-[280px] w-full max-w-4xl items-center justify-center">
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                  Ainda não há mensagens para este profissional.
+                </p>
+              </div>
+            ) : (
+              <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[88%] rounded-2xl border px-4 py-3 shadow-sm ${
+                        msg.role === "user"
+                          ? "border-[hsl(var(--primary)/0.4)] bg-[hsl(var(--primary)/0.14)]"
+                          : "border-[hsl(var(--border))] bg-[hsl(var(--background))]/95"
+                      }`}
+                    >
+                      <p className="mb-1 text-[10px] uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]">
+                        {getMessageAuthor(msg.role)}
+                      </p>
+                      <div className="prose prose-invert prose-sm max-w-none break-words">
+                        {msg.content ? (
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        ) : (
+                          <span className="text-sm text-[hsl(var(--muted-foreground))]">Pensando...</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/75 p-3 sm:p-4">
+            <div className="mx-auto w-full max-w-4xl space-y-3">
+              {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
+              <div className="flex items-end gap-3">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleComposerKeyDown}
+                  placeholder={`Mensagem para ${selectedAgentLabel || "o profissional selecionado"}`}
+                  className="min-h-[56px] max-h-44 flex-1 resize-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2.5 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={sending || !selectedAgent || !input.trim()}
+                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 text-sm font-medium text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
+                >
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Enviar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </AppLayout>

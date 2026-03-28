@@ -7,6 +7,7 @@ NUL
 .claude
 control-panel/frontend/node_modules
 control-panel/frontend/.next
+*.tsbuildinfo
 tmp-job*
 .clone/*
 
