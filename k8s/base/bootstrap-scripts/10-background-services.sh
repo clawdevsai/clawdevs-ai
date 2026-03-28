@@ -38,9 +38,14 @@ stream_agent_sessions() {
 }
 
 ensure_panel_read_permissions() {
+  local config_mode="${OPENCLAW_CONFIG_FILE_MODE:-600}"
+  local sessions_mode="${OPENCLAW_SESSIONS_FILE_MODE:-600}"
   while true; do
-    chmod a+r "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true
-    chmod a+r "${OPENCLAW_STATE_DIR}"/agents/*/sessions/sessions.json 2>/dev/null || true
+    chmod "${config_mode}" "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true
+    for _session_file in "${OPENCLAW_STATE_DIR}"/agents/*/sessions/sessions.json; do
+      [ -f "${_session_file}" ] || continue
+      chmod "${sessions_mode}" "${_session_file}" 2>/dev/null || true
+    done
     sleep "${PANEL_PERMISSION_SYNC_INTERVAL_SECONDS:-5}"
   done
 }

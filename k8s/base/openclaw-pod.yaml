@@ -112,6 +112,12 @@ spec:
                   name: openclaw-auth
                   key: LANGUAGE
                   optional: true
+            - name: NODE_HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: OPENCLAW_GATEWAY_NODEPORT
+              value: "31879"
             - name: NODE_OPTIONS
               value: --max-old-space-size=1024
             - name: OPENCLAW_NO_RESPAWN

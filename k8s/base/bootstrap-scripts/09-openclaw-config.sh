@@ -22,6 +22,18 @@
 # desnecessaria que causa "missing-meta-before-write" e faz o gateway encerrar.
 _existing_token="$(jq -r '.gateway.auth.token // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
 _existing_bind="$(jq -r '.gateway.bind // empty' "${OPENCLAW_STATE_DIR}/openclaw.json" 2>/dev/null || true)"
+_node_host_ip="${NODE_HOST_IP:-127.0.0.1}"
+_gateway_nodeport="${OPENCLAW_GATEWAY_NODEPORT:-31879}"
+_allowed_origins_json="${OPENCLAW_CONTROL_UI_ALLOWED_ORIGINS_JSON:-}"
+if [ -z "${_allowed_origins_json}" ]; then
+  _allowed_origins_json="$(jq -cn \
+    --arg o1 "http://127.0.0.1:18789" \
+    --arg o2 "http://localhost:18789" \
+    --arg o3 "http://clawdevs-ai:18789" \
+    --arg o4 "http://clawdevs-ai.default.svc.cluster.local:18789" \
+    --arg o5 "http://${_node_host_ip}:${_gateway_nodeport}" \
+    '[$o1,$o2,$o3,$o4,$o5] | unique')"
+fi
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
@@ -35,14 +47,17 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
     "bind": "lan",
     "port": 18789,
     "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "dangerouslyAllowHostHeaderOriginFallback": false,
       "dangerouslyDisableDeviceAuth": false,
-      "allowedOrigins": [
-        "*"
-      ]
+      "allowedOrigins": __CONTROL_UI_ALLOWED_ORIGINS__
     },
     "auth": {
-      "token": "__TOKEN__"
+      "token": "__TOKEN__",
+      "rateLimit": {
+        "maxAttempts": 10,
+        "windowMs": 60000,
+        "lockoutMs": 300000
+      }
     }
   },
   "models": {
@@ -161,7 +176,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
         "model": "ollama/qwen3-vl:235b-cloud",
         "workspace": "/data/openclaw/workspace-ceo",
         "agentDir": "/data/openclaw/agents/ceo/agent",
-        "skills": ["ceo_orchestration"],
+        "skills": ["ceo_orchestration", "markdown_converter", "market_research"],
         "tools": {
           "allow": [
             "read",
@@ -587,6 +602,7 @@ EOF
 sed -i "s/__TOKEN__/${OPENCLAW_GATEWAY_TOKEN}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s/__TELEGRAM_BOT_TOKEN_CEO__/${TELEGRAM_BOT_TOKEN_CEO}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 sed -i "s/__TELEGRAM_CHAT_ID__/${TELEGRAM_CHAT_ID}/g" "${OPENCLAW_STATE_DIR}/openclaw.json"
+sed -i "s#__CONTROL_UI_ALLOWED_ORIGINS__#${_allowed_origins_json}#g" "${OPENCLAW_STATE_DIR}/openclaw.json"
 mkdir -p ~/.openclaw
 cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
 fi
@@ -607,8 +623,15 @@ fi
 # Hardening minimo: manter autenticacao de dispositivo habilitada no Control UI.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
-  if jq '
+  if jq --argjson allowedOrigins "${_allowed_origins_json}" '
       .gateway.controlUi.dangerouslyDisableDeviceAuth = false
+      | .gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback = false
+      | .gateway.controlUi.allowedOrigins = $allowedOrigins
+      | .gateway.auth.rateLimit = {
+          "maxAttempts": (.gateway.auth.rateLimit.maxAttempts // 10),
+          "windowMs": (.gateway.auth.rateLimit.windowMs // 60000),
+          "lockoutMs": (.gateway.auth.rateLimit.lockoutMs // 300000)
+        }
     ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
     mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
     mkdir -p ~/.openclaw
