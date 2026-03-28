@@ -2,11 +2,13 @@
 
 This document tracks schema changes made to the control panel database.
 
-## Auto-Migration System
+## Migration System
 
-The control panel uses SQLModel ORM which automatically creates and updates database tables based on Python model definitions. When the application starts, `SQLModel.metadata.create_all()` is called to ensure all tables and columns exist.
+The control panel uses Alembic versioned migrations.
 
-**No manual migration scripts are required.** Changes to models are automatically applied when the application runs.
+On startup, the backend runs `alembic upgrade head` (enabled by default via `PANEL_RUN_DB_MIGRATIONS_ON_STARTUP=true`).
+
+`SQLModel.metadata.create_all()` can be enabled only as an explicit fallback (`PANEL_ALLOW_SCHEMA_CREATE_ALL_FALLBACK=true`) and **does not apply ALTER operations**.
 
 ---
 
@@ -14,7 +16,7 @@ The control panel uses SQLModel ORM which automatically creates and updates data
 
 **Date:** 2026-03-27
 **Models Changed:** Task, Agent
-**Status:** Implemented via SQLModel auto-migration
+**Status:** Implemented via Alembic migration `0010_failure_escalation_schema_alignment.py`
 
 ### Task Model Changes
 
@@ -112,10 +114,9 @@ No new migrations required; cost fields already added in Phase 1.
 ## Running Migrations
 
 **Automatic (Recommended):**
-Simply start the application. SQLModel will automatically:
-1. Create all tables if they don't exist
-2. Add any new columns to existing tables
-3. Create indexes as defined
+Start the application and let startup run:
+1. `alembic upgrade head`
+2. admin/agent bootstrap
 
 ```bash
 cd control-panel/backend
@@ -140,7 +141,13 @@ Connect to PostgreSQL and verify tables:
 
 ## Rollback Plan
 
-If a migration causes issues, SQLModel cannot automatically rollback changes. To rollback:
+If a migration causes issues, rollback via Alembic first:
+
+```bash
+alembic downgrade -1
+```
+
+Then, if needed, apply manual SQL corrections:
 
 1. **Remove columns manually via SQL:**
 ```sql

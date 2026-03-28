@@ -75,6 +75,8 @@ class Settings(BaseSettings):
 
     # Security
     debug: bool = False
+    run_db_migrations_on_startup: bool = True
+    allow_schema_create_all_fallback: bool = False
     allowed_origins: list[str] = [
         "http://localhost:3000",
         "http://clawdevs-panel-frontend:3000",

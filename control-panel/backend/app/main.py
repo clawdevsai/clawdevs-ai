@@ -26,7 +26,7 @@ from sqlmodel import select
 import logging
 
 from app.core.config import get_settings
-from app.core.database import AsyncSessionLocal
+from app.core.database import AsyncSessionLocal, run_migrations
 from app.core.auth import get_password_hash
 from app.models import User
 from app.api import auth as auth_api
@@ -76,6 +76,7 @@ async def bootstrap_agents():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await run_migrations()
     await bootstrap_admin()
     await bootstrap_agents()
     yield

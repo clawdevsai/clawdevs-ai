@@ -21,6 +21,10 @@
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
+from alembic.config import Config
+from alembic import command
+from pathlib import Path
+import asyncio
 import logging
 
 from app.core.config import get_settings
@@ -50,3 +54,25 @@ async def get_session():
 async def create_db_and_tables():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+
+
+def _run_alembic_upgrade_head() -> None:
+    base_dir = Path(__file__).resolve().parents[2]
+    alembic_ini = base_dir / "alembic.ini"
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("script_location", str(base_dir / "migrations"))
+    cfg.set_main_option("sqlalchemy.url", settings.database_url)
+    command.upgrade(cfg, "head")
+
+
+async def run_migrations() -> None:
+    if settings.run_db_migrations_on_startup:
+        logger.info("Running Alembic migrations at startup")
+        await asyncio.to_thread(_run_alembic_upgrade_head)
+        return
+
+    if settings.allow_schema_create_all_fallback:
+        logger.warning(
+            "Using SQLModel.metadata.create_all fallback. This does not apply ALTERs."
+        )
+        await create_db_and_tables()
