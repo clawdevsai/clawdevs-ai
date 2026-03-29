@@ -491,7 +491,7 @@ async def sync_agents_runtime(session) -> None:
             agent.last_heartbeat_at != latest_heartbeat
             or agent.openclaw_session_id != next_session_id
             or agent.current_model != next_model
-            or agent.status != next_status
+            or agent.runtime_status != next_status
             or agent.display_name != identity["display_name"]
             or agent.role != identity["role"]
             or agent.avatar_url != expected_avatar_url
@@ -499,7 +499,7 @@ async def sync_agents_runtime(session) -> None:
             agent.last_heartbeat_at = latest_heartbeat
             agent.openclaw_session_id = next_session_id
             agent.current_model = next_model
-            agent.status = next_status
+            agent.runtime_status = next_status
             agent.display_name = identity["display_name"]
             agent.role = identity["role"]
             agent.avatar_url = expected_avatar_url

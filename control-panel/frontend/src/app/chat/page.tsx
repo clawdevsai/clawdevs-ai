@@ -55,6 +55,7 @@ interface Agent {
   display_name: string;
   role: string;
   status?: string;
+  runtime_status?: string;
 }
 
 interface ToolCall {
@@ -593,12 +594,12 @@ function ChatPageContent() {
                 </p>
                 <p className="truncate text-xs text-[hsl(var(--muted-foreground))]">{selectedAgentRole}</p>
               </div>
-              {selectedAgentData?.status ? (
+              {selectedAgentData?.runtime_status ? (
                 <Badge
-                  variant={["online", "working"].includes(selectedAgentData.status) ? "success" : "secondary"}
+                  variant={["online", "working"].includes(selectedAgentData.runtime_status) ? "success" : "secondary"}
                   className="ml-1 hidden sm:inline-flex"
                 >
-                  {selectedAgentData.status === "working" ? "online" : selectedAgentData.status}
+                  {selectedAgentData.runtime_status === "working" ? "online" : selectedAgentData.runtime_status}
                 </Badge>
               ) : null}
             </div>

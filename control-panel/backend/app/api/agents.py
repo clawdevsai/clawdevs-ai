@@ -41,6 +41,7 @@ class AgentResponse(BaseModel):
     role: str
     avatar_url: str | None
     status: str
+    runtime_status: str | None = None  # online|working|idle|offline
     current_model: str | None
     last_heartbeat_at: datetime | None
     cron_expression: str | None
@@ -71,6 +72,7 @@ class AgentResponse(BaseModel):
             role=agent.role,
             avatar_url=agent.avatar_url,
             status=agent.status,
+            runtime_status=agent.runtime_status,
             current_model=agent.current_model,
             last_heartbeat_at=agent.last_heartbeat_at,
             cron_expression=agent.cron_expression,

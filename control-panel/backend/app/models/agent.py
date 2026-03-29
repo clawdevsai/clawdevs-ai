@@ -33,6 +33,7 @@ class Agent(SQLModel, table=True):
     role: str
     avatar_url: Optional[str] = None
     status: str = Field(default="unknown")  # active|inactive|error|unknown
+    runtime_status: str = Field(default="offline")  # online|working|idle|offline (computed from heartbeat)
     current_model: Optional[str] = None
     openclaw_session_id: Optional[str] = None
     last_heartbeat_at: Optional[datetime] = None
