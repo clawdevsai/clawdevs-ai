@@ -636,6 +636,38 @@ for skill_asset in /bootstrap/agent-config/*-skill-*--asset--*; do
 done
 # --- Fim: sincronizacao dinamica de skills por agente ---
 
+# --- Rollout dinamico de skills compartilhadas para todos os agentes ---
+# Materializa /bootstrap/agent-config/shared-skill-* em todos os workspaces
+# para que skills configuradas em agents.list[].skills sejam resolvidas.
+for shared_skill_manifest in /bootstrap/agent-config/shared-skill-*-SKILL.md; do
+  [ -f "${shared_skill_manifest}" ] || continue
+  shared_skill_manifest_base="$(basename "${shared_skill_manifest}")"
+  if [[ "${shared_skill_manifest_base}" =~ ^shared-skill-(.+)-SKILL\.md$ ]]; then
+    shared_skill_name="${BASH_REMATCH[1]}"
+    for shared_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+      shared_skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${shared_skill_name}"
+      mkdir -p "${shared_skill_target_dir}"
+      cp -f "${shared_skill_manifest}" "${shared_skill_target_dir}/SKILL.md"
+    done
+  fi
+done
+
+for shared_skill_asset in /bootstrap/agent-config/shared-skill-*--asset--*; do
+  [ -f "${shared_skill_asset}" ] || continue
+  shared_skill_asset_base="$(basename "${shared_skill_asset}")"
+  if [[ "${shared_skill_asset_base}" =~ ^shared-skill-(.+)--asset--(.+)$ ]]; then
+    shared_skill_name="${BASH_REMATCH[1]}"
+    shared_asset_rel_encoded="${BASH_REMATCH[2]}"
+    shared_asset_rel="${shared_asset_rel_encoded//__SLASH__/\/}"
+    for shared_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
+      shared_skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${shared_agent}/skills/${shared_skill_name}"
+      mkdir -p "${shared_skill_target_dir}/$(dirname "${shared_asset_rel}")"
+      cp -f "${shared_skill_asset}" "${shared_skill_target_dir}/${shared_asset_rel}"
+    done
+  fi
+done
+# --- Fim: rollout dinamico de skills compartilhadas ---
+
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"

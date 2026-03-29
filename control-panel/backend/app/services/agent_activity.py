@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,6 +15,14 @@ IGNORED_ACTIVITY_TEXTS = {
     "PONG",
     "OK",
 }
+
+IGNORED_ACTIVITY_PATTERNS = (
+    re.compile(
+        r"^\*\*STANDBY\*\*\s*—\s*\d+\s+recusas?,\s*ciclo encerrado\.",
+        re.IGNORECASE,
+    ),
+    re.compile(r"^terceira recusa\b", re.IGNORECASE),
+)
 
 
 def get_agent_current_activity(
@@ -125,7 +134,7 @@ def _extract_last_meaningful_text(session_file: Path) -> tuple[str | None, str |
         if not text:
             continue
         full_text = text.strip()
-        if full_text.upper() in IGNORED_ACTIVITY_TEXTS:
+        if _is_ignored_activity(full_text):
             continue
         return full_text, role
 
@@ -164,3 +173,9 @@ def _parse_timestamp(value: object) -> datetime | None:
         except ValueError:
             return None
     return None
+
+
+def _is_ignored_activity(full_text: str) -> bool:
+    if full_text.upper() in IGNORED_ACTIVITY_TEXTS:
+        return True
+    return any(pattern.search(full_text) for pattern in IGNORED_ACTIVITY_PATTERNS)

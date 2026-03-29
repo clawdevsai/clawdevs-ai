@@ -1010,7 +1010,8 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
-        { "pattern": "/usr/bin/curl" }
+        { "pattern": "/usr/bin/curl" },
+        { "pattern": "/usr/bin/gh" }
       ]
     },
     "dev_backend": {

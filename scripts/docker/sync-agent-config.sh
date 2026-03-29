@@ -135,8 +135,11 @@ fi
 
 # 6) Validacao: tudo que bootstrap referencia em /bootstrap/agent-config/ deve existir
 mapfile -t referenced_keys < <(
-  grep -RhoE '/bootstrap/agent-config/[A-Za-z0-9._${}-]+' "${BOOTSTRAP_DIR}" \
+  grep -RhoE '/bootstrap/agent-config/[A-Za-z0-9._${}*:-]+' "${BOOTSTRAP_DIR}" \
     | sed 's#.*/##' \
+    | grep -v '\*' \
+    | grep -v '\${' \
+    | grep -vE '^[[:space:]]*$|.*-$' \
     | sort -u
 )
 

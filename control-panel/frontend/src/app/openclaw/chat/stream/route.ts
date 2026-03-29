@@ -91,6 +91,62 @@ function normalizeRagContext(rawContext?: string | null): string | null {
   return normalized.slice(0, 3500);
 }
 
+function resolveGatewayToken(): string {
+  return (
+    process.env.OPENCLAW_GATEWAY_TOKEN?.trim() ||
+    process.env.PANEL_OPENCLAW_GATEWAY_TOKEN?.trim() ||
+    ""
+  );
+}
+
+function resolveGatewayCandidates(): string[] {
+  const configured = process.env.OPENCLAW_GATEWAY_URL?.trim();
+  const panelConfigured = process.env.PANEL_OPENCLAW_GATEWAY_URL?.trim();
+  const defaults = [
+    "http://localhost:18789",
+    "http://clawdevs-ai:18789",
+  ];
+  const all = [configured, panelConfigured, ...defaults]
+    .filter(Boolean)
+    .map((value) => (value as string).replace(/\/+$/, ""));
+  return Array.from(new Set(all));
+}
+
+async function streamFromGateway(
+  gatewayUrl: string,
+  gatewayToken: string,
+  sessionKey: string,
+  payload: unknown
+): Promise<Response | null> {
+  try {
+    const upstreamResponse = await fetch(`${gatewayUrl}/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${gatewayToken}`,
+        "Content-Type": "application/json",
+        "x-openclaw-session-key": sessionKey,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!upstreamResponse.ok || !upstreamResponse.body) {
+      return null;
+    }
+
+    return new Response(upstreamResponse.body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const authorization = request.headers.get("authorization");
@@ -107,10 +163,12 @@ export async function POST(request: Request) {
     const { agentSlug, sessionKey } = resolveAgentAndSessionKey(body);
     const ragContext = normalizeRagContext(body.rag_context);
 
-    const gatewayUrl = (process.env.OPENCLAW_GATEWAY_URL ?? "http://clawdevs-ai:18789").replace(/\/+$/, "");
-    const gatewayToken = (process.env.OPENCLAW_GATEWAY_TOKEN ?? "").trim();
+    const gatewayToken = resolveGatewayToken();
     if (!gatewayToken) {
-      return NextResponse.json({ detail: "OPENCLAW_GATEWAY_TOKEN is not configured" }, { status: 500 });
+      return NextResponse.json(
+        { detail: "OPENCLAW_GATEWAY_TOKEN is not configured" },
+        { status: 500 }
+      );
     }
 
     const upstreamPayload = {
@@ -131,39 +189,23 @@ export async function POST(request: Request) {
       ],
     };
 
-    const upstreamResponse = await fetch(`${gatewayUrl}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${gatewayToken}`,
-        "Content-Type": "application/json",
-        "x-openclaw-session-key": sessionKey,
-      },
-      body: JSON.stringify(upstreamPayload),
-    });
-
-    if (!upstreamResponse.ok || !upstreamResponse.body) {
-      const errorBody = await upstreamResponse.text();
-      return new Response(
-        errorBody || JSON.stringify({ detail: "Failed to connect to OpenClaw gateway" }),
-        {
-          status: upstreamResponse.status || 502,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-store",
-          },
-        }
+    const gatewayCandidates = resolveGatewayCandidates();
+    for (const candidate of gatewayCandidates) {
+      const streamResponse = await streamFromGateway(
+        candidate,
+        gatewayToken,
+        sessionKey,
+        upstreamPayload
       );
+      if (streamResponse) {
+        return streamResponse;
+      }
     }
 
-    return new Response(upstreamResponse.body, {
-      status: 200,
-      headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
-      },
-    });
+    return NextResponse.json(
+      { detail: "Failed to connect to OpenClaw gateway" },
+      { status: 502 }
+    );
   } catch (error) {
     if (error instanceof Response) {
       return error;
