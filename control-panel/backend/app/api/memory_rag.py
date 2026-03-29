@@ -46,6 +46,11 @@ async def search_memories(
     query: str = Query(..., min_length=3, max_length=1000, description="Search query"),
     top_k: int = Query(5, ge=1, le=20, description="Number of results"),
     agent_slug: Optional[str] = Query(None, description="Filter to specific agent"),
+    session_key: Optional[str] = Query(
+        None,
+        max_length=512,
+        description="Prioritize memories from the same chat session",
+    ),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     """
@@ -69,11 +74,13 @@ async def search_memories(
         query=query,
         top_k=top_k,
         agent_slug=agent_slug,
+        session_key=session_key,
     )
 
     return {
         "query": query,
         "agent_slug": agent_slug,
+        "session_key": session_key,
         "results_count": len(results),
         "top_k_requested": top_k,
         "results": results,
@@ -84,6 +91,11 @@ async def search_memories(
 async def get_agent_rag_context(
     agent_slug: str,
     task_description: str = Query(..., min_length=10, max_length=1000),
+    session_key: Optional[str] = Query(
+        None,
+        max_length=512,
+        description="Prioritize memories from the same chat session",
+    ),
     max_items: int = Query(5, ge=1, le=20),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
@@ -108,6 +120,7 @@ async def get_agent_rag_context(
     context = await retriever.get_rag_context(
         agent_slug=agent_slug,
         task_description=task_description,
+        session_key=session_key,
         max_context_items=max_items,
     )
 

@@ -34,7 +34,16 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
-import { Send, Loader2, RefreshCw } from "lucide-react";
+import {
+  Send,
+  Loader2,
+  RefreshCw,
+  Paperclip,
+  Mic,
+  Plus,
+  Download,
+  ChevronsUpDown,
+} from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -73,6 +82,22 @@ interface HistoryResponse {
   messages: ChatMessage[];
 }
 
+interface RagSearchResult {
+  id: string;
+  title: string;
+  body?: string | null;
+  similarity_score: number;
+  retrieval_mode?: string;
+}
+
+interface RagSearchResponse {
+  query: string;
+  agent_slug?: string | null;
+  session_key?: string | null;
+  results_count: number;
+  results: RagSearchResult[];
+}
+
 const SESSION_KEY_RE = /^agent:([a-z0-9_-]+):(.+)$/i;
 
 type ParsedSessionKey = {
@@ -102,6 +127,23 @@ const fetchHistory = (slug: string, sessionKey?: string) =>
     method: "GET",
     params: sessionKey ? { session_key: sessionKey } : undefined,
   });
+
+function getAgentOptionLabel(agent: Agent): string {
+  return `${agent.role.replace(/_/g, " ")} · ${agent.display_name}`;
+}
+
+function buildRagContext(results: RagSearchResult[]): string | null {
+  const compactItems = results
+    .filter((item) => (item.body ?? "").trim().length > 0)
+    .slice(0, 4)
+    .map((item, index) => {
+      const clippedBody = (item.body ?? "").trim().replace(/\s+/g, " ").slice(0, 320);
+      return `${index + 1}. ${item.title} (score ${item.similarity_score.toFixed(3)}, ${item.retrieval_mode ?? "semantic"})\n${clippedBody}`;
+    });
+
+  if (compactItems.length === 0) return null;
+  return compactItems.join("\n\n");
+}
 
 function ChatPageContent() {
   const router = useRouter();
@@ -212,7 +254,11 @@ function ChatPageContent() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [agentDropdownOpen, setAgentDropdownOpen] = useState(false);
+  const [agentQuery, setAgentQuery] = useState("");
+  const [activeAgentIndex, setActiveAgentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const agentDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (historyData?.messages) {
@@ -231,25 +277,111 @@ function ChatPageContent() {
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (!agentDropdownOpen) return;
+
+    function onPointerDown(event: MouseEvent) {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (agentDropdownRef.current?.contains(target)) return;
+      setAgentDropdownOpen(false);
+      setAgentQuery("");
+    }
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [agentDropdownOpen]);
+
   const selectedAgentData = useMemo(
     () => agents.find((a) => a.slug === selectedAgent) ?? null,
     [agents, selectedAgent]
   );
+
+  const filteredAgents = useMemo(() => {
+    const query = agentQuery.trim().toLowerCase();
+    if (!query) return agents;
+    return agents.filter((agent) => {
+      const label = getAgentOptionLabel(agent).toLowerCase();
+      const slug = agent.slug.toLowerCase();
+      const role = agent.role.toLowerCase().replace(/_/g, " ");
+      return label.includes(query) || slug.includes(query) || role.includes(query);
+    });
+  }, [agents, agentQuery]);
+
+  useEffect(() => {
+    if (!agentDropdownOpen) return;
+    setActiveAgentIndex((current) => {
+      if (filteredAgents.length === 0) return 0;
+      if (current >= filteredAgents.length) return 0;
+      return current;
+    });
+  }, [filteredAgents, agentDropdownOpen]);
+
   const selectedAgentName = selectedAgentData?.display_name ?? selectedAgent ?? "";
   const selectedAgentRole = (selectedAgentData?.role ?? "Profissional").replace(/_/g, " ");
   const selectedAgentLabel = selectedAgentName
     ? `${selectedAgentRole} · ${selectedAgentName}`
     : "";
+
   const activeSessionKey =
     selectedSessionKey ??
     (selectedAgent ? buildMainSessionKey(selectedAgent) : null);
+
+  const agentInputValue = agentDropdownOpen
+    ? agentQuery
+    : selectedAgentData
+    ? getAgentOptionLabel(selectedAgentData)
+    : "";
 
   function handleAgentChange(nextAgent: string) {
     const nextSessionKey = buildMainSessionKey(nextAgent);
     setSelectedAgent(nextAgent);
     setSelectedSessionKey(nextSessionKey);
     setSessionParamError(null);
+    setAgentDropdownOpen(false);
+    setAgentQuery("");
     syncSessionParam(nextSessionKey, false);
+  }
+
+  function handleAgentInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (!agentDropdownOpen && (event.key === "Enter" || event.key === "ArrowDown")) {
+      event.preventDefault();
+      setAgentDropdownOpen(true);
+      return;
+    }
+
+    if (!agentDropdownOpen) return;
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveAgentIndex((current) =>
+        filteredAgents.length === 0 ? 0 : Math.min(current + 1, filteredAgents.length - 1)
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveAgentIndex((current) => Math.max(current - 1, 0));
+      return;
+    }
+
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const target = filteredAgents[activeAgentIndex];
+      if (target) {
+        handleAgentChange(target.slug);
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setAgentDropdownOpen(false);
+      setAgentQuery("");
+    }
   }
 
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -268,25 +400,77 @@ function ChatPageContent() {
     return role;
   }
 
+  async function persistRagTurn(
+    agentSlug: string,
+    sessionKey: string,
+    turnId: string,
+    userMessage: string,
+    assistantMessage: string
+  ) {
+    try {
+      await customInstance<{ status: string; memory_id: string }>({
+        url: "/chat/rag/turn",
+        method: "POST",
+        data: {
+          agent_slug: agentSlug,
+          session_key: sessionKey,
+          turn_id: turnId,
+          user_message: userMessage,
+          assistant_message: assistantMessage,
+        },
+      });
+    } catch (persistError) {
+      console.warn("Failed to persist chat turn into RAG", persistError);
+    }
+  }
+
+  async function loadRagContext(
+    agentSlug: string,
+    sessionKey: string,
+    userInput: string
+  ): Promise<string | null> {
+    try {
+      const ragResponse = await customInstance<RagSearchResponse>({
+        url: "/memory/rag/search",
+        method: "GET",
+        params: {
+          query: userInput,
+          top_k: 5,
+          agent_slug: agentSlug,
+          session_key: sessionKey,
+        },
+      });
+      return buildRagContext(ragResponse.results ?? []);
+    } catch (ragError) {
+      console.warn("Failed to load RAG context", ragError);
+      return null;
+    }
+  }
+
   async function sendMessage() {
     if (!selectedAgent || !input.trim()) return;
+
     const sessionKeyForRequest = activeSessionKey ?? buildMainSessionKey(selectedAgent);
+    const turnId = `turn-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
     setSending(true);
     setError(null);
 
+    const userInput = input.trim();
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
-      content: input.trim(),
+      content: userInput,
     };
     const assistantMsgId = `assistant-${Date.now()}`;
     setMessages((prev) => [...prev, userMsg, { id: assistantMsgId, role: "assistant", content: "" }]);
-    const userInput = input.trim();
     setInput("");
 
     try {
+      const ragContext = await loadRagContext(selectedAgent, sessionKeyForRequest, userInput);
+
       const token = typeof window !== "undefined" ? localStorage.getItem("panel_token") : null;
-      const res = await fetch("/api/chat/stream", {
+      const res = await fetch("/openclaw/chat/stream", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -296,23 +480,28 @@ function ChatPageContent() {
           agent_slug: selectedAgent,
           session_key: sessionKeyForRequest,
           message: userInput,
+          rag_context: ragContext,
         }),
       });
 
       if (!res.ok || !res.body) {
-        // Better error messages based on status code
-        if (res.status === 503) {
-          throw new Error("Agente offline - aguarde e tente novamente");
-        } else if (res.status === 404) {
-          throw new Error("Agente não encontrado");
-        } else {
-          throw new Error("Falha ao conectar com agente");
+        const errorBody = await res.text();
+        let detailMessage = "Falha ao conectar com OpenClaw";
+        if (errorBody) {
+          try {
+            const parsedError = JSON.parse(errorBody) as { detail?: string };
+            detailMessage = parsedError.detail || detailMessage;
+          } catch {
+            detailMessage = errorBody;
+          }
         }
+        throw new Error(detailMessage);
       }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let assistantContent = "";
 
       while (true) {
         const { value, done } = await reader.read();
@@ -321,6 +510,7 @@ function ChatPageContent() {
 
         const parts = buffer.split("\n\n");
         buffer = parts.pop() || "";
+
         for (const chunk of parts) {
           const line = chunk.trim();
           if (!line.startsWith("data:")) continue;
@@ -328,15 +518,31 @@ function ChatPageContent() {
           if (!data || data === "[DONE]") {
             continue;
           }
+
           try {
-            const parsed = JSON.parse(data);
-            const delta =
+            const parsed = JSON.parse(data) as {
+              choices?: Array<{
+                delta?: {
+                  content?: string;
+                  tool_calls?: Array<{ function?: { name?: string } }>;
+                };
+              }>;
+            };
+
+            const deltaText =
               parsed?.choices?.[0]?.delta?.content ??
-              parsed?.choices?.[0]?.delta?.tool_calls?.map((t: any) => t?.function?.name).join(", ");
-            if (delta) {
+              parsed?.choices?.[0]?.delta?.tool_calls
+                ?.map((toolCall) => toolCall?.function?.name)
+                .filter(Boolean)
+                .join(", ");
+
+            if (deltaText) {
+              assistantContent += deltaText;
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMsgId ? { ...m, content: (m.content ?? "") + delta } : m
+                prev.map((message) =>
+                  message.id === assistantMsgId
+                    ? { ...message, content: (message.content ?? "") + deltaText }
+                    : message
                 )
               );
             }
@@ -346,12 +552,18 @@ function ChatPageContent() {
         }
       }
 
-      // refresh persisted history when finished
+      await persistRagTurn(
+        selectedAgent,
+        sessionKeyForRequest,
+        turnId,
+        userInput,
+        (assistantContent || "[sem conteúdo textual]").trim()
+      );
+
       refetchHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
-      // rollback assistant stub
-      setMessages((prev) => prev.filter((m) => m.id !== assistantMsgId));
+      setMessages((prev) => prev.filter((message) => message.id !== assistantMsgId));
     } finally {
       setSending(false);
     }
@@ -388,21 +600,81 @@ function ChatPageContent() {
               ) : null}
             </div>
 
-            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[auto_minmax(220px,320px)_auto] sm:items-center">
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[auto_minmax(250px,340px)_auto] sm:items-center">
               <label className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
                 Agente
               </label>
-              <select
-                value={selectedAgent ?? ""}
-                onChange={(e) => handleAgentChange(e.target.value)}
-                className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
-              >
-                {agents.map((a) => (
-                  <option key={a.slug} value={a.slug}>
-                    {`${a.role.replace(/_/g, " ")} · ${a.display_name}`}
-                  </option>
-                ))}
-              </select>
+              <div className="relative" ref={agentDropdownRef}>
+                <input
+                  value={agentInputValue}
+                  onFocus={() => {
+                    setAgentDropdownOpen(true);
+                    setAgentQuery("");
+                  }}
+                  onChange={(event) => {
+                    setAgentDropdownOpen(true);
+                    setAgentQuery(event.target.value);
+                    setActiveAgentIndex(0);
+                  }}
+                  onKeyDown={handleAgentInputKeyDown}
+                  placeholder="Digite para buscar agente"
+                  className="h-10 w-full rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 pr-9 text-sm text-[hsl(var(--foreground))] outline-none transition-colors focus:border-[hsl(var(--primary))]"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAgentDropdownOpen((open) => {
+                      const next = !open;
+                      if (next) {
+                        setAgentQuery("");
+                      }
+                      return next;
+                    });
+                  }}
+                  className="absolute inset-y-0 right-0 inline-flex w-9 items-center justify-center text-[hsl(var(--muted-foreground))]"
+                  aria-label="Abrir seletor de agente"
+                >
+                  <ChevronsUpDown className="h-4 w-4" />
+                </button>
+
+                {agentDropdownOpen && (
+                  <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-1 shadow-2xl">
+                    {filteredAgents.length === 0 ? (
+                      <p className="px-3 py-2 text-xs text-[hsl(var(--muted-foreground))]">
+                        Nenhum agente encontrado.
+                      </p>
+                    ) : (
+                      filteredAgents.map((agent, index) => {
+                        const isActive = index === activeAgentIndex;
+                        const isSelected = agent.slug === selectedAgent;
+                        return (
+                          <button
+                            key={agent.slug}
+                            type="button"
+                            onMouseEnter={() => setActiveAgentIndex(index)}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              handleAgentChange(agent.slug);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+                              isActive
+                                ? "bg-[hsl(var(--primary)/0.16)] text-[hsl(var(--foreground))]"
+                                : "text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/40"
+                            }`}
+                          >
+                            <span className="truncate">{getAgentOptionLabel(agent)}</span>
+                            {isSelected ? (
+                              <span className="ml-2 rounded bg-[hsl(var(--primary)/0.18)] px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+                                atual
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => selectedAgent && refetchHistory()}
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[hsl(var(--border))] px-3 text-xs font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]/40 disabled:opacity-50"
@@ -475,22 +747,59 @@ function ChatPageContent() {
                 <p className="text-sm text-[hsl(var(--destructive))]">{sessionParamError}</p>
               )}
               {error && <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>}
-              <div className="flex items-end gap-3">
+
+              <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--background))]/80 p-2.5">
                 <textarea
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleComposerKeyDown}
-                  placeholder={`Mensagem para ${selectedAgentLabel || "o profissional selecionado"}`}
-                  className="min-h-[56px] max-h-44 flex-1 resize-none rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 py-2.5 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))]"
+                  placeholder="Message Memo (Enter to send)"
+                  className="min-h-[62px] max-h-44 w-full resize-none rounded-xl border border-transparent bg-transparent px-2.5 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--primary)/0.3)] focus:outline-none"
                 />
-                <button
-                  onClick={sendMessage}
-                  disabled={sending || !selectedAgent || !input.trim()}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-[hsl(var(--primary))] px-4 text-sm font-medium text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
-                >
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Enviar
-                </button>
+
+                <div className="mt-1 flex items-center justify-between px-1 pb-0.5">
+                  <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                      aria-label="Anexar arquivo"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                      aria-label="Usar microfone"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-[hsl(var(--muted-foreground))]">
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                      aria-label="Adicionar ação"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
+                      aria-label="Exportar"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={sendMessage}
+                      disabled={sending || !selectedAgent || !input.trim()}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-50"
+                      aria-label="Enviar mensagem"
+                    >
+                      {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

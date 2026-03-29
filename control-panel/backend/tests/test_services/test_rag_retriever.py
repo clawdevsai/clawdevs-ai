@@ -39,6 +39,11 @@ class FakeEmbeddingService(EmbeddingService):
         ]
 
 
+class NoEmbeddingService(FakeEmbeddingService):
+    async def generate_embedding(self, text: str) -> Optional[list[float]]:
+        return None
+
+
 @pytest.fixture
 async def session() -> AsyncGenerator[AsyncSession, None]:
     engine = create_async_engine(
@@ -164,3 +169,56 @@ class TestRAGRetriever:
         ]
         reranked = await retriever.rerank_results(initial, agent_context="User Auth")
         assert len(reranked) == len(initial)
+
+    @pytest.mark.asyncio
+    async def test_fallback_to_lexical_when_embedding_unavailable(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
+        retriever = RAGRetriever(session, NoEmbeddingService())
+        results = await retriever.retrieve_similar_solutions(
+            query="database migrations with alembic",
+            top_k=5,
+            agent_slug="dba_data_engineer",
+        )
+
+        assert len(results) > 0
+        assert results[0]["retrieval_mode"] == "lexical"
+        assert "Database Migration Pattern" in [r["title"] for r in results]
+
+    @pytest.mark.asyncio
+    async def test_prioritize_same_session_memories(
+        self, session: AsyncSession, sample_memories: None
+    ) -> None:
+        session.add(
+            MemoryEntry(
+                title="Session-specific Cache Strategy",
+                body="Use Redis write-through cache with session constraints.",
+                agent_slug="dev_backend",
+                entry_type="active",
+                tags=["session:agent:dev_backend:main", "cache"],
+                embedding=[0.1, 0.2, 0.3],
+            )
+        )
+        session.add(
+            MemoryEntry(
+                title="Generic Cache Strategy",
+                body="Use Redis write-through cache.",
+                agent_slug="dev_backend",
+                entry_type="active",
+                tags=["cache"],
+                embedding=[0.1, 0.2, 0.3],
+            )
+        )
+        await session.commit()
+
+        retriever = RAGRetriever(session, FakeEmbeddingService())
+        results = await retriever.retrieve_similar_solutions(
+            query="cache strategy",
+            top_k=5,
+            agent_slug="dev_backend",
+            session_key="agent:dev_backend:main",
+        )
+
+        assert len(results) > 0
+        assert results[0]["title"] == "Session-specific Cache Strategy"
+        assert results[0]["retrieval_mode"] == "semantic"

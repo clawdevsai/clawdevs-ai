@@ -23,6 +23,9 @@ import asyncio
 import json
 import httpx
 import re
+import hashlib
+import logging
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -32,16 +35,20 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser
-from app.models import Agent, Session as SessionModel
+from app.models import Agent, MemoryEntry, Session as SessionModel
 from app.services.openclaw_client import openclaw_client
+from app.services.embedding_service import EmbeddingService
 from app.services.agent_sync import _status_from_heartbeat
 from app.core.config import get_settings
 from app.core.database import get_session
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 SESSION_KEY_RE = re.compile(r"^agent:(?P<slug>[a-zA-Z0-9_-]+):(?P<rest>.+)$")
+TURN_ID_SANITIZE_RE = re.compile(r"[^a-zA-Z0-9._:-]+")
+EMBEDDING_DIMENSION = 1536
 
 
 class ToolCall(BaseModel):
@@ -69,6 +76,19 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
 
 
+class ChatRagTurnRequest(BaseModel):
+    agent_slug: Optional[str] = Field(default=None, max_length=64)
+    session_key: str = Field(..., min_length=1, max_length=512)
+    turn_id: str = Field(..., min_length=1, max_length=128)
+    user_message: str = Field(..., min_length=1, max_length=4000)
+    assistant_message: str = Field(..., min_length=1, max_length=40000)
+
+
+class ChatRagTurnResponse(BaseModel):
+    status: str
+    memory_id: str
+
+
 def _parse_agent_session_key(session_key: str) -> tuple[str, str]:
     value = (session_key or "").strip()
     match = SESSION_KEY_RE.match(value)
@@ -86,24 +106,55 @@ def _parse_agent_session_key(session_key: str) -> tuple[str, str]:
     return slug, value
 
 
-def _resolve_agent_and_session_key(body: ChatRequest) -> tuple[str, str]:
-    if body.session_key:
-        session_slug, normalized_session_key = _parse_agent_session_key(body.session_key)
-        if body.agent_slug and body.agent_slug.strip().lower() != session_slug:
+def _resolve_agent_and_session_key_fields(
+    agent_slug: Optional[str],
+    session_key: Optional[str],
+) -> tuple[str, str]:
+    if session_key:
+        session_slug, normalized_session_key = _parse_agent_session_key(session_key)
+        if agent_slug and agent_slug.strip().lower() != session_slug:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="agent_slug does not match session_key agent",
             )
         return session_slug, normalized_session_key
 
-    if not body.agent_slug:
+    if not agent_slug:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="agent_slug is required when session_key is not provided",
         )
 
-    agent_slug = body.agent_slug.strip()
-    return agent_slug, f"agent:{agent_slug}:main"
+    normalized_slug = agent_slug.strip().lower()
+    return normalized_slug, f"agent:{normalized_slug}:main"
+
+
+def _resolve_agent_and_session_key(body: ChatRequest) -> tuple[str, str]:
+    return _resolve_agent_and_session_key_fields(body.agent_slug, body.session_key)
+
+
+def _normalize_turn_id(raw_turn_id: str) -> str:
+    normalized = TURN_ID_SANITIZE_RE.sub("-", raw_turn_id.strip()).strip("-")
+    if not normalized:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="turn_id is invalid after normalization",
+        )
+    return normalized[:96]
+
+
+def _build_turn_source_path(agent_slug: str, session_key: str, turn_id: str) -> str:
+    session_hash = hashlib.sha1(session_key.encode("utf-8")).hexdigest()[:16]
+    return f"chat-rag/{agent_slug}/{session_hash}/{turn_id}"
+
+
+def _compose_turn_memory_body(user_message: str, assistant_message: str) -> str:
+    return (
+        "## User\n"
+        f"{user_message.strip()}\n\n"
+        "## Assistant\n"
+        f"{assistant_message.strip()}\n"
+    )
 
 
 async def _resolve_session_id_for_key(
@@ -433,3 +484,75 @@ async def chat_stream(
     return EventSourceResponse(
         _stream_sse(resolved_agent_slug, body.message, resolved_session_key)
     )
+
+
+@router.post("/rag/turn", response_model=ChatRagTurnResponse)
+async def persist_chat_turn_rag(
+    body: ChatRagTurnRequest,
+    _: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_session)],
+):
+    resolved_agent_slug, resolved_session_key = _resolve_agent_and_session_key_fields(
+        body.agent_slug, body.session_key
+    )
+    await _ensure_agent(db, resolved_agent_slug)
+
+    normalized_turn_id = _normalize_turn_id(body.turn_id)
+    source_file_path = _build_turn_source_path(
+        resolved_agent_slug,
+        resolved_session_key,
+        normalized_turn_id,
+    )
+
+    existing_result = await db.exec(
+        select(MemoryEntry).where(MemoryEntry.source_file_path == source_file_path)
+    )
+    existing_entry = existing_result.first()
+    if existing_entry:
+        return ChatRagTurnResponse(status="exists", memory_id=str(existing_entry.id))
+
+    memory_body = _compose_turn_memory_body(body.user_message, body.assistant_message)
+    tags = [
+        "chat-rag",
+        f"agent:{resolved_agent_slug}",
+        f"session:{resolved_session_key}",
+        f"turn:{normalized_turn_id}",
+    ]
+
+    embedding_service = EmbeddingService()
+    embedding: list[float] | None = None
+    embedding_generated_at: datetime | None = None
+    try:
+        generated_embedding = await embedding_service.generate_embedding(memory_body)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Embedding generation failed for chat turn: %s", exc)
+        generated_embedding = None
+
+    if generated_embedding:
+        if len(generated_embedding) == EMBEDDING_DIMENSION:
+            embedding = generated_embedding
+            embedding_generated_at = datetime.now(UTC).replace(tzinfo=None)
+        else:
+            logger.warning(
+                "Skipping chat turn embedding due to dimension mismatch: %s",
+                len(generated_embedding),
+            )
+
+    memory_entry = MemoryEntry(
+        agent_slug=resolved_agent_slug,
+        title=f"Chat turn {resolved_agent_slug}:{normalized_turn_id}",
+        body=memory_body,
+        entry_type="active",
+        tags=tags,
+        source_agents=[resolved_agent_slug],
+        embedding=embedding,
+        embedding_model=embedding_service.model,
+        chunk_index=0,
+        source_file_path=source_file_path,
+        embedding_generated_at=embedding_generated_at,
+    )
+    db.add(memory_entry)
+    await db.commit()
+    await db.refresh(memory_entry)
+
+    return ChatRagTurnResponse(status="created", memory_id=str(memory_entry.id))

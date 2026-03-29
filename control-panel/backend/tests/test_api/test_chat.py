@@ -23,10 +23,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 from httpx import AsyncClient
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api import chat as chat_api
-from app.models import Agent
+from app.models import Agent, MemoryEntry
 
 
 async def _create_agent(db_session: AsyncSession, slug: str = "po") -> Agent:
@@ -218,3 +219,126 @@ class TestChatApi:
         payload = response.json()
         assert payload["agent_slug"] == "po"
         assert payload["messages"] == []
+
+
+class TestChatRagTurnApi:
+    @pytest.mark.asyncio
+    async def test_rag_turn_persists_memory_entry(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+
+        async def fake_embedding(self, text: str):
+            return [0.1] * 1536
+
+        monkeypatch.setattr(
+            chat_api.EmbeddingService,
+            "generate_embedding",
+            fake_embedding,
+        )
+
+        response = await client.post(
+            "/chat/rag/turn",
+            headers=auth_headers,
+            json={
+                "agent_slug": "po",
+                "session_key": "agent:po:main",
+                "turn_id": "turn-001",
+                "user_message": "Como implementar cache?",
+                "assistant_message": "Use Redis com TTL e invalidação por evento.",
+            },
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "created"
+
+        entries = (
+            await db_session.exec(
+                select(MemoryEntry).where(
+                    MemoryEntry.source_file_path == "chat-rag/po/a85f2dfbef41e49b/turn-001"
+                )
+            )
+        ).all()
+        assert len(entries) == 1
+        assert entries[0].agent_slug == "po"
+        assert entries[0].entry_type == "active"
+        assert entries[0].embedding is not None
+
+    @pytest.mark.asyncio
+    async def test_rag_turn_is_idempotent_by_turn_id(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+
+        async def fake_embedding(self, text: str):
+            return [0.1] * 1536
+
+        monkeypatch.setattr(
+            chat_api.EmbeddingService,
+            "generate_embedding",
+            fake_embedding,
+        )
+
+        request_payload = {
+            "agent_slug": "po",
+            "session_key": "agent:po:main",
+            "turn_id": "turn-002",
+            "user_message": "Preciso de logs estruturados.",
+            "assistant_message": "Use logs JSON com correlação por request_id.",
+        }
+
+        first_response = await client.post(
+            "/chat/rag/turn",
+            headers=auth_headers,
+            json=request_payload,
+        )
+        second_response = await client.post(
+            "/chat/rag/turn",
+            headers=auth_headers,
+            json=request_payload,
+        )
+
+        assert first_response.status_code == 200
+        assert second_response.status_code == 200
+        assert first_response.json()["status"] == "created"
+        assert second_response.json()["status"] == "exists"
+        assert first_response.json()["memory_id"] == second_response.json()["memory_id"]
+
+        entries = (
+            await db_session.exec(
+                select(MemoryEntry).where(
+                    MemoryEntry.source_file_path == "chat-rag/po/a85f2dfbef41e49b/turn-002"
+                )
+            )
+        ).all()
+        assert len(entries) == 1
+
+    @pytest.mark.asyncio
+    async def test_rag_turn_rejects_agent_session_mismatch(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+    ):
+        response = await client.post(
+            "/chat/rag/turn",
+            headers=auth_headers,
+            json={
+                "agent_slug": "ceo",
+                "session_key": "agent:po:main",
+                "turn_id": "turn-003",
+                "user_message": "x",
+                "assistant_message": "y",
+            },
+        )
+
+        assert response.status_code == 400
+        assert "agent_slug does not match" in response.json()["detail"]

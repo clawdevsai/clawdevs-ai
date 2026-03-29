@@ -83,6 +83,29 @@ for skill_file in "${SRC_ROOT}/agents"/*/skills/*/SKILL.md; do
   copy_key "${agent}-skill-${skill_name}-SKILL.md" "${skill_file}"
 done
 
+# 2.1) Arquivos auxiliares das skills (refs, docs, scripts etc.).
+#      Chave: <agente>-skill-<skill>--asset--<caminho_relativo_com___SLASH__>
+while IFS= read -r -d '' skill_asset; do
+  rel_path="${skill_asset#${SRC_ROOT}/agents/}"
+  case "${rel_path}" in
+    */skills/*/*) ;;
+    *) continue ;;
+  esac
+
+  agent="${rel_path%%/*}"
+  post_agent="${rel_path#*/skills/}"
+  skill_name="${post_agent%%/*}"
+  asset_rel="${post_agent#*/}"
+
+  # SKILL.md ja e exportado no passo 2.
+  if [ "${asset_rel}" = "SKILL.md" ]; then
+    continue
+  fi
+
+  asset_rel_encoded="${asset_rel//\//__SLASH__}"
+  copy_key "${agent}-skill-${skill_name}--asset--${asset_rel_encoded}" "${skill_asset}"
+done < <(find "${SRC_ROOT}/agents" -type f -print0)
+
 # 3) Referencia obrigatoria da skill self-improving
 copy_key \
   "shared-skill-self-improving-skill-security-policy.md" \

@@ -606,6 +606,36 @@ if [ -f /bootstrap/agent-config/shared-SOURCE_VALIDATION.md ]; then
 fi
 # --- Fim: politica compartilhada de validacao de fontes ---
 
+# --- Sincronizacao dinamica de skills por agente ---
+# Garante que todo arquivo em /bootstrap/agent-config/<agent>-skill-*
+# seja materializado em workspace-<agent>/skills/<skill>/...
+for skill_manifest in /bootstrap/agent-config/*-skill-*-SKILL.md; do
+  [ -f "${skill_manifest}" ] || continue
+  skill_manifest_base="$(basename "${skill_manifest}")"
+  if [[ "${skill_manifest_base}" =~ ^(.+)-skill-(.+)-SKILL\.md$ ]]; then
+    skill_agent="${BASH_REMATCH[1]}"
+    skill_name="${BASH_REMATCH[2]}"
+    skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${skill_agent}/skills/${skill_name}"
+    mkdir -p "${skill_target_dir}"
+    cp -f "${skill_manifest}" "${skill_target_dir}/SKILL.md"
+  fi
+done
+
+for skill_asset in /bootstrap/agent-config/*-skill-*--asset--*; do
+  [ -f "${skill_asset}" ] || continue
+  skill_asset_base="$(basename "${skill_asset}")"
+  if [[ "${skill_asset_base}" =~ ^(.+)-skill-(.+)--asset--(.+)$ ]]; then
+    skill_agent="${BASH_REMATCH[1]}"
+    skill_name="${BASH_REMATCH[2]}"
+    asset_rel_encoded="${BASH_REMATCH[3]}"
+    asset_rel="${asset_rel_encoded//__SLASH__/\/}"
+    skill_target_dir="${OPENCLAW_STATE_DIR}/workspace-${skill_agent}/skills/${skill_name}"
+    mkdir -p "${skill_target_dir}/$(dirname "${asset_rel}")"
+    cp -f "${skill_asset}" "${skill_target_dir}/${asset_rel}"
+  fi
+done
+# --- Fim: sincronizacao dinamica de skills por agente ---
+
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-ceo"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-po"
 render_agent_context "${OPENCLAW_STATE_DIR}/workspace-arquiteto"
@@ -623,24 +653,13 @@ render_agent_context "${OPENCLAW_STATE_DIR}/workspace-memory_curator"
 # As skills precisam estar em skills/ dentro desse workspace para serem encontradas pelo OpenClaw.
 SHARED_WORKSPACE="${OPENCLAW_STATE_DIR}/backlog/implementation"
 mkdir -p "${SHARED_WORKSPACE}/skills"
-for skill_src_dir in \
-  "${OPENCLAW_STATE_DIR}/workspace-ceo/skills/ceo_orchestration" \
-  "${OPENCLAW_STATE_DIR}/workspace-po/skills/po_product_delivery" \
-  "${OPENCLAW_STATE_DIR}/workspace-arquiteto/skills/arquiteto_engineering" \
-  "${OPENCLAW_STATE_DIR}/workspace-dev_backend/skills/dev_backend_implementation" \
-  "${OPENCLAW_STATE_DIR}/workspace-dev_frontend/skills/dev_frontend_implementation" \
-  "${OPENCLAW_STATE_DIR}/workspace-dev_mobile/skills/dev_mobile_implementation" \
-  "${OPENCLAW_STATE_DIR}/workspace-qa_engineer/skills/qa_engineer_validation" \
-  "${OPENCLAW_STATE_DIR}/workspace-devops_sre/skills/devops_sre_operations" \
-  "${OPENCLAW_STATE_DIR}/workspace-security_engineer/skills/security_engineer_scan" \
-  "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_designer_artifacts" \
-  "${OPENCLAW_STATE_DIR}/workspace-ux_designer/skills/ux_ui_pro_rules" \
-  "${OPENCLAW_STATE_DIR}/workspace-dba_data_engineer/skills/dba_data_engineer_schema" \
-  "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion"; do
+for skill_src_dir in "${OPENCLAW_STATE_DIR}"/workspace-*/skills/*; do
+  [ -d "${skill_src_dir}" ] || continue
+  [ -f "${skill_src_dir}/SKILL.md" ] || continue
   skill_name="$(basename "${skill_src_dir}")"
   dest_dir="${SHARED_WORKSPACE}/skills/${skill_name}"
   mkdir -p "${dest_dir}"
-  cp -f "${skill_src_dir}/SKILL.md" "${dest_dir}/SKILL.md"
+  cp -Rf "${skill_src_dir}/." "${dest_dir}/"
 done
 # --- Fim: Skills no workspace compartilhado ---
 
