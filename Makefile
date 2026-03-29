@@ -352,61 +352,61 @@ destroy:
 	@echo "[destroy] stack removida por completo."
 
 token-init-image-build:
-	docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
+	docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
 
 token-init-image-push:
 	docker push $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 postgres-image-build:
-	docker build -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
+	docker build --no-cache -t $(POSTGRES_IMAGE) -f docker/clawdevs-postgres/Dockerfile .
 
 postgres-image-push:
 	docker push $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 searxng-image-build:
-	docker build -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
+	docker build --no-cache -t $(SEARXNG_IMAGE) -f docker/clawdevs-searxng/Dockerfile .
 
 searxng-image-push:
 	docker push $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 ollama-image-build:
-	docker build -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
+	docker build --no-cache -t $(OLLAMA_IMAGE) -f docker/clawdevs-ollama/Dockerfile .
 
 ollama-image-push:
 	docker push $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 redis-image-build:
-	docker build -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
+	docker build --no-cache -t $(REDIS_IMAGE) -f docker/clawdevs-redis/Dockerfile .
 
 redis-image-push:
 	docker push $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-backend-image-build:
-	docker build -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
+	docker build --no-cache -t $(PANEL_BACKEND_IMAGE) -f docker/clawdevs-panel-backend/Dockerfile control-panel/backend
 
 panel-backend-image-push:
 	docker push $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 searxng-proxy-image-build:
-	docker build -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
+	docker build --no-cache -t $(SEARXNG_PROXY_IMAGE) -f docker/clawdevs-searxng-proxy/Dockerfile .
 
 searxng-proxy-image-push:
 	docker push $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-worker-image-build:
-	docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
+	docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend
 
 panel-worker-image-push:
 	docker push $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-frontend-image-build:
-	docker build -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
+	docker build --no-cache -t $(PANEL_FRONTEND_IMAGE) -f docker/clawdevs-panel-frontend/Dockerfile control-panel/frontend
 
 panel-frontend-image-push:
 	docker push $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 openclaw-image-build:
-	docker build --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
+	docker build --no-cache --build-arg OPENCLAW_VERSION=$(OPENCLAW_VERSION) -t $(OPENCLAW_IMAGE) -f docker/clawdevs-openclaw/Dockerfile .
 
 openclaw-image-push:
 	docker push $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
