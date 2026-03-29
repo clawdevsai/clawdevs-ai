@@ -79,7 +79,7 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: logs-follow ps top
 .PHONY: env-check panel-url panel-db-migrate panel-logs openclaw-shell push release clean prune
 .PHONY: migrate openclaw-dashboard ollama-list ollama-sign
-.PHONY: reset destroy
+.PHONY: reset destroy destroy-complete
 .PHONY: network-create volumes-create containers-clean
 .PHONY: token-init-image-build token-init-image-push
 .PHONY: postgres-image-build postgres-image-push
@@ -323,7 +323,7 @@ ollama-sign:
 
 reset:
 	@echo "AVISO: isso vai apagar todos os volumes da stack."
-	@read -p "Confirma? [y/N] " confirm && [ "$$confirm" = "y" ]
+	@bash scripts/docker/confirm-yes.sh
 	@$(MAKE) down
 	@set -eu; \
 	for volume in $(STACK_VOLUMES); do \
@@ -333,7 +333,7 @@ reset:
 
 destroy:
 	@echo "AVISO: isso vai remover containers, volumes, network, build cache e imagens locais da stack."
-	@read -p "Confirma? [y/N] " confirm && [ "$$confirm" = "y" ]
+	@if [ -t 0 ]; then bash scripts/docker/confirm-yes.sh; fi
 	@$(MAKE) down
 	@set -eu; \
 	for volume in $(STACK_VOLUMES); do \
@@ -356,6 +356,18 @@ destroy:
 		docker rmi "$$image" >$(NULL_DEV) 2>&1 || true; \
 	done
 	@echo "[destroy] stack removida por completo."
+
+destroy-complete:
+	@echo "AVISO: isso vai remover TUDO do Docker (containers, volumes, networks, imagens, cache)."
+	@if [ -t 0 ]; then bash scripts/docker/confirm-yes.sh; fi
+	@docker stop $$(docker ps -aq) >$(NULL_DEV) 2>&1 || true
+	@docker rm -f $$(docker ps -aq) >$(NULL_DEV) 2>&1 || true
+	@docker rmi -f $$(docker images -aq) >$(NULL_DEV) 2>&1 || true
+	@docker volume prune -af >$(NULL_DEV) 2>&1 || true
+	@docker network prune -f >$(NULL_DEV) 2>&1 || true
+	@docker builder prune -af >$(NULL_DEV) 2>&1 || true
+	@docker system prune -af >$(NULL_DEV) 2>&1 || true
+	@echo "[destroy-complete] Docker completamente limpo."
 
 token-init-image-build:
 	docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
