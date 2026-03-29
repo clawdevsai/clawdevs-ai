@@ -113,25 +113,36 @@ async def _generate_activity_from_sessions(db_session) -> list[ActivityEventResp
 
 
 async def _load_persisted_activity(db_session) -> list[ActivityEventResponse]:
+    # Select only legacy-safe columns here. Some deployed databases may still
+    # miss newer model columns (for example `user_id`) and selecting the whole
+    # model would fail with UndefinedColumnError.
     result = await db_session.exec(
-        select(ActivityEvent).order_by(col(ActivityEvent.created_at).desc()).limit(100)
+        select(
+            ActivityEvent.id,
+            ActivityEvent.event_type,
+            ActivityEvent.agent_id,
+            ActivityEvent.payload,
+            ActivityEvent.created_at,
+        )
+        .order_by(col(ActivityEvent.created_at).desc())
+        .limit(100)
     )
     events = result.all()
     items: list[ActivityEventResponse] = []
-    for event in events:
-        payload = event.payload or {}
+    for event_id, event_type, agent_id, payload, created_at in events:
+        payload = payload or {}
         description = (
             payload.get("description")
             if isinstance(payload, dict) and payload.get("description")
-            else event.event_type
+            else event_type
         )
         items.append(
             ActivityEventResponse(
-                id=str(event.id),
-                event_type=event.event_type,
+                id=str(event_id),
+                event_type=event_type,
                 description=description,
-                agent_id=str(event.agent_id) if event.agent_id else None,
-                created_at=event.created_at,
+                agent_id=str(agent_id) if agent_id else None,
+                created_at=created_at,
             )
         )
     return items

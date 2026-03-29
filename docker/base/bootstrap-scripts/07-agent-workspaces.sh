@@ -547,24 +547,8 @@ cp /bootstrap/agent-config/memory_curator-IDENTITY.md "${OPENCLAW_STATE_DIR}/wor
 cp /bootstrap/agent-config/memory_curator-SOUL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/SOUL.md"
 mkdir -p "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion"
 cp /bootstrap/agent-config/memory_curator-skill-memory_curator_promotion-SKILL.md "${OPENCLAW_STATE_DIR}/workspace-memory_curator/skills/memory_curator_promotion/SKILL.md"
-for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer; do
+for ws_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer devops_sre security_engineer ux_designer dba_data_engineer memory_curator; do
   ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
-  if [ ! -f "${ws_dir}/MEMORY.md" ]; then
-    printf '%s\n' \
-      "# MEMORY.md - ${ws_agent}" \
-      "" \
-      "## Instrucoes de uso" \
-      "- Registre decisoes duraveis, tech stack, contexto de projeto e aprendizados relevantes." \
-      "- Use memory/YYYY-MM-DD.md para notas do dia-a-dia." \
-      "- Este arquivo e carregado em toda sessao -- mantenha conciso e objetivo." \
-      "" \
-      "## Contexto do projeto" \
-      "" \
-      "## Decisoes arquiteturais (ADRs resumidas)" \
-      "" \
-      "## Historico de escalacoes e resolucoes" \
-      > "${ws_dir}/MEMORY.md"
-  fi
   mkdir -p "${ws_dir}/memory"
 done
 # --- Sistema de Memória Cross-Agent (aiox-core pattern) ---
@@ -589,6 +573,29 @@ if [ ! -f "${MEMORY_BASE}/shared/SHARED_MEMORY.md" ]; then
     printf '# SHARED MEMORY — ClawDevs AI\n\n## Promoted Patterns\n' > "${MEMORY_BASE}/shared/SHARED_MEMORY.md"
   fi
 fi
+
+# Canonicaliza workspace-<agent>/MEMORY.md para o arquivo central:
+# /data/openclaw/memory/<agent>/MEMORY.md
+for mem_agent in ceo po arquiteto dev_backend dev_frontend dev_mobile qa_engineer security_engineer devops_sre ux_designer dba_data_engineer memory_curator; do
+  ws_memory="${OPENCLAW_STATE_DIR}/workspace-${mem_agent}/MEMORY.md"
+  canonical_memory="${MEMORY_BASE}/${mem_agent}/MEMORY.md"
+  migrated_snapshot="${MEMORY_BASE}/${mem_agent}/_migrated_workspace_MEMORY.md"
+
+  if [ -f "${ws_memory}" ] && [ ! -L "${ws_memory}" ]; then
+    if [ ! -f "${migrated_snapshot}" ]; then
+      cp "${ws_memory}" "${migrated_snapshot}"
+    fi
+    if ! cmp -s "${ws_memory}" "${canonical_memory}"; then
+      {
+        printf '\n\n## Migrated From Workspace (%s)\n\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+        cat "${ws_memory}"
+      } >> "${canonical_memory}"
+    fi
+    rm -f "${ws_memory}"
+  fi
+
+  ln -sfn "${canonical_memory}" "${ws_memory}"
+done
 # --- Fim: Sistema de Memória Cross-Agent ---
 
 # --- Politica compartilhada de validacao de fontes (Zero Trust) ---

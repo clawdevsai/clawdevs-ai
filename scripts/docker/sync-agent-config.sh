@@ -55,6 +55,25 @@ for agent_dir in "${SRC_ROOT}"/*; do
   done
 done
 
+# 1.1) Garantir os MEMORY.md canonicos por agente.
+required_memory_agents=(
+  ceo
+  po
+  arquiteto
+  dev_backend
+  dev_frontend
+  dev_mobile
+  qa_engineer
+  devops_sre
+  security_engineer
+  ux_designer
+  dba_data_engineer
+  memory_curator
+)
+for agent in "${required_memory_agents[@]}"; do
+  copy_key "${agent}-MEMORY.md" "${SRC_ROOT}/${agent}/MEMORY.md"
+done
+
 # 2) Skills dos agentes (openclaw-config/agents/<agente>/skills/<skill>/SKILL.md)
 for skill_file in "${SRC_ROOT}/agents"/*/skills/*/SKILL.md; do
   [ -f "${skill_file}" ] || continue

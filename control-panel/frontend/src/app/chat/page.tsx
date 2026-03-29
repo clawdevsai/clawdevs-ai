@@ -23,6 +23,7 @@
 "use client";
 
 import {
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -102,7 +103,7 @@ const fetchHistory = (slug: string, sessionKey?: string) =>
     params: sessionKey ? { session_key: sessionKey } : undefined,
   });
 
-export default function ChatPage() {
+function ChatPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -496,5 +497,19 @@ export default function ChatPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppLayout>
+          <div className="h-full" />
+        </AppLayout>
+      }
+    >
+      <ChatPageContent />
+    </Suspense>
   );
 }

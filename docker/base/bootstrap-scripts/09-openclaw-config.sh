@@ -88,6 +88,30 @@ case "${_sandbox_session_tools_visibility}" in
     ;;
 esac
 
+_exec_policy_raw="${OPENCLAW_EXEC_POLICY:-allowlist}"
+_exec_policy="$(printf '%s' "${_exec_policy_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+case "${_exec_policy}" in
+  allow-always)
+    _exec_security="full"
+    _exec_ask="off"
+    _exec_auto_allow_skills="true"
+    ;;
+  allowlist|"")
+    _exec_policy="allowlist"
+    _exec_security="allowlist"
+    _exec_ask="on-miss"
+    _exec_auto_allow_skills="false"
+    ;;
+  *)
+    echo "[bootstrap] OPENCLAW_EXEC_POLICY='${_exec_policy_raw}' invalido; usando 'allowlist'"
+    _exec_policy="allowlist"
+    _exec_security="allowlist"
+    _exec_ask="on-miss"
+    _exec_auto_allow_skills="false"
+    ;;
+esac
+echo "[bootstrap] exec policy efetiva=${_exec_policy} (security=${_exec_security}, ask=${_exec_ask}, autoAllowSkills=${_exec_auto_allow_skills})"
+
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ] && [ -n "${_existing_token}" ] && [ "${_existing_token}" = "${OPENCLAW_GATEWAY_TOKEN}" ] && [ "${_existing_bind}" = "lan" ]; then
   echo "[bootstrap] openclaw.json ja configurado com token correto e bind valido (${_existing_bind}), pulando escrita"
   mkdir -p ~/.openclaw
@@ -775,7 +799,7 @@ fi
 # Zero Trust baseline: sandbox global, exec allowlist + prompt on miss + deny fallback.
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   _tmp_openclaw_json="$(mktemp)"
-  if jq --arg sandboxMode "${_sandbox_mode}" --arg sandboxVisibility "${_sandbox_session_tools_visibility}" '
+  if jq --arg sandboxMode "${_sandbox_mode}" --arg sandboxVisibility "${_sandbox_session_tools_visibility}" --arg execSecurity "${_exec_security}" --arg execAsk "${_exec_ask}" '
       .agents.defaults.sandbox.mode = $sandboxMode
       | .agents.defaults.sandbox.sessionToolsVisibility = $sandboxVisibility
       | .tools.exec.strictInlineEval = true
@@ -784,8 +808,8 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
             (.tools.exec // {})
             + {
               "host": "gateway",
-              "security": "allowlist",
-              "ask": "on-miss",
+              "security": $execSecurity,
+              "ask": $execAsk,
               "strictInlineEval": true
             }
           )
@@ -1253,6 +1277,26 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
 }
 EOFAPPROVALS
 echo "[bootstrap] zero-trust exec approvals aplicadas (allowlist + ask=on-miss + autoAllowSkills=false)"
+
+if [ -f "${EXEC_APPROVALS_FILE}" ]; then
+  _tmp_exec_approvals="$(mktemp)"
+  if jq --arg execSecurity "${_exec_security}" --arg execAsk "${_exec_ask}" --argjson autoAllowSkills "${_exec_auto_allow_skills}" '
+      .defaults.security = $execSecurity
+      | .defaults.ask = $execAsk
+      | .defaults.autoAllowSkills = $autoAllowSkills
+      | .agents |= with_entries(
+          .value.security = $execSecurity
+          | .value.ask = $execAsk
+          | .value.autoAllowSkills = $autoAllowSkills
+        )
+    ' "${EXEC_APPROVALS_FILE}" > "${_tmp_exec_approvals}"; then
+    mv "${_tmp_exec_approvals}" "${EXEC_APPROVALS_FILE}"
+    echo "[bootstrap] exec approvals ajustadas para policy=${_exec_policy}"
+  else
+    rm -f "${_tmp_exec_approvals}"
+    echo "[bootstrap] falha ao ajustar exec approvals para policy=${_exec_policy}"
+  fi
+fi
 # Repair agent main sessions when the persisted transcript is missing, invalid,
 # or contains no assistant text messages that the chat UI can render.
 repair_main_session() {
