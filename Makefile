@@ -196,25 +196,11 @@ up:
 	@exit 1
 
 up-all: preflight build network-create volumes-create containers-clean
-	@set -euo pipefail; \
-	load_env_file() { \
-		local env_file="$$1"; \
-		while IFS= read -r raw_line || [ -n "$$raw_line" ]; do \
-			line="$$(printf '%s\n' "$$raw_line" | tr -d '\r')"; \
-			case "$$line" in \
-				''|\#*) continue ;; \
-			esac; \
-			key="$${line%%=*}"; \
-			value="$${line#*=}"; \
-			key="$$(printf '%s' "$$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$$//')"; \
-			key="$${key#export }"; \
-			if ! printf '%s' "$$key" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$$'; then \
-				echo "[up] ERRO: chave invalida no .env: $$key"; \
-				return 1; \
-			fi; \
-			export "$$key=$$value"; \
-		done < "$$env_file"; \
-	}; \
+	@bash scripts/docker/up-all.sh "$(ENV_FILE)" "$(STACK_NETWORK)" \
+		"$(POSTGRES_IMAGE)" "$(REDIS_IMAGE)" "$(OLLAMA_IMAGE)" \
+		"$(SEARXNG_IMAGE)" "$(SEARXNG_PROXY_IMAGE)" "$(PANEL_BACKEND_IMAGE)" \
+		"$(PANEL_WORKER_IMAGE)" "$(PANEL_FRONTEND_IMAGE)" "$(TOKEN_INIT_IMAGE)" \
+		"$(SEARXNG_PROXY_CONF)"
 	load_env_file "$(ENV_FILE)"; \
 	wait_for_health() { \
 		local name="$${1:-}"; local timeout="$${2:-120}"; local elapsed=0; local status=""; \
