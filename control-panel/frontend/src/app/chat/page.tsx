@@ -169,6 +169,78 @@ function buildRagContext(results: RagSearchResult[]): string | null {
   return compactItems.join("\n\n");
 }
 
+const FILE_EXT_RE = /\.(?:md|txt|json|yaml|yml|csv)$/i;
+
+function basenameFromPathHint(text: string): string | null {
+  const re = /([\w./\\-]+\.(?:md|txt|json|yaml|yml|csv))/gi;
+  let last: string | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    last = m[1];
+  }
+  if (!last) return null;
+  const base = last.split(/[/\\]/).pop();
+  if (!base || !FILE_EXT_RE.test(base)) return null;
+  return base;
+}
+
+function slugifyMarkdownHeading(raw: string): string {
+  const cleaned = raw.replace(/^#+\s*/, "").trim();
+  const slug = cleaned
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+  return slug || "document";
+}
+
+function suggestFilename(
+  assistantContent: string,
+  previousUserContent: string | undefined,
+  agentSlug: string,
+  messageId: string
+): string {
+  const fromUser = previousUserContent ? basenameFromPathHint(previousUserContent) : null;
+  if (fromUser) return fromUser;
+
+  const trimmed = assistantContent.trim();
+  const firstLine = trimmed.split("\n")[0]?.trim() ?? "";
+  if (firstLine.startsWith("#")) {
+    return `${slugifyMarkdownHeading(firstLine)}.md`;
+  }
+
+  const short = messageId.replace(/^assistant-/, "").slice(0, 8);
+  const date = new Date().toISOString().slice(0, 10);
+  return `documento-${agentSlug}-${date}-${short}.md`;
+}
+
+function downloadTextFile(content: string, filename: string, mimeType = "text/markdown; charset=utf-8") {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildChatExportMarkdown(
+  messages: ChatMessage[],
+  userLabel: string,
+  assistantLabel: string
+): string {
+  const lines: string[] = [];
+  lines.push("# Chat export\n");
+  lines.push(`Generated: ${new Date().toISOString()}\n\n---\n\n`);
+  for (const msg of messages) {
+    const header =
+      msg.role === "user" ? userLabel : msg.role === "assistant" ? assistantLabel : String(msg.role);
+    lines.push(`## ${header}\n\n`);
+    lines.push(`${(msg.content ?? "").trim() || "(empty)"}\n\n`);
+  }
+  return lines.join("");
+}
+
 function ChatPageContent() {
   const router = useRouter();
   const pathname = usePathname();
@@ -836,7 +908,7 @@ function ChatPageContent() {
               </div>
             ) : (
               <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
-                {messages.map((msg) => (
+                {messages.map((msg, index) => (
                   <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div
                       className={`max-w-[88%] rounded-2xl border px-4 py-3 shadow-sm ${
@@ -845,9 +917,31 @@ function ChatPageContent() {
                           : "border-[hsl(var(--border))] bg-[hsl(var(--background))]/95"
                       }`}
                     >
-                      <p className="mb-1 text-[10px] uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]">
-                        {getMessageAuthor(msg.role)}
-                      </p>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <p className="text-[10px] uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]">
+                          {getMessageAuthor(msg.role)}
+                        </p>
+                        {msg.role === "assistant" && msg.content.trim() && selectedAgent ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const prevUser =
+                                index > 0 && messages[index - 1]?.role === "user"
+                                  ? messages[index - 1].content
+                                  : undefined;
+                              downloadTextFile(
+                                msg.content,
+                                suggestFilename(msg.content, prevUser, selectedAgent, msg.id)
+                              );
+                            }}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                            aria-label="Baixar documento"
+                            title="Baixar documento"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="prose prose-invert prose-sm max-w-none break-words">
                         {msg.content ? (
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -917,8 +1011,23 @@ function ChatPageContent() {
                     </button>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50"
-                      aria-label="Exportar"
+                      onClick={() => {
+                        if (!selectedAgent || messages.length === 0) return;
+                        const stamp = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+                        const filename = `chat-${selectedAgent}-${stamp}.md`;
+                        downloadTextFile(
+                          buildChatExportMarkdown(
+                            messages,
+                            "Você",
+                            selectedAgentLabel || "Assistente"
+                          ),
+                          filename
+                        );
+                      }}
+                      disabled={!selectedAgent || messages.length === 0}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[hsl(var(--muted))]/50 disabled:cursor-not-allowed disabled:opacity-40"
+                      aria-label="Exportar conversa"
+                      title="Exportar conversa (Markdown)"
                     >
                       <Download className="h-4 w-4" />
                     </button>
