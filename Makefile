@@ -75,10 +75,10 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: build images-build pull
 .PHONY: build-with-cache images-build-with-cache
 .PHONY: up up-all up-all-with-cache up-gpu down restart status logs
-.PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-openclaw
+.PHONY: up-postgres up-redis up-ollama up-searxng up-searxng-proxy up-panel-backend up-panel-worker up-panel-frontend up-token-init up-openclaw up-openclaw-with-cache
 .PHONY: openclaw-logs backend-logs ollama-logs frontend-logs
 .PHONY: logs-follow ps top
-.PHONY: env-check panel-url panel-db-migrate panel-logs openclaw-shell push release clean prune
+.PHONY: env-check panel-url panel-db-migrate panel-logs openclaw-shell openclaw-restart push release clean prune
 .PHONY: migrate openclaw-dashboard ollama-list ollama-sign
 .PHONY: reset destroy destroy-complete
 .PHONY: network-create volumes-create containers-clean
@@ -116,6 +116,8 @@ help:
 	@echo "make up-all-with-cache  Build local (com cache) + sobe todos os 10 containers"
 	@echo "make up-gpu        Mesmo fluxo do up-all com --gpus all no Ollama"
 	@echo "make up-<service>  Sobe container individual (ex.: up-postgres)"
+	@echo "make up-openclaw / up-openclaw-with-cache  Rebuild imagem + recria so o OpenClaw (sem cache / com cache)"
+	@echo "make openclaw-restart  Reinicia so o container (AGENTS.md em bind mount — sem rebuild)"
 	@echo "make down          Remove todos os containers da stack"
 	@echo "make status        Lista status dos containers da stack"
 	@echo "make logs          Logs agregados dos containers em execucao"
@@ -218,7 +220,7 @@ images-build-with-cache: \
 
 up:
 	@echo "Use make up-all para subir a stack completa."
-	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-openclaw"
+	@echo "Para subir um container: make up-postgres | up-redis | up-ollama | up-searxng | up-searxng-proxy | up-panel-backend | up-panel-worker | up-panel-frontend | up-token-init | up-openclaw | up-openclaw-with-cache"
 	@exit 1
 
 up-all: preflight build network-create volumes-create containers-clean
@@ -279,6 +281,10 @@ up-token-init: preflight network-create volumes-create token-init-image-build
 	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" TOKEN_INIT_IMAGE="$(TOKEN_INIT_IMAGE)" bash scripts/docker/up-service.sh token-init
 
 up-openclaw: preflight network-create volumes-create openclaw-image-build
+	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
+
+# Rebuild da imagem OpenClaw com cache Docker (mais rapido) e recria so o container clawdevs-openclaw.
+up-openclaw-with-cache: preflight network-create volumes-create openclaw-image-build-with-cache
 	@ENV_FILE="$(ENV_FILE)" STACK_NETWORK="$(STACK_NETWORK)" OPENCLAW_IMAGE="$(OPENCLAW_IMAGE)" BOOTSTRAP_SCRIPTS_DIR="$(BOOTSTRAP_SCRIPTS_DIR)" bash scripts/docker/up-service.sh openclaw
 
 up-gpu:
@@ -355,6 +361,11 @@ openclaw-dashboard:
 
 openclaw-shell:
 	@docker exec -it clawdevs-openclaw /bin/bash
+
+# Reinicia o container OpenClaw sem rebuild (config em docker/base/openclaw-config ja reflete o disco).
+openclaw-restart:
+	@docker restart clawdevs-openclaw
+	@echo "[openclaw-restart] clawdevs-openclaw reiniciado."
 
 ollama-list:
 	@docker exec clawdevs-ollama ollama list
