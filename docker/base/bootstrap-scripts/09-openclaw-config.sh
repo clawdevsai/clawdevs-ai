@@ -867,6 +867,28 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   fi
 fi
 
+# Normalizacao de modelos invalidos/legados.
+# Evita que typos persistidos em openclaw.json sobrevivam quando a escrita base e pulada.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .agents.list |= map(
+        if .id == "ux_designer" and (.model // "") == "ollama/nminimax-m2.7:cloud"
+        then .model = "ollama/minimax-m2.7:cloud"
+        else .
+        end
+      )
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] normalizacao de modelos aplicada (legacy typos corrigidos)"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao normalizar modelos no openclaw.json"
+  fi
+fi
+
 # Garantir skill self-improving para todos os agentes sem remover skills existentes.
 # Requisito: adicao idempotente (nao duplica entradas).
 if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then

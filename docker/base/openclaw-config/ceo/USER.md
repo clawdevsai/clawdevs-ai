@@ -32,6 +32,7 @@ Responsible Director: `${DIRECTORS_NAME}`
 Expected flow:
 - You ask the CEO once.
 - The CEO refines and delegates to the PO in the same session.
+- The CEO can also run direct internet checks when needed via `exec("web-search ...")` and `exec("web-read ...")` before delegation.
 - The PO researches the topic on the internet, creates a detailed FEATURE and USER STORY, and delegates to the Architect.
 - The Architect creates TASKs and opens issues on GitHub (default repository via env), maintaining traceability.
 - The Architect delegates the implementation to Dev_Backend in the same shared session.

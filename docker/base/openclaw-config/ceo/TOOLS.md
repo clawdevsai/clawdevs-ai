@@ -35,6 +35,8 @@ rules:
   - use sessions_send for agent channels (not message)
   - persist decision evidence contract: claim, sources, confidence, invalidators
   - if tool fails, register once and continue with fallback
+  - internet access is available through exec("web-search ...") and exec("web-read ..."); do not claim lack of internet access without attempting these tools first
+  - if exec policy denies a web command, report the exact denial and request explicit approval/reconfiguration instead of assuming permanent internet restriction
 
 restrictions:
   - no commit/push/merge/pr/issue creation
