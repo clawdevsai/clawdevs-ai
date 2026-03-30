@@ -155,18 +155,6 @@ fi
 
 load_env_file "$ENV_FILE"
 
-# Start token-init
-echo "[up] iniciando clawdevs-token-init"
-docker volume inspect panel-token >/dev/null 2>&1 || docker volume create panel-token >/dev/null
-docker run -d --name clawdevs-token-init --network "$STACK_NETWORK" --network-alias token-init \
-  --user 0:0 \
-  -e PANEL_ADMIN_USERNAME="$PANEL_ADMIN_USERNAME" \
-  -e PANEL_ADMIN_PASSWORD="$PANEL_ADMIN_PASSWORD" \
-  -v panel-token:/panel-token \
-  --restart no \
-  "$TOKEN_INIT_IMAGE" >/dev/null
-wait_for_exit_success clawdevs-token-init 180
-
 # Start postgres
 echo "[up] iniciando clawdevs-postgres"
 docker run -d --name clawdevs-postgres --network "$STACK_NETWORK" --network-alias postgres \
@@ -245,6 +233,19 @@ docker run -d --name clawdevs-panel-backend --network "$STACK_NETWORK" --network
   "$PANEL_BACKEND_IMAGE" \
   sh -c 'alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000' >/dev/null
 wait_for_health clawdevs-panel-backend 240
+
+# Start token-init (precisa do panel-backend saudável)
+echo "[up] iniciando clawdevs-token-init"
+docker volume inspect panel-token >/dev/null 2>&1 || docker volume create panel-token >/dev/null
+docker rm -f clawdevs-token-init >/dev/null 2>&1 || true
+docker run -d --name clawdevs-token-init --network "$STACK_NETWORK" --network-alias token-init \
+  --user 0:0 \
+  -e PANEL_ADMIN_USERNAME="$PANEL_ADMIN_USERNAME" \
+  -e PANEL_ADMIN_PASSWORD="$PANEL_ADMIN_PASSWORD" \
+  -v panel-token:/panel-token \
+  --restart no \
+  "$TOKEN_INIT_IMAGE" >/dev/null
+wait_for_exit_success clawdevs-token-init 180
 
 # Start searxng-proxy
 echo "[up] iniciando clawdevs-searxng-proxy"

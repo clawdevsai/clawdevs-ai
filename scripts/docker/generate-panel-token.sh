@@ -14,7 +14,8 @@ RETRY_DELAY=2
 
 echo "[token-init] Aguardando panel-backend em $BACKEND/healthz..."
 i=0
-until curl -sf "$BACKEND/healthz" > /dev/null 2>&1; do
+# timeouts evitam travar o container quando DNS/conexão demoram
+until curl -sf --connect-timeout 2 --max-time 4 "$BACKEND/healthz" > /dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -ge "$MAX_RETRIES" ]; then
     echo "[token-init] ERRO: backend nao respondeu apos $MAX_RETRIES tentativas."
@@ -25,7 +26,7 @@ until curl -sf "$BACKEND/healthz" > /dev/null 2>&1; do
 done
 
 echo "[token-init] Backend pronto. Fazendo login..."
-LOGIN_RESP=$(curl -sf -X POST "$BACKEND/auth/login" \
+LOGIN_RESP=$(curl -sf --connect-timeout 2 --max-time 10 -X POST "$BACKEND/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"username\":\"${PANEL_ADMIN_USERNAME}\",\"password\":\"${PANEL_ADMIN_PASSWORD}\"}")
 
@@ -37,7 +38,7 @@ if [ -z "$ADMIN_TOKEN" ]; then
 fi
 
 echo "[token-init] Login OK. Gerando token de agente..."
-AGENT_RESP=$(curl -sf -X POST "$BACKEND/auth/agent-token" \
+AGENT_RESP=$(curl -sf --connect-timeout 2 --max-time 10 -X POST "$BACKEND/auth/agent-token" \
   -H "Authorization: Bearer $ADMIN_TOKEN")
 
 AGENT_TOKEN=$(echo "$AGENT_RESP" | grep -o '"access_token":"[^"]*' | cut -d'"' -f4)
