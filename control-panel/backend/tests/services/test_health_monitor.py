@@ -58,3 +58,21 @@ async def test_health_monitor_start_stop():
     # Stop it
     await monitor.stop()
     assert monitor.enabled is False
+
+
+@pytest.mark.asyncio
+async def test_gather_db_metrics(test_engine):
+    """Verify database metrics are gathered correctly"""
+    from app.services.health_monitor import HealthMonitorLoop
+
+    monitor = HealthMonitorLoop()
+    metrics = await monitor._gather_db_metrics(engine=test_engine)
+
+    # Verify structure
+    assert "connection_pool" in metrics
+    assert "max_connections" in metrics["connection_pool"]
+    assert "active_connections" in metrics["connection_pool"]
+    assert "percentage" in metrics["connection_pool"]
+
+    # Verify reasonable values
+    assert 0 <= metrics["connection_pool"]["percentage"] <= 100

@@ -23,7 +23,7 @@
 import asyncio
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from app.core.config import get_settings
@@ -121,10 +121,82 @@ class HealthMonitorLoop:
             f"Health check complete: {success_count}/{len(results)} agents responded"
         )
 
-    async def _gather_db_metrics(self) -> Dict[str, Any]:
+    async def _gather_db_metrics(self, engine=None) -> Dict[str, Any]:
         """Gather PostgreSQL health metrics"""
-        # TODO: Implement in Task 2
-        return {}
+        try:
+            from sqlalchemy import text
+
+            if engine is None:
+                from app.core.database import engine as default_engine
+                engine = default_engine
+
+            async with engine.connect() as conn:
+                # Get connection pool stats
+                pool = conn.engine.pool
+
+                # Determine database type
+                dialect_name = conn.dialect.name
+
+                if dialect_name == "postgresql":
+                    # PostgreSQL-specific queries
+                    result = await conn.execute(
+                        text("""
+                            SELECT
+                                datname as database,
+                                numbackends as active_connections
+                            FROM pg_stat_database
+                            WHERE datname = current_database()
+                        """)
+                    )
+                    db_stats = result.fetchone()
+
+                    result = await conn.execute(
+                        text("SHOW max_connections")
+                    )
+                    max_conn_row = result.fetchone()
+                    max_connections = int(max_conn_row[0]) if max_conn_row else 100
+
+                    active_connections = db_stats[1] if db_stats else 0
+                else:
+                    # Fallback for SQLite and other databases
+                    max_connections = 100
+                    active_connections = 1
+
+                pool_percentage = int((active_connections / max_connections) * 100)
+
+                # Get slow queries from pg_stat_statements (if available)
+                slow_queries = 0
+                if dialect_name == "postgresql":
+                    try:
+                        result = await conn.execute(
+                            text("""
+                                SELECT COUNT(*) as slow_count
+                                FROM pg_stat_statements
+                                WHERE mean_exec_time > 5000  -- 5 seconds
+                                LIMIT 1
+                            """)
+                        )
+                        slow_row = result.fetchone()
+                        slow_queries = slow_row[0] if slow_row else 0
+                    except Exception:
+                        # pg_stat_statements extension may not be installed
+                        slow_queries = 0
+
+                return {
+                    "connection_pool": {
+                        "max_connections": max_connections,
+                        "active_connections": active_connections,
+                        "percentage": pool_percentage,
+                    },
+                    "slow_queries": slow_queries,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+        except Exception as e:
+            logger.error(f"Failed to gather DB metrics: {e}")
+            return {
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
     async def _gather_agent_metrics(self) -> Dict[str, Any]:
         """Gather agent health metrics"""
@@ -149,7 +221,7 @@ class HealthMonitorLoop:
             payload = {
                 "role": "repair_monitor",
                 "metrics": metrics,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "config": {
                     "db_pool_critical_pct": settings.DB_CONNECTION_POOL_CRITICAL_PCT,
                     "agent_heartbeat_timeout_min": settings.AGENT_HEARTBEAT_TIMEOUT_MINUTES,
