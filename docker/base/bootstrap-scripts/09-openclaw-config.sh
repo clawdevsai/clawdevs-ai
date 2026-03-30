@@ -983,7 +983,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/env" },
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
-        { "pattern": "/usr/bin/tr" }
+        { "pattern": "/usr/bin/tr" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "arquiteto": {
@@ -1013,7 +1015,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
-        { "pattern": "/usr/bin/gh" }
+        { "pattern": "/usr/bin/gh" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "dev_backend": {
@@ -1042,7 +1046,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
-        { "pattern": "/usr/bin/curl" }
+        { "pattern": "/usr/bin/curl" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "dev_frontend": {
@@ -1071,7 +1077,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
-        { "pattern": "/usr/bin/curl" }
+        { "pattern": "/usr/bin/curl" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "dev_mobile": {
@@ -1100,7 +1108,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
-        { "pattern": "/usr/bin/curl" }
+        { "pattern": "/usr/bin/curl" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "qa_engineer": {
@@ -1129,7 +1139,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
-        { "pattern": "/usr/bin/curl" }
+        { "pattern": "/usr/bin/curl" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "security_engineer": {
@@ -1160,7 +1172,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
         { "pattern": "/usr/bin/openssl" },
-        { "pattern": "/usr/bin/sha256sum" }
+        { "pattern": "/usr/bin/sha256sum" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "ux_designer": {
@@ -1188,7 +1202,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
-        { "pattern": "/usr/bin/git" }
+        { "pattern": "/usr/bin/git" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "devops_sre": {
@@ -1218,7 +1234,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/tr" },
         { "pattern": "/usr/bin/git" },
         { "pattern": "/usr/bin/curl" },
-        { "pattern": "/usr/bin/docker" }
+        { "pattern": "/usr/bin/docker" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "dba_data_engineer": {
@@ -1246,7 +1264,9 @@ cat > "${EXEC_APPROVALS_FILE}" << 'EOFAPPROVALS'
         { "pattern": "/usr/bin/printenv" },
         { "pattern": "/usr/bin/tee" },
         { "pattern": "/usr/bin/tr" },
-        { "pattern": "/usr/bin/git" }
+        { "pattern": "/usr/bin/git" },
+        { "pattern": "/data/openclaw/bin/web-search" },
+        { "pattern": "/data/openclaw/bin/web-read" }
       ]
     },
     "memory_curator": {
