@@ -202,6 +202,9 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
   },
   "session": {
     "dmScope": "per-channel-peer",
+    "agentToAgent": {
+      "maxPingPongTurns": 2
+    },
     "maintenance": {
       "mode": "enforce",
       "pruneAfter": "365d",
@@ -690,6 +693,22 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
   else
     rm -f "${_tmp_openclaw_json}"
     echo "[bootstrap] falha ao remover campos depreciados do openclaw.json"
+  fi
+fi
+
+# Reduz turnos de ping-pong agente-a-agente (default OpenClaw: 5) para encurtar sessions_send.
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq '
+      .session = (.session // {})
+      | .session.agentToAgent = ((.session.agentToAgent // {}) + {"maxPingPongTurns": 2})
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] falha ao aplicar session.agentToAgent.maxPingPongTurns no openclaw.json"
   fi
 fi
 

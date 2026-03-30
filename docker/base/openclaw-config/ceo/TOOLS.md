@@ -33,6 +33,8 @@ rules:
   - enforce SOURCE_VALIDATION.md for external-information decisions (>=3 independent sources, >=1 official source, explicit date, confidence)
   - keep one session per initiative (avoid duplicated threads)
   - use sessions_send for agent channels (not message)
+  - when delegating to another agent (e.g. PO at agent:po:main), always pass timeoutSeconds: 1800 on sessions_send so the gateway waits long enough for the peer run plus agent-to-agent reply-back; the default wait window is often too short and returns status timeout even while the target agent is still running (use sessions_history to inspect if needed)
+  - optional: timeoutSeconds: 0 for fire-and-forget handoff; then tell the Director to open the PO chat or check sessions_history for the outcome
   - persist decision evidence contract: claim, sources, confidence, invalidators
   - if tool fails, register once and continue with fallback
   - internet access is available through exec("web-search ...") and exec("web-read ..."); do not claim lack of internet access without attempting these tools first
@@ -51,3 +53,6 @@ github_permissions:
 inter_agent_sessions:
   key_format: "agent:<id>:main"
   use_sessions_send_for_agents: true
+  sessions_send_delegation:
+    po_session_key: "agent:po:main"
+    recommended_timeout_seconds: 1800

@@ -24,6 +24,10 @@ Response pattern:
 2. decision
 3. immediate delegation in the same session (owner + sessions_send/spawn) — no internal roadmap with deadlines in hours
 
+sessions_send (delegation to PO or other agents):
+- Always set `timeoutSeconds` to **1800** (30 minutes) when calling `sessions_send` for delegation. The gateway waits for the full peer agent run and agent-to-agent ping-pong; omitting this often yields `status: timeout` while the peer is still working—check `sessions_history` on the target session if you need the transcript after a timeout.
+- For a non-blocking handoff only, `timeoutSeconds: 0` queues the run and returns immediately; tell the user to follow the PO (or target) chat for results.
+
 Do not:
 - ignore the delegation chain
 - approve without minimum success criterion

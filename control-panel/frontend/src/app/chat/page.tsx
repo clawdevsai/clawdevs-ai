@@ -42,6 +42,8 @@ import {
   Mic,
   Plus,
   Download,
+  Copy,
+  Check,
   ChevronsUpDown,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -254,6 +256,7 @@ function ChatPageContent() {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [selectedSessionKey, setSelectedSessionKey] = useState<string | null>(null);
   const [sessionParamError, setSessionParamError] = useState<string | null>(null);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const { data: sessionsData } = useQuery({
     queryKey: ["sessions", selectedAgent, "chat-picker"],
@@ -751,8 +754,8 @@ function ChatPageContent() {
 
   return (
     <AppLayout>
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4">
-        <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-5">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-4">
+        <div className="shrink-0 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <AgentAvatar
@@ -892,7 +895,7 @@ function ChatPageContent() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top,hsla(var(--primary),0.12),transparent_55%)] p-4 sm:p-6"
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_top,hsla(var(--primary),0.12),transparent_55%)] p-4 sm:p-6"
           >
             {agentsLoading || historyLoading ? (
               <div className="mx-auto w-full max-w-4xl space-y-3">
@@ -907,11 +910,14 @@ function ChatPageContent() {
                 </p>
               </div>
             ) : (
-              <div className="mx-auto flex w-full max-w-4xl flex-col gap-3">
+              <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-3">
                 {messages.map((msg, index) => (
-                  <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    key={msg.id}
+                    className={`flex min-w-0 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
                     <div
-                      className={`max-w-[88%] rounded-2xl border px-4 py-3 shadow-sm ${
+                      className={`min-w-0 max-w-[88%] rounded-2xl border px-4 py-3 shadow-sm ${
                         msg.role === "user"
                           ? "border-[hsl(var(--primary)/0.4)] bg-[hsl(var(--primary)/0.14)]"
                           : "border-[hsl(var(--border))] bg-[hsl(var(--background))]/95"
@@ -922,27 +928,54 @@ function ChatPageContent() {
                           {getMessageAuthor(msg.role)}
                         </p>
                         {msg.role === "assistant" && msg.content.trim() && selectedAgent ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const prevUser =
-                                index > 0 && messages[index - 1]?.role === "user"
-                                  ? messages[index - 1].content
-                                  : undefined;
-                              downloadTextFile(
-                                msg.content,
-                                suggestFilename(msg.content, prevUser, selectedAgent, msg.id)
-                              );
-                            }}
-                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
-                            aria-label="Baixar documento"
-                            title="Baixar documento"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex shrink-0 items-center gap-0.5">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(msg.content);
+                                  setCopiedMessageId(msg.id);
+                                  window.setTimeout(() => {
+                                    setCopiedMessageId((cur) => (cur === msg.id ? null : cur));
+                                  }, 2000);
+                                } catch {
+                                  console.warn("Clipboard write failed");
+                                }
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                              aria-label={
+                                copiedMessageId === msg.id ? "Copiado" : "Copiar texto da mensagem"
+                              }
+                              title={copiedMessageId === msg.id ? "Copiado" : "Copiar"}
+                            >
+                              {copiedMessageId === msg.id ? (
+                                <Check className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const prevUser =
+                                  index > 0 && messages[index - 1]?.role === "user"
+                                    ? messages[index - 1].content
+                                    : undefined;
+                                downloadTextFile(
+                                  msg.content,
+                                  suggestFilename(msg.content, prevUser, selectedAgent, msg.id)
+                                );
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                              aria-label="Baixar documento"
+                              title="Baixar documento"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         ) : null}
                       </div>
-                      <div className="prose prose-invert prose-sm max-w-none break-words">
+                      <div className="prose prose-invert prose-sm max-w-none min-w-0 break-words [overflow-wrap:anywhere] [&_pre]:max-w-full [&_pre]:overflow-x-auto">
                         {msg.content ? (
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         ) : sending && msg.role === "assistant" ? (
@@ -967,7 +1000,7 @@ function ChatPageContent() {
             )}
           </div>
 
-          <div className="border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/75 p-3 sm:p-4">
+          <div className="shrink-0 border-t border-[hsl(var(--border))] bg-[hsl(var(--background))]/75 p-3 sm:p-4">
             <div className="mx-auto w-full max-w-4xl space-y-3">
               {sessionParamError && (
                 <p className="text-sm text-[hsl(var(--destructive))]">{sessionParamError}</p>
