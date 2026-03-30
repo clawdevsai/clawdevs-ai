@@ -45,6 +45,7 @@ interface Agent {
   role: string
   avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
+  runtime_status?: "online" | "working" | "idle" | "offline" | string | null
   model?: string | null
   current_model?: string | null
   last_heartbeat?: string | null
@@ -739,18 +740,23 @@ export default function AgentProfilePage({ params }: PageProps) {
                 <Badge variant="secondary" className="font-mono text-[10px]">
                   {agent.model ?? agent.current_model ?? "—"}
                 </Badge>
+                {(() => {
+                  const effectiveStatus = (agent.runtime_status ?? agent.status) as string
+                  return (
                 <Badge
                   variant={
-                    statusBadgeVariant(agent.status) as
+                    statusBadgeVariant(effectiveStatus) as
                       | "success"
                       | "warning"
                       | "error"
                       | "secondary"
                   }
                 >
-                  <StatusDot status={agent.status} />
-                  <span className="ml-1.5 capitalize">{agent.status}</span>
+                  <StatusDot status={effectiveStatus} />
+                  <span className="ml-1.5 capitalize">{effectiveStatus}</span>
                 </Badge>
+                  )
+                })()}
               </div>
               {(agent.last_heartbeat ?? agent.last_heartbeat_at) && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">

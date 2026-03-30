@@ -36,6 +36,7 @@ interface Agent {
   role: string
   avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
+  runtime_status?: "online" | "working" | "idle" | "offline" | string | null
   model?: string | null
   current_model?: string | null
   last_heartbeat?: string | null
@@ -95,7 +96,9 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-      {agents.map((agent) => (
+      {agents.map((agent) => {
+        const effectiveStatus = (agent.runtime_status ?? agent.status) as string
+        return (
         <Link
           key={agent.id}
           href={`/agents/${agent.slug}`}
@@ -116,20 +119,20 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
                 {agent.role}
               </span>
             </div>
-            <Badge variant={statusBadgeVariant(agent.status) as "success" | "warning" | "error" | "secondary"}>
+            <Badge variant={statusBadgeVariant(effectiveStatus) as "success" | "warning" | "error" | "secondary"}>
               <span
                 className={cn(
                   "mr-1 h-1.5 w-1.5 rounded-full inline-block",
-                  agent.status === "online" || agent.status === "working"
+                  effectiveStatus === "online" || effectiveStatus === "working"
                     ? "bg-green-400"
-                    : agent.status === "idle"
+                    : effectiveStatus === "idle"
                     ? "bg-yellow-400"
-                    : agent.status === "error"
+                    : effectiveStatus === "error"
                     ? "bg-red-400"
                     : "bg-white/30"
                 )}
               />
-              {agent.status}
+              {effectiveStatus}
             </Badge>
           </div>
           <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
@@ -143,7 +146,7 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
             </span>
           </div>
         </Link>
-      ))}
+      )})}
     </div>
   )
 }

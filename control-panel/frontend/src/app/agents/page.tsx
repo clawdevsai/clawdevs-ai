@@ -45,6 +45,7 @@ interface Agent {
   role: string
   avatar_url?: string | null
   status: "online" | "idle" | "offline" | string
+  runtime_status?: "online" | "working" | "idle" | "offline" | string | null
   model?: string | null
   current_model?: string | null
   last_heartbeat?: string | null
@@ -197,6 +198,9 @@ export default function AgentsPage() {
             <EmptyState query={search} />
           ) : (
             filtered.map((agent) => (
+              (() => {
+                const effectiveStatus = (agent.runtime_status ?? agent.status) as string
+                return (
               <Link
                 key={agent.id}
                 href={`/agents/${agent.slug}`}
@@ -220,7 +224,7 @@ export default function AgentsPage() {
                   </div>
                   <Badge
                     variant={
-                      statusBadgeVariant(agent.status) as
+                      statusBadgeVariant(effectiveStatus) as
                         | "success"
                         | "warning"
                         | "error"
@@ -230,16 +234,16 @@ export default function AgentsPage() {
                     <span
                       className={cn(
                         "mr-1 h-1.5 w-1.5 rounded-full inline-block",
-                        agent.status === "online" || agent.status === "working"
+                        effectiveStatus === "online" || effectiveStatus === "working"
                           ? "bg-green-400"
-                          : agent.status === "idle"
+                          : effectiveStatus === "idle"
                           ? "bg-yellow-400"
-                          : agent.status === "error"
+                          : effectiveStatus === "error"
                           ? "bg-red-400"
                           : "bg-white/30"
                       )}
                     />
-                    {agent.status}
+                    {effectiveStatus}
                   </Badge>
                 </div>
 
@@ -260,6 +264,8 @@ export default function AgentsPage() {
                   </span>
                 </div>
               </Link>
+                )
+              })()
             ))
           )}
         </div>

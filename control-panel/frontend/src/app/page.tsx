@@ -47,6 +47,7 @@ interface Agent {
   display_name: string
   role: string
   status: string
+  runtime_status?: string | null
   model?: string | null
   current_model?: string | null
   last_heartbeat?: string | null
@@ -167,7 +168,10 @@ export default function DashboardPage() {
   }, [queryClient])
 
   const agents = agentsData?.items ?? []
-  const activeAgents = agents.filter((a) => a.status === "online" || a.status === "working").length
+  const activeAgents = agents.filter((a) => {
+    const status = a.runtime_status ?? a.status
+    return status === "online" || status === "working"
+  }).length
   const pendingApprovals = approvalsData?.total ?? 0
   const totalSessions = sessionsData?.total ?? 0
   const totalTasks = tasksData?.total ?? 0
