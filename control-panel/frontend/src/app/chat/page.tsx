@@ -758,6 +758,30 @@ function ChatPageContent() {
     }
   }
 
+  async function persistChatTranscriptTurn(
+    agentSlug: string,
+    sessionKey: string,
+    turnId: string,
+    userMessage: string,
+    assistantMessage: string
+  ) {
+    try {
+      await customInstance<{ status: string }>({
+        url: "/chat/transcript/turn",
+        method: "POST",
+        data: {
+          agent_slug: agentSlug,
+          session_key: sessionKey,
+          turn_id: turnId,
+          user_message: userMessage,
+          assistant_message: assistantMessage,
+        },
+      });
+    } catch (persistError) {
+      console.warn("Failed to persist chat transcript", persistError);
+    }
+  }
+
   async function loadRagContext(
     agentSlug: string,
     sessionKey: string,
@@ -886,13 +910,23 @@ function ChatPageContent() {
         }
       }
 
-      await persistRagTurn(
-        selectedAgent,
-        sessionKeyForRequest,
-        turnId,
-        userInput,
-        (assistantContent || "[sem conteúdo textual]").trim()
-      );
+      const assistantForPersist = (assistantContent || "[sem conteúdo textual]").trim();
+      await Promise.all([
+        persistRagTurn(
+          selectedAgent,
+          sessionKeyForRequest,
+          turnId,
+          userInput,
+          assistantForPersist
+        ),
+        persistChatTranscriptTurn(
+          selectedAgent,
+          sessionKeyForRequest,
+          turnId,
+          userInput,
+          assistantForPersist
+        ),
+      ]);
 
       refetchHistory();
     } catch (err) {

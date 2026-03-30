@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # OpenClaw data path (PVC mounted read-only)
     openclaw_data_path: str = "/data/openclaw"
 
+    # Panel chat: max total words stored per (agent, session_key) transcript (approximate count)
+    chat_transcript_max_words: int = Field(default=200_000, ge=1_000, le=2_000_000)
+
     # Container orchestration
     container_namespace: str = "default"
 

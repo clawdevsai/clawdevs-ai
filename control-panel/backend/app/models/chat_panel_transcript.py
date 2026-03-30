@@ -18,32 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .user import User
-from .agent import Agent
-from .session import Session
-from .approval import Approval
-from .task import Task
-from .sdd_artifact import SddArtifact
-from .memory_entry import MemoryEntry
-from .cron_execution import CronExecution
-from .activity_event import ActivityEvent
-from .metric import Metric
-from .repository import Repository
-from .agent_permission import AgentPermission
-from .chat_panel_transcript import ChatPanelTranscript
+from datetime import UTC, datetime
+from typing import Any, Optional
+from uuid import UUID, uuid4
 
-__all__ = [
-    "User",
-    "Agent",
-    "Session",
-    "Approval",
-    "Task",
-    "SddArtifact",
-    "MemoryEntry",
-    "CronExecution",
-    "ActivityEvent",
-    "Metric",
-    "Repository",
-    "AgentPermission",
-    "ChatPanelTranscript",
-]
+from sqlalchemy import Column, JSON, UniqueConstraint
+from sqlmodel import Field, SQLModel
+
+
+class ChatPanelTranscript(SQLModel, table=True):
+    __tablename__ = "chat_panel_transcripts"
+    __table_args__ = (
+        UniqueConstraint(
+            "agent_slug",
+            "session_key",
+            name="uq_chat_panel_transcripts_agent_session_key",
+        ),
+    )
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    agent_slug: str = Field(index=True, max_length=64)
+    session_key: str = Field(max_length=512)
+    messages: list[Any] = Field(default_factory=list, sa_column=Column(JSON))
+    last_turn_id: Optional[str] = Field(default=None, max_length=96)
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
+    )

@@ -27,7 +27,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api import chat as chat_api
-from app.models import Agent, MemoryEntry, Session
+from app.models import Agent, ChatPanelTranscript, MemoryEntry, Session
 
 
 async def _create_agent(db_session: AsyncSession, slug: str = "po") -> Agent:
@@ -301,6 +301,169 @@ class TestChatApi:
         payload = response.json()
         assert len(payload["messages"]) == 1
         assert payload["messages"][0]["content"] == "from-jsonl"
+
+    @pytest.mark.asyncio
+    async def test_history_prefers_panel_transcript_over_openclaw(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+        transcript = ChatPanelTranscript(
+            agent_slug="po",
+            session_key="agent:po:main",
+            messages=[
+                {"role": "user", "content": "from-panel"},
+                {"role": "assistant", "content": "panel-reply"},
+            ],
+        )
+        db_session.add(transcript)
+        await db_session.commit()
+
+        get_session_mock = AsyncMock(
+            return_value={
+                "messages": [{"role": "assistant", "content": "from-gateway"}]
+            }
+        )
+        monkeypatch.setattr(chat_api.openclaw_client, "get_session", get_session_mock)
+
+        response = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert len(payload["messages"]) == 2
+        assert payload["messages"][0]["content"] == "from-panel"
+        assert payload["messages"][1]["content"] == "panel-reply"
+        get_session_mock.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_transcript_turn_appends_and_shows_in_history(
+        self, client: AsyncClient, auth_headers: dict, db_session: AsyncSession
+    ):
+        await _create_agent(db_session, "po")
+        post = await client.post(
+            "/chat/transcript/turn",
+            headers=auth_headers,
+            json={
+                "agent_slug": "po",
+                "session_key": "agent:po:main",
+                "turn_id": "turn-panel-1",
+                "user_message": "hello",
+                "assistant_message": "hi there",
+            },
+        )
+        assert post.status_code == 200
+        assert post.json()["status"] == "appended"
+
+        hist = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+        assert hist.status_code == 200
+        msgs = hist.json()["messages"]
+        assert len(msgs) == 2
+        assert msgs[0]["content"] == "hello"
+        assert msgs[1]["content"] == "hi there"
+
+    @pytest.mark.asyncio
+    async def test_transcript_turn_duplicate_turn_id_no_extra_messages(
+        self, client: AsyncClient, auth_headers: dict, db_session: AsyncSession
+    ):
+        await _create_agent(db_session, "po")
+        body = {
+            "agent_slug": "po",
+            "session_key": "agent:po:main",
+            "turn_id": "turn-dedupe",
+            "user_message": "once",
+            "assistant_message": "ok",
+        }
+        first = await client.post(
+            "/chat/transcript/turn", headers=auth_headers, json=body
+        )
+        second = await client.post(
+            "/chat/transcript/turn", headers=auth_headers, json=body
+        )
+        assert first.status_code == 200
+        assert second.status_code == 200
+        assert first.json()["status"] == "appended"
+        assert second.json()["status"] == "duplicate"
+
+        hist = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+        assert len(hist.json()["messages"]) == 2
+
+    @pytest.mark.asyncio
+    async def test_transcript_turn_seeds_from_openclaw_when_row_empty(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        tmp_path,
+        monkeypatch,
+    ):
+        await _create_agent(db_session, "po")
+        monkeypatch.setattr(chat_api.settings, "openclaw_data_path", str(tmp_path))
+        sessions_dir = tmp_path / "agents" / "po" / "sessions"
+        sessions_dir.mkdir(parents=True, exist_ok=True)
+        (sessions_dir / "sessions.json").write_text(
+            '{"agent:po:main":{"sessionId":"sess-seed-1"}}',
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(
+            chat_api.openclaw_client,
+            "get_session",
+            AsyncMock(
+                return_value={
+                    "messages": [{"role": "assistant", "content": "prior-openclaw"}]
+                }
+            ),
+        )
+
+        post = await client.post(
+            "/chat/transcript/turn",
+            headers=auth_headers,
+            json={
+                "agent_slug": "po",
+                "session_key": "agent:po:main",
+                "turn_id": "turn-after-seed",
+                "user_message": "next",
+                "assistant_message": "reply",
+            },
+        )
+        assert post.status_code == 200
+
+        hist = await client.get(
+            "/chat/history/po",
+            headers=auth_headers,
+            params={"session_key": "agent:po:main"},
+        )
+        msgs = hist.json()["messages"]
+        assert len(msgs) == 3
+        assert msgs[0]["content"] == "prior-openclaw"
+        assert msgs[1]["content"] == "next"
+        assert msgs[2]["content"] == "reply"
+
+    def test_trim_messages_to_word_budget_drops_from_start(self):
+        msgs = [
+            chat_api.Message(role="user", content="one two"),
+            chat_api.Message(role="assistant", content="three four"),
+            chat_api.Message(role="user", content="five"),
+            chat_api.Message(role="assistant", content="six"),
+        ]
+        out = chat_api._trim_messages_to_word_budget(msgs, max_words=3)
+        assert chat_api._total_words_in_messages(out) <= 3
+        assert out[-1].role == "assistant"
+        assert out[-1].content == "six"
 
 
 class TestChatRagTurnApi:

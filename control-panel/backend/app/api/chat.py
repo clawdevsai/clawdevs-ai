@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Annotated, Any, AsyncGenerator, Optional
+from typing import Annotated, Any, AsyncGenerator, Optional, cast
 import asyncio
 import json
 import httpx
@@ -36,7 +36,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, require_agent_access
-from app.models import Agent, MemoryEntry, Session as SessionModel
+from app.models import (
+    Agent,
+    ChatPanelTranscript,
+    MemoryEntry,
+    Session as SessionModel,
+)
 from app.services.openclaw_client import openclaw_client
 from app.services.embedding_service import EmbeddingService
 from app.services.agent_sync import _status_from_heartbeat
@@ -88,6 +93,109 @@ class ChatRagTurnRequest(BaseModel):
 class ChatRagTurnResponse(BaseModel):
     status: str
     memory_id: str
+
+
+class ChatTranscriptTurnRequest(BaseModel):
+    agent_slug: Optional[str] = Field(default=None, max_length=64)
+    session_key: str = Field(..., min_length=1, max_length=512)
+    turn_id: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    user_message: str = Field(..., min_length=1, max_length=4000)
+    assistant_message: str = Field(..., min_length=1, max_length=40000)
+
+
+class ChatTranscriptTurnResponse(BaseModel):
+    status: str
+
+
+def _count_words(text: str) -> int:
+    """Approximate word count (whitespace-separated); adequate for PT/EN budgets."""
+    return len((text or "").split())
+
+
+def _total_words_in_messages(messages: list[Message]) -> int:
+    return sum(_count_words(m.content) for m in messages)
+
+
+def _trim_messages_to_word_budget(
+    messages: list[Message], max_words: int
+) -> list[Message]:
+    msgs = list(messages)
+    while msgs and _total_words_in_messages(msgs) > max_words:
+        msgs.pop(0)
+    return msgs
+
+
+def _storage_dicts_to_messages(raw: object) -> list[Message]:
+    if not isinstance(raw, list):
+        return []
+    out: list[Message] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        try:
+            out.append(Message.model_validate(cast(dict[str, Any], item)))
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+def _messages_to_storage_dicts(messages: list[Message]) -> list[dict[str, Any]]:
+    return [m.model_dump(mode="json") for m in messages]
+
+
+async def _get_panel_transcript_messages(
+    db: AsyncSession, agent_slug: str, session_key: str
+) -> list[Message]:
+    slug = agent_slug.strip().lower()
+    key = session_key.strip()
+    result = await db.exec(
+        select(ChatPanelTranscript).where(
+            ChatPanelTranscript.agent_slug == slug,
+            ChatPanelTranscript.session_key == key,
+        )
+    )
+    row = result.first()
+    if row is None:
+        return []
+    return _storage_dicts_to_messages(row.messages)
+
+
+async def _load_messages_from_openclaw_for_session_key(
+    agent_slug: str,
+    normalized_session_key: str,
+    db: AsyncSession,
+) -> list[Message]:
+    target_session_id = await _resolve_session_id_for_key(
+        agent_slug, normalized_session_key, db
+    )
+    if not target_session_id:
+        return []
+
+    oc_session = await openclaw_client.get_session(target_session_id)
+    messages_raw: list[Any] = []
+    if oc_session and isinstance(oc_session, dict):
+        messages_raw = (
+            oc_session.get("messages")
+            or oc_session.get("history")
+            or oc_session.get("conversation")
+            or []
+        )
+        if not isinstance(messages_raw, list):
+            messages_raw = []
+
+    parsed: list[Message] = []
+    for msg in messages_raw:
+        if isinstance(msg, dict):
+            parsed_msg = _parse_message(msg)
+            if parsed_msg:
+                parsed.append(parsed_msg)
+
+    if not parsed and target_session_id:
+        parsed = _read_messages_from_local_session_jsonl(
+            agent_slug, target_session_id
+        )
+
+    return parsed
 
 
 def _parse_agent_session_key(session_key: str) -> tuple[str, str]:
@@ -493,40 +601,53 @@ async def chat_history(
     await require_agent_access(agent_slug, current_user, db)
     await _ensure_agent(db, agent_slug)
 
-    target_session_id: Optional[str] = None
+    slug_norm = agent_slug.strip().lower()
+
     if session_key:
         session_slug, normalized_session_key = _parse_agent_session_key(session_key)
-        if session_slug != agent_slug.strip().lower():
+        if session_slug != slug_norm:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="agent_slug does not match session_key agent",
             )
-        target_session_id = await _resolve_session_id_for_key(
+        panel_msgs = await _get_panel_transcript_messages(
+            db, slug_norm, normalized_session_key
+        )
+        if panel_msgs:
+            return ChatHistoryResponse(agent_slug=agent_slug, messages=panel_msgs)
+
+        parsed = await _load_messages_from_openclaw_for_session_key(
             agent_slug, normalized_session_key, db
         )
-        if not target_session_id:
-            return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
-    else:
-        session_row = await _latest_session_for_agent(db, agent_slug)
-        if not session_row or not session_row.openclaw_session_id:
-            return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
-        target_session_id = session_row.openclaw_session_id
+        return ChatHistoryResponse(agent_slug=agent_slug, messages=parsed)
 
+    main_key = f"agent:{slug_norm}:main"
+    panel_msgs = await _get_panel_transcript_messages(db, slug_norm, main_key)
+    if panel_msgs:
+        return ChatHistoryResponse(agent_slug=agent_slug, messages=panel_msgs)
+
+    session_row = await _latest_session_for_agent(db, agent_slug)
+    if not session_row or not session_row.openclaw_session_id:
+        return ChatHistoryResponse(agent_slug=agent_slug, messages=[])
+
+    target_session_id = session_row.openclaw_session_id
     oc_session = await openclaw_client.get_session(target_session_id)
-    messages_raw = []
+    messages_raw: list[Any] = []
     if oc_session and isinstance(oc_session, dict):
-        messages_raw = (
+        raw = (
             oc_session.get("messages")
             or oc_session.get("history")
             or oc_session.get("conversation")
             or []
         )
+        messages_raw = raw if isinstance(raw, list) else []
 
     parsed: list[Message] = []
     for msg in messages_raw:
-        parsed_msg = _parse_message(msg)
-        if parsed_msg:
-            parsed.append(parsed_msg)
+        if isinstance(msg, dict):
+            parsed_msg = _parse_message(msg)
+            if parsed_msg:
+                parsed.append(parsed_msg)
 
     if not parsed and target_session_id:
         parsed = _read_messages_from_local_session_jsonl(
@@ -578,6 +699,64 @@ async def chat_stream(
     return EventSourceResponse(
         _stream_sse(resolved_agent_slug, body.message, resolved_session_key)
     )
+
+
+@router.post("/transcript/turn", response_model=ChatTranscriptTurnResponse)
+async def append_chat_transcript_turn(
+    body: ChatTranscriptTurnRequest,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_session)],
+):
+    resolved_agent_slug, resolved_session_key = _resolve_agent_and_session_key_fields(
+        body.agent_slug, body.session_key
+    )
+    await require_agent_access(resolved_agent_slug, current_user, db)
+    await _ensure_agent(db, resolved_agent_slug)
+
+    normalized_turn: Optional[str] = None
+    if body.turn_id:
+        normalized_turn = _normalize_turn_id(body.turn_id)
+
+    result = await db.exec(
+        select(ChatPanelTranscript).where(
+            ChatPanelTranscript.agent_slug == resolved_agent_slug,
+            ChatPanelTranscript.session_key == resolved_session_key,
+        )
+    )
+    row = result.first()
+
+    if normalized_turn and row is not None and row.last_turn_id == normalized_turn:
+        return ChatTranscriptTurnResponse(status="duplicate")
+
+    if row is None:
+        row = ChatPanelTranscript(
+            agent_slug=resolved_agent_slug,
+            session_key=resolved_session_key,
+            messages=[],
+            last_turn_id=None,
+            updated_at=datetime.now(UTC).replace(tzinfo=None),
+        )
+        db.add(row)
+        await db.flush()
+
+    msgs = _storage_dicts_to_messages(row.messages)
+    if not msgs:
+        seed = await _load_messages_from_openclaw_for_session_key(
+            resolved_agent_slug, resolved_session_key, db
+        )
+        msgs = list(seed)
+
+    msgs.append(Message(role="user", content=body.user_message.strip()))
+    msgs.append(Message(role="assistant", content=body.assistant_message.strip()))
+    msgs = _trim_messages_to_word_budget(msgs, settings.chat_transcript_max_words)
+
+    row.messages = _messages_to_storage_dicts(msgs)
+    if normalized_turn:
+        row.last_turn_id = normalized_turn
+    row.updated_at = datetime.now(UTC).replace(tzinfo=None)
+    await db.commit()
+
+    return ChatTranscriptTurnResponse(status="appended")
 
 
 @router.post("/rag/turn", response_model=ChatRagTurnResponse)
