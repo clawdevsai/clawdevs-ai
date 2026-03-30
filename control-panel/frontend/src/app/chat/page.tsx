@@ -754,7 +754,7 @@ function ChatPageContent() {
 
   return (
     <AppLayout>
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-4">
+      <div className="mx-auto flex h-[calc(100dvh-6rem)] min-h-0 w-full max-w-6xl flex-col gap-4 overflow-hidden">
         <div className="shrink-0 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -927,7 +927,8 @@ function ChatPageContent() {
                         <p className="text-[10px] uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]">
                           {getMessageAuthor(msg.role)}
                         </p>
-                        {msg.role === "assistant" && msg.content.trim() && selectedAgent ? (
+                        {msg.content.trim() &&
+                        (msg.role === "user" || msg.role === "assistant") ? (
                           <div className="flex shrink-0 items-center gap-0.5">
                             <button
                               type="button"
@@ -954,24 +955,27 @@ function ChatPageContent() {
                                 <Copy className="h-3.5 w-3.5" />
                               )}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const prevUser =
-                                  index > 0 && messages[index - 1]?.role === "user"
-                                    ? messages[index - 1].content
-                                    : undefined;
-                                downloadTextFile(
-                                  msg.content,
-                                  suggestFilename(msg.content, prevUser, selectedAgent, msg.id)
-                                );
-                              }}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
-                              aria-label="Baixar documento"
-                              title="Baixar documento"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                            </button>
+                            {msg.role === "assistant" ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const prevUser =
+                                    index > 0 && messages[index - 1]?.role === "user"
+                                      ? messages[index - 1].content
+                                      : undefined;
+                                  const slug = selectedAgent ?? "agent";
+                                  downloadTextFile(
+                                    msg.content,
+                                    suggestFilename(msg.content, prevUser, slug, msg.id)
+                                  );
+                                }}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))]/50 hover:text-[hsl(var(--foreground))]"
+                                aria-label="Baixar documento"
+                                title="Baixar documento"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </button>
+                            ) : null}
                           </div>
                         ) : null}
                       </div>
