@@ -26,6 +26,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
+import redis.asyncio as aioredis
+
 from app.core.config import get_settings
 from app.services.openclaw_client import OpenClawClient
 
@@ -253,9 +255,43 @@ class HealthMonitorLoop:
             }
 
     async def _gather_queue_metrics(self) -> Dict[str, Any]:
-        """Gather queue health metrics"""
-        # TODO: Implement in Task 4
-        return {}
+        """Gather queue health metrics from Redis/RQ"""
+        try:
+            # Connect to Redis
+            redis_client = aioredis.from_url(settings.redis_url)
+
+            # Get total queue depth (all keys in Redis)
+            queue_depth = await redis_client.dbsize()
+
+            # Get memory usage in MB
+            info = await redis_client.info()
+            redis_memory_bytes = info.get("used_memory", 0)
+            redis_memory_mb = redis_memory_bytes // (1024 * 1024) if redis_memory_bytes else 0
+
+            # Count failed jobs in dead-letter queue
+            # RQ stores failed jobs with pattern "rq:job:*" and status "failed"
+            # For simplicity, we check for keys matching RQ failure patterns
+            failed_job_keys = await redis_client.keys("rq:job:*:status:failed")
+            failed_jobs = len(failed_job_keys) if failed_job_keys else 0
+
+            # Close the connection
+            await redis_client.close()
+
+            return {
+                "queue_depth": queue_depth,
+                "failed_jobs": failed_jobs,
+                "redis_memory_mb": redis_memory_mb,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to gather queue metrics: {e}")
+            return {
+                "queue_depth": 0,
+                "failed_jobs": 0,
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
 
     async def _invoke_agent(
         self, agent_slug: str, metrics: Dict[str, Any]

@@ -151,3 +151,123 @@ async def test_gather_agent_metrics(db_session):
     # Verify timestamp is ISO format
     assert isinstance(metrics["timestamp"], str)
     assert "T" in metrics["timestamp"]  # ISO format check
+
+
+@pytest.mark.asyncio
+async def test_gather_queue_metrics_success():
+    """Verify queue metrics are gathered correctly when Redis is available"""
+    from app.services.health_monitor import HealthMonitorLoop
+    from unittest.mock import AsyncMock, patch
+
+    monitor = HealthMonitorLoop()
+
+    # Mock Redis client
+    mock_redis = AsyncMock()
+
+    # Mock DBSIZE command (total queue depth)
+    mock_redis.dbsize = AsyncMock(return_value=45)
+
+    # Mock INFO command (memory usage)
+    mock_redis.info = AsyncMock(return_value={"used_memory": 536870912})  # 512 MB
+
+    # Mock keys pattern for failed jobs (dead letter queue)
+    mock_redis.keys = AsyncMock(return_value=[b"rq:job:failed-job-1", b"rq:job:failed-job-2"])
+
+    # Mock close method
+    mock_redis.close = AsyncMock()
+
+    with patch("app.services.health_monitor.aioredis.from_url", return_value=mock_redis):
+        metrics = await monitor._gather_queue_metrics()
+
+    # Verify structure
+    assert "queue_depth" in metrics
+    assert "failed_jobs" in metrics
+    assert "redis_memory_mb" in metrics
+    assert "timestamp" in metrics
+
+    # Verify values
+    assert metrics["queue_depth"] == 45
+    assert metrics["failed_jobs"] == 2
+    assert metrics["redis_memory_mb"] == 512
+
+    # Verify timestamp is ISO format
+    assert isinstance(metrics["timestamp"], str)
+    assert "T" in metrics["timestamp"]
+
+
+@pytest.mark.asyncio
+async def test_gather_queue_metrics_redis_error():
+    """Verify queue metrics handle Redis connection errors gracefully"""
+    from app.services.health_monitor import HealthMonitorLoop
+    from unittest.mock import patch
+
+    monitor = HealthMonitorLoop()
+
+    # Mock Redis connection error
+    with patch("app.services.health_monitor.aioredis.from_url", side_effect=ConnectionError("Connection refused")):
+        metrics = await monitor._gather_queue_metrics()
+
+    # Verify structure on error
+    assert "error" in metrics
+    assert "timestamp" in metrics
+
+    # Verify default values on error
+    assert metrics["queue_depth"] == 0
+    assert metrics["failed_jobs"] == 0
+
+    # Verify error message
+    assert "Connection refused" in metrics["error"]
+
+    # Verify timestamp exists
+    assert isinstance(metrics["timestamp"], str)
+    assert "T" in metrics["timestamp"]
+
+
+@pytest.mark.asyncio
+async def test_gather_queue_metrics_empty_queue():
+    """Verify queue metrics handle empty queue correctly"""
+    from app.services.health_monitor import HealthMonitorLoop
+    from unittest.mock import AsyncMock, patch
+
+    monitor = HealthMonitorLoop()
+
+    # Mock Redis client with empty queue
+    mock_redis = AsyncMock()
+    mock_redis.dbsize = AsyncMock(return_value=0)
+    mock_redis.info = AsyncMock(return_value={"used_memory": 1048576})  # 1 MB
+    mock_redis.keys = AsyncMock(return_value=[])  # No failed jobs
+    mock_redis.close = AsyncMock()
+
+    with patch("app.services.health_monitor.aioredis.from_url", return_value=mock_redis):
+        metrics = await monitor._gather_queue_metrics()
+
+    # Verify values
+    assert metrics["queue_depth"] == 0
+    assert metrics["failed_jobs"] == 0
+    assert metrics["redis_memory_mb"] == 1
+    assert "error" not in metrics
+
+
+@pytest.mark.asyncio
+async def test_gather_queue_metrics_missing_memory_info():
+    """Verify queue metrics handle missing memory info gracefully"""
+    from app.services.health_monitor import HealthMonitorLoop
+    from unittest.mock import AsyncMock, patch
+
+    monitor = HealthMonitorLoop()
+
+    # Mock Redis client with missing memory info
+    mock_redis = AsyncMock()
+    mock_redis.dbsize = AsyncMock(return_value=10)
+    mock_redis.info = AsyncMock(return_value={})  # No used_memory key
+    mock_redis.keys = AsyncMock(return_value=[b"rq:job:failed-1"])
+    mock_redis.close = AsyncMock()
+
+    with patch("app.services.health_monitor.aioredis.from_url", return_value=mock_redis):
+        metrics = await monitor._gather_queue_metrics()
+
+    # Should have default memory value
+    assert metrics["queue_depth"] == 10
+    assert metrics["failed_jobs"] == 1
+    assert metrics["redis_memory_mb"] == 0  # Default when not available
+    assert "error" not in metrics
