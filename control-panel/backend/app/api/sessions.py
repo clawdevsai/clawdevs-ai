@@ -33,9 +33,8 @@ from app.core.database import get_session as get_db_session
 from app.core.config import get_settings
 from app.api.deps import CurrentUser
 from app.models import Session as SessionModel
-from app.services.session_sync import sync_sessions
 from app.services.session_labels import session_display_label, session_kind
-from app.services.llm_runtime_client import llm_runtime_client as openclaw_client
+from app.models.chat_panel_transcript import ChatPanelTranscript
 
 router = APIRouter()
 settings = get_settings()
@@ -107,38 +106,47 @@ async def list_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
 ):
-    # Sync sessions from OpenClaw before listing
-    await sync_sessions(session)
-
-    # Build base query
-    # Keep active sessions first, then order each group by most recent activity.
-    status_priority = case(
-        (col(SessionModel.status) == "active", 0),
-        else_=1,
+    query = select(ChatPanelTranscript).order_by(
+        col(ChatPanelTranscript.updated_at).desc(),
+        col(ChatPanelTranscript.id).desc(),
     )
-    base_query = select(SessionModel).order_by(
-        status_priority.asc(),
-        col(SessionModel.last_active_at).desc(),
-    )
-
-    # Filter by agent_slug if provided
     if agent_slug:
-        base_query = base_query.where(SessionModel.agent_slug == agent_slug)
+        query = query.where(ChatPanelTranscript.agent_slug == agent_slug)
 
-    # Get total count using func.count()
-    count_query = select(func.count(SessionModel.id))
+    count_query = select(func.count(ChatPanelTranscript.id))
     if agent_slug:
-        count_query = count_query.where(SessionModel.agent_slug == agent_slug)
+        count_query = count_query.where(ChatPanelTranscript.agent_slug == agent_slug)
     count_result = await session.exec(count_query)
     total = count_result.one() or 0
 
-    # Apply pagination
     offset = (page - 1) * page_size
-    paginated_query = base_query.offset(offset).limit(page_size)
-    result = await session.exec(paginated_query)
-    sessions = result.all()
+    result = await session.exec(query.offset(offset).limit(page_size))
+    rows = result.all()
 
-    items = [_session_to_response(s, messages=None) for s in sessions]
+    items: list[SessionResponse] = []
+    for row in rows:
+        msgs = row.messages if isinstance(row.messages, list) else []
+        items.append(
+            SessionResponse(
+                id=str(row.id),
+                agent_slug=row.agent_slug,
+                openclaw_session_id=str(row.id),
+                openclaw_session_key=row.session_key,
+                session_kind=session_kind(row.session_key, row.agent_slug),
+                session_label=session_display_label(row.session_key, row.agent_slug),
+                channel_type="panel",
+                channel_peer=None,
+                status="active",
+                message_count=len(msgs),
+                token_count=0,
+                started_at=row.updated_at,
+                ended_at=None,
+                last_active_at=row.updated_at,
+                created_at=row.updated_at,
+                messages=None,
+            )
+        )
+
     return SessionsListResponse(items=items, total=total)
 
 
@@ -148,53 +156,45 @@ async def get_session(
     _: CurrentUser,
     db_session: Annotated[AsyncSession, Depends(get_db_session)],
 ):
-    """Get session details including messages from OpenClaw."""
-    # First sync to ensure we have the latest
-    await sync_sessions(db_session)
-
-    # Try to find by internal UUID first
-    db_session_obj = None
+    """Get session details from control-panel transcript storage."""
+    transcript_row: ChatPanelTranscript | None = None
     try:
         uuid_obj = UUID(session_id)
-        result = await db_session.exec(
-            select(SessionModel).where(SessionModel.id == uuid_obj)
-        )
-        db_session_obj = result.first()
+        result = await db_session.exec(select(ChatPanelTranscript).where(ChatPanelTranscript.id == uuid_obj))
+        transcript_row = result.first()
     except ValueError:
         pass
 
-    # If not found by UUID, try by openclaw_session_id
-    if not db_session_obj:
+    if transcript_row is None:
         result = await db_session.exec(
-            select(SessionModel).where(SessionModel.openclaw_session_id == session_id)
+            select(ChatPanelTranscript).where(ChatPanelTranscript.session_key == session_id)
         )
-        db_session_obj = result.first()
+        transcript_row = result.first()
 
-    if not db_session_obj:
+    if transcript_row is None:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    # Fetch full session details from OpenClaw including messages
-    oc_session = await openclaw_client.get_session(db_session_obj.openclaw_session_id)
+    stored = transcript_row.messages if isinstance(transcript_row.messages, list) else []
+    messages = [_parse_message(m) for m in stored if isinstance(m, dict)]
 
-    # Parse messages if available
-    messages = None
-    if oc_session and isinstance(oc_session, dict):
-        msgs = (
-            oc_session.get("messages")
-            or oc_session.get("history")
-            or oc_session.get("conversation")
-        )
-        if msgs and isinstance(msgs, list):
-            messages = [_parse_message(m) for m in msgs if isinstance(m, dict)]
-
-    # Fallback: read messages from local OpenClaw session JSONL when gateway is unavailable.
-    if messages is None:
-        messages = _read_messages_from_local_session_file(
-            agent_slug=db_session_obj.agent_slug,
-            openclaw_session_id=db_session_obj.openclaw_session_id,
-        )
-
-    return _session_to_response(db_session_obj, messages=messages)
+    return SessionResponse(
+        id=str(transcript_row.id),
+        agent_slug=transcript_row.agent_slug,
+        openclaw_session_id=str(transcript_row.id),
+        openclaw_session_key=transcript_row.session_key,
+        session_kind=session_kind(transcript_row.session_key, transcript_row.agent_slug),
+        session_label=session_display_label(transcript_row.session_key, transcript_row.agent_slug),
+        channel_type="panel",
+        channel_peer=None,
+        status="active",
+        message_count=len(messages),
+        token_count=0,
+        started_at=transcript_row.updated_at,
+        ended_at=None,
+        last_active_at=transcript_row.updated_at,
+        created_at=transcript_row.updated_at,
+        messages=messages,
+    )
 
 
 def _parse_message(msg: dict) -> MessageResponse:

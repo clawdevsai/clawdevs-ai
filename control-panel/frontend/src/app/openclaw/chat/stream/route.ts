@@ -25,11 +25,8 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SESSION_KEY_RE = /^agent:([a-z0-9_-]+):(.+)$/i;
-
 type ChatStreamBody = {
   agent_slug?: string;
-  session_key?: string;
   message?: string;
   rag_context?: string | null;
 };
@@ -38,49 +35,15 @@ function normalizeAgentSlug(rawValue: string): string {
   return rawValue.trim().toLowerCase();
 }
 
-function parseSessionKey(sessionKey: string): { agentSlug: string; normalized: string } | null {
-  const normalized = sessionKey.trim();
-  const match = SESSION_KEY_RE.exec(normalized);
-  if (!match) return null;
-  return {
-    agentSlug: normalizeAgentSlug(match[1]),
-    normalized,
-  };
-}
-
-function resolveAgentAndSessionKey(body: ChatStreamBody): { agentSlug: string; sessionKey: string } {
-  const rawSessionKey = (body.session_key ?? "").trim();
+function resolveAgent(body: ChatStreamBody): string {
   const rawAgentSlug = (body.agent_slug ?? "").trim();
-
-  if (rawSessionKey) {
-    const parsed = parseSessionKey(rawSessionKey);
-    if (!parsed) {
-      throw new Response(
-        JSON.stringify({ detail: "session_key must match 'agent:<slug>:<rest>'" }),
-        { status: 422, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    if (rawAgentSlug && normalizeAgentSlug(rawAgentSlug) !== parsed.agentSlug) {
-      throw new Response(
-        JSON.stringify({ detail: "agent_slug does not match session_key agent" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-    return { agentSlug: parsed.agentSlug, sessionKey: parsed.normalized };
-  }
-
   if (!rawAgentSlug) {
     throw new Response(
-      JSON.stringify({ detail: "agent_slug is required when session_key is not provided" }),
+      JSON.stringify({ detail: "agent_slug is required" }),
       { status: 422, headers: { "Content-Type": "application/json" } }
     );
   }
-
-  const agentSlug = normalizeAgentSlug(rawAgentSlug);
-  return {
-    agentSlug,
-    sessionKey: `agent:${agentSlug}:main`,
-  };
+  return normalizeAgentSlug(rawAgentSlug);
 }
 
 function normalizeRagContext(rawContext?: string | null): string | null {
@@ -95,8 +58,6 @@ function resolveGatewayToken(): string {
   return (
     process.env.NEMOCLAW_GATEWAY_TOKEN?.trim() ||
     process.env.PANEL_NEMOCLAW_GATEWAY_TOKEN?.trim() ||
-    process.env.OPENCLAW_GATEWAY_TOKEN?.trim() ||
-    process.env.PANEL_OPENCLAW_GATEWAY_TOKEN?.trim() ||
     ""
   );
 }
@@ -104,18 +65,14 @@ function resolveGatewayToken(): string {
 function resolveGatewayCandidates(): string[] {
   const nemoclConfigured = process.env.NEMOCLAW_GATEWAY_URL?.trim();
   const panelNemoclConfigured = process.env.PANEL_NEMOCLAW_GATEWAY_URL?.trim();
-  const configured = process.env.OPENCLAW_GATEWAY_URL?.trim();
-  const panelConfigured = process.env.PANEL_OPENCLAW_GATEWAY_URL?.trim();
   const defaults = [
     "http://nemoclaw:18789",
-    "http://openclaw:18789",
-    "http://clawdevs-openclaw:18789",
     "http://host.docker.internal:18789",
     "http://localhost:18789",
     "http://127.0.0.1:18789",
     "http://clawdevs-ai:18789",
   ];
-  const all = [nemoclConfigured, panelNemoclConfigured, configured, panelConfigured, ...defaults]
+  const all = [nemoclConfigured, panelNemoclConfigured, ...defaults]
     .filter(Boolean)
     .map((value) => (value as string).replace(/\/+$/, ""));
   return Array.from(new Set(all));
@@ -138,7 +95,6 @@ type GatewayStreamResult =
 async function streamFromGateway(
   gatewayUrl: string,
   gatewayToken: string,
-  sessionKey: string,
   payload: unknown
 ): Promise<GatewayStreamResult> {
   try {
@@ -147,7 +103,6 @@ async function streamFromGateway(
       headers: {
         Authorization: `Bearer ${gatewayToken}`,
         "Content-Type": "application/json",
-        "x-openclaw-session-key": sessionKey,
       },
       body: JSON.stringify(payload),
     });
@@ -206,18 +161,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ detail: "message is required" }, { status: 422 });
     }
 
-    const { agentSlug, sessionKey } = resolveAgentAndSessionKey(body);
+    const agentSlug = resolveAgent(body);
     const ragContext = normalizeRagContext(body.rag_context);
 
     const gatewayToken = resolveGatewayToken();
     if (!gatewayToken) {
       return NextResponse.json(
-        { detail: "OPENCLAW_GATEWAY_TOKEN is not configured" },
+        { detail: "NEMOCLAW_GATEWAY_TOKEN is not configured" },
         { status: 500 }
       );
     }
 
-    const modelPrefix = process.env.NEMOCLAW_MODEL_PREFIX?.trim() || "openclaw";
+    const modelPrefix = process.env.NEMOCLAW_MODEL_PREFIX?.trim() || "nemoclaw";
     const upstreamPayload = {
       model: `${modelPrefix}/${agentSlug}`,
       stream: true,
@@ -242,7 +197,6 @@ export async function POST(request: Request) {
       const streamResult = await streamFromGateway(
         candidate,
         gatewayToken,
-        sessionKey,
         upstreamPayload
       );
 
@@ -266,7 +220,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { detail: "Failed to connect to OpenClaw gateway" },
+      { detail: "Failed to connect to NemoClaw runtime" },
       { status: 502 }
     );
   } catch (error) {

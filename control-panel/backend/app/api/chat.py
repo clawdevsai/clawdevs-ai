@@ -472,41 +472,7 @@ async def _latest_session_for_agent(
 
 
 async def _wakeup_agent(agent_slug: str) -> bool:
-    """
-    Try to wake up an agent by sending a lightweight request to OpenClaw.
-    This triggers the agent to start if it's idle or stopped.
-    """
-    import logging
-
-    logger = logging.getLogger(__name__)
-
-    try:
-        session_key = f"agent:{agent_slug}:wakeup"
-        payload = {
-            "model": f"openclaw/{agent_slug}",
-            "messages": [{"role": "system", "content": "__WAKEUP__"}],
-            "stream": False,
-        }
-        headers = {
-            "Authorization": f"Bearer {openclaw_client.headers.get('Authorization', '')}",
-            "Content-Type": "application/json",
-            "x-openclaw-session-key": session_key,
-        }
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            r = await client.post(
-                f"{openclaw_client.base_url}/v1/chat/completions",
-                headers=headers,
-                json=payload,
-            )
-            if r.status_code in (200, 201, 202):
-                logger.info(f"Wakeup signal sent to agent '{agent_slug}'")
-                return True
-            else:
-                logger.warning(f"Wakeup failed for '{agent_slug}': {r.status_code}")
-                return False
-    except Exception as e:
-        logger.warning(f"Failed to send wakeup to agent '{agent_slug}': {e}")
-        return False
+    return True
 
 
 async def _wait_for_agent_online(

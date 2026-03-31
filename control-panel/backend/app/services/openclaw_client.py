@@ -32,11 +32,9 @@ class NemoClawClient:
     def __init__(self):
         configured_url = (
             getattr(settings, "nemoclaw_gateway_url", "").strip()
-            or settings.openclaw_gateway_url.strip()
         )
         configured_token = (
             getattr(settings, "nemoclaw_gateway_token", "").strip()
-            or settings.openclaw_gateway_token.strip()
         )
         self.base_url = configured_url.rstrip("/")
         token = configured_token
@@ -50,12 +48,8 @@ class NemoClawClient:
         env_candidates = [
             os.getenv("NEMOCLAW_GATEWAY_URL", "").strip(),
             os.getenv("PANEL_NEMOCLAW_GATEWAY_URL", "").strip(),
-            os.getenv("OPENCLAW_GATEWAY_URL", "").strip(),
-            os.getenv("PANEL_OPENCLAW_GATEWAY_URL", "").strip(),
             "http://nemoclaw:18789",
-            "http://openclaw:18789",
             "http://clawdevs-nemoclaw:18789",
-            "http://clawdevs-openclaw:18789",
         ]
         dedup: list[str] = []
         for item in [*configured, *env_candidates]:
@@ -147,10 +141,7 @@ class NemoClawClient:
         Stream chat completions from the gateway.
         Yields dict events: {"event": "delta"|"done"|"error", "data": str}
         """
-        resolved_session_key = (session_key or "").strip() or f"agent:{agent_slug}:main"
-        # NemoClaw runs OpenClaw inside the sandbox; the gateway contract still expects
-        # `openclaw` or `openclaw/<agentId>` as model identifiers.
-        model_prefix = os.getenv("NEMOCLAW_MODEL_PREFIX", "openclaw")
+        model_prefix = os.getenv("NEMOCLAW_MODEL_PREFIX", "nemoclaw")
         payload = {
             "model": f"{model_prefix}/{agent_slug}",
             "messages": [{"role": "user", "content": message}],
@@ -159,7 +150,6 @@ class NemoClawClient:
         headers = {
             **self.headers,
             "Content-Type": "application/json",
-            "x-openclaw-session-key": resolved_session_key,
         }
         candidates = self._runtime_candidates()
         try:
@@ -205,8 +195,7 @@ class NemoClawClient:
         self, agent_slug: str, message: str, session_key: str | None = None
     ) -> str:
         """Run a non-streaming turn and return plain text output."""
-        resolved_session_key = (session_key or "").strip() or f"agent:{agent_slug}:main"
-        model_prefix = os.getenv("NEMOCLAW_MODEL_PREFIX", "openclaw")
+        model_prefix = os.getenv("NEMOCLAW_MODEL_PREFIX", "nemoclaw")
         payload = {
             "model": f"{model_prefix}/{agent_slug}",
             "messages": [{"role": "user", "content": message}],
@@ -215,7 +204,6 @@ class NemoClawClient:
         headers = {
             **self.headers,
             "Content-Type": "application/json",
-            "x-openclaw-session-key": resolved_session_key,
         }
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
