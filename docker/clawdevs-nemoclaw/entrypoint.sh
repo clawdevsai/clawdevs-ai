@@ -11,20 +11,10 @@ nemoclaw_runtime_ok() {
   return 0
 }
 
-# Install OpenShell from NVIDIA releases if needed
-install_openshell_release() {
-  local url="https://github.com/NVIDIA/OpenShell/releases/download/v1.0.0/openshell-linux-x64"
-  echo "[entrypoint] Downloading OpenShell from ${url}..."
-
-  if curl -fsSL --max-time 30 "${url}" -o /tmp/openshell; then
-    chmod +x /tmp/openshell
-    mv /tmp/openshell /usr/local/bin/openshell
-    echo "[entrypoint] OpenShell installed successfully"
-    return 0
-  else
-    echo "[entrypoint] Failed to download OpenShell from ${url}"
-    return 1
-  fi
+# Install OpenShell CLI (no gateway) if needed
+install_openshell_cli() {
+  curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | \
+    OPENSHELL_VERSION="${OPENSHELL_VERSION:-v0.0.19}" OPENSHELL_INSTALL_DIR=/usr/local/bin sh
 }
 
 # Verify NemoClaw is available (should be pre-installed in base image)
@@ -39,7 +29,7 @@ fi
 # Try to install OpenShell if not already available
 if ! command -v openshell >/dev/null 2>&1; then
   echo "[entrypoint] Installing OpenShell..."
-  if install_openshell_release; then
+  if install_openshell_cli; then
     echo "[entrypoint] OpenShell ready"
   else
     echo "[entrypoint] WARNING: OpenShell installation failed, continuing without it..."

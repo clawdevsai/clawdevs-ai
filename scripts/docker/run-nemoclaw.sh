@@ -77,7 +77,7 @@ if [ "${NEMOCLAW_EXTERNAL:-false}" = "true" ]; then
     if ! nemoclaw clawdevs-ai status --json >/dev/null 2>&1; then
       echo "[nemoclaw-up][erro] sandbox 'clawdevs-ai' nao esta pronto no host."
       echo "[nemoclaw-up] Execute no host:"
-      echo "  curl -fsSL https://www.nvidia.com/nemoclaw.sh | bash"
+      echo "  curl -fsSL https://raw.githubusercontent.com/NVIDIA/NemoClaw/main/install.sh | bash"
       echo "  nemoclaw onboard   # escolha o nome: clawdevs-ai"
       echo "  openshell term     # aprovar egress/policies quando solicitado"
       exit 1
@@ -85,7 +85,7 @@ if [ "${NEMOCLAW_EXTERNAL:-false}" = "true" ]; then
   else
     echo "[nemoclaw-up][warn] comando 'nemoclaw' nao encontrado no PATH (modo external)."
     echo "[nemoclaw-up][warn] vou validar apenas o gateway via healthz. Para validar sandbox via CLI:"
-    echo "  curl -fsSL https://www.nvidia.com/nemoclaw.sh | bash"
+    echo "  curl -fsSL https://raw.githubusercontent.com/NVIDIA/NemoClaw/main/install.sh | bash"
     echo "  nemoclaw onboard   # escolha o nome: clawdevs-ai"
   fi
 
@@ -106,6 +106,15 @@ fi
 
 echo "[up] iniciando clawdevs-nemoclaw"
 docker rm -f clawdevs-nemoclaw >/dev/null 2>&1 || true
+
+# Workaround: upstream sometimes pins a non-existent OpenShell gateway tag.
+# If the pinned tag is missing, alias it to the latest known-good tag.
+if ! docker image inspect ghcr.io/nvidia/openshell/cluster:0.0.20 >/dev/null 2>&1; then
+  if docker pull ghcr.io/nvidia/openshell/cluster:0.0.19 >/dev/null 2>&1; then
+    docker tag ghcr.io/nvidia/openshell/cluster:0.0.19 ghcr.io/nvidia/openshell/cluster:0.0.20 >/dev/null 2>&1 || true
+  fi
+fi
+
 "${DOCKER_BIN[@]}" run -d --name clawdevs-nemoclaw --network "$STACK_NETWORK" --network-alias nemoclaw --network-alias openclaw \
   --gpus all \
   -p 18789:18789 \

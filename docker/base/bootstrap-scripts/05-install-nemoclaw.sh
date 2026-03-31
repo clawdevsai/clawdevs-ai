@@ -14,7 +14,7 @@ nemoclaw_runtime_ok() {
 
 install_nemoclaw_official() {
   # Official installer installs NemoClaw + OpenShell on the host.
-  curl -fsSL "https://www.nvidia.com/nemoclaw.sh" | bash
+  curl -fsSL "https://raw.githubusercontent.com/NVIDIA/NemoClaw/main/install.sh" | bash
 }
 
 install_openshell_fallback() {
@@ -32,8 +32,7 @@ install_openshell_fallback() {
 
   # Fallback to GitHub releases
   echo "[bootstrap] Trying GitHub releases..."
-  OPENSHELL_VERSION="latest"
-  OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/download/${OPENSHELL_VERSION}/openshell-linux-x64"
+  OPENSHELL_URL="https://github.com/NVIDIA/OpenShell/releases/latest/download/openshell-linux-x64"
 
   if curl -fsSL "${OPENSHELL_URL}" -o /tmp/openshell 2>/dev/null; then
     chmod +x /tmp/openshell
