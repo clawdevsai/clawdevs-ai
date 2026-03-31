@@ -129,28 +129,14 @@ jobs:
             type=raw,value=${{ steps.vars.outputs.version_tag }}
             type=raw,value=latest
 
-      - name: Build, load and push
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          outputs: |
-            type=registry
-            type=docker
-
-      - name: Prepare local Scout tag
-        env:
-          VERSION_TAG: ${{ steps.vars.outputs.version_tag }}
-          IMAGE_NAME: ${{ matrix.image }}
-        run: |
-          set -euo pipefail
-          SRC="clawdevsai/${IMAGE_NAME}:${VERSION_TAG}"
-          DST="scout-${IMAGE_NAME}:${VERSION_TAG}"
-          docker image inspect "${SRC}" >/dev/null
-          docker tag "${SRC}" "${DST}"
-          docker image inspect "${DST}" >/dev/null
+          push: true
 
       - name: Resolve Scout image reference
         id: scout_ref
@@ -159,12 +145,8 @@ jobs:
           IMAGE_NAME: ${{ matrix.image }}
         run: |
           set -euo pipefail
-          if [ "${IMAGE_NAME}" = "ollama-runtime" ]; then
-            # Avoid local indexing for very large images; scan the pushed registry tag directly.
-            echo "image_ref=clawdevsai/${IMAGE_NAME}:${VERSION_TAG}" >> "$GITHUB_OUTPUT"
-          else
-            echo "image_ref=local://scout-${IMAGE_NAME}:${VERSION_TAG}" >> "$GITHUB_OUTPUT"
-          fi
+          # Always scan the pushed registry tag to avoid loading images locally on the runner.
+          echo "image_ref=clawdevsai/${IMAGE_NAME}:${VERSION_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: CVE gate (critical/high)
         if: ${{ matrix.image != 'postgres-runtime' }}
