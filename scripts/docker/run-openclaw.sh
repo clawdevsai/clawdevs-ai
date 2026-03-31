@@ -84,7 +84,6 @@ docker rm -f clawdevs-openclaw >/dev/null 2>&1 || true
   -e GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-${GIT_TOKEN}}}" \
   -e GIT_TOKEN="${GIT_TOKEN}" \
   -e GIT_ORG="${GIT_ORG}" \
-  -e GIT_DEFAULT_REPOSITORY="${GIT_DEFAULT_REPOSITORY:-}" \
   -e OLLAMA_API_KEY="${OLLAMA_API_KEY:-}" \
   -e DIRECTORS_NAME="${DIRECTORS_NAME:-Director}" \
   -e LANGUAGE="${LANGUAGE:-pt-BR}" \

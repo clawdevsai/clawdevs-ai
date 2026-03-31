@@ -32,13 +32,16 @@ if [ -n "${GH_TOKEN:-}" ]; then
 else
   echo "GH_TOKEN ausente: GitHub CLI iniciara sem autenticacao persistida" >/tmp/gh-auth-status.log
 fi
-if ! gh api "repos/${GIT_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
-  discovered_repo="$(gh repo list "${GIT_ORG}" --limit 1 --json nameWithOwner --jq '.[0].nameWithOwner' 2>/dev/null || true)"
-  if [ -n "${discovered_repo}" ]; then
-    GIT_DEFAULT_REPOSITORY="${discovered_repo}"
+# Contexto inicial: primeiro repositorio listavel da org (sem repo fixo em env). Demais repos: gh e claw-repo-discover / claw-repo-switch.
+initial_repo=""
+if [ -n "${GH_TOKEN:-}" ] || [ -n "${GIT_TOKEN:-}" ]; then
+  initial_repo="$(gh repo list "${GIT_ORG}" --limit 1 --json nameWithOwner --jq '.[0].nameWithOwner' 2>/dev/null || true)"
+  case "${initial_repo}" in ''|'null') initial_repo="" ;; esac
+  if [ -n "${initial_repo}" ] && gh api "repos/${initial_repo}" --silent >/dev/null 2>&1; then
+    write_repository_context "${initial_repo}" "${ACTIVE_REPOSITORY_BRANCH}"
+  else
+    echo "[bootstrap] nenhum repositorio inicial para '${GIT_ORG}' (lista vazia ou sem acesso); use claw-repo-switch org/repo"
   fi
+else
+  echo "[bootstrap] sem token GitHub: pulando contexto de repositorio; use claw-repo-switch apos autenticar"
 fi
-if ! gh api "repos/${GIT_DEFAULT_REPOSITORY}" --silent >/dev/null 2>&1; then
-  GIT_DEFAULT_REPOSITORY="${GIT_ORG}/user-api"
-fi
-write_repository_context "${GIT_DEFAULT_REPOSITORY}" "${ACTIVE_REPOSITORY_BRANCH}"

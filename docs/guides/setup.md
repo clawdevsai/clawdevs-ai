@@ -173,7 +173,6 @@ OPENCLAW_LOG_LEVEL=info            # debug|info|warn|error
 # GitHub Integration
 GIT_TOKEN=<required>               # Personal Access Token
 GIT_ORG=<required>                 # Organization name
-GIT_DEFAULT_REPOSITORY=<optional>  # org/repo fallback
 
 # Telegram (Optional)
 TELEGRAM_BOT_TOKEN_CEO=<optional>  # Bot token: id:hash

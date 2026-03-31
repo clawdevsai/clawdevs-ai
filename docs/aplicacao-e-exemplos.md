@@ -39,7 +39,7 @@ O **StatefulSet** `clawdevs-ai` (container `openclaw`) é o núcleo: um time de 
 - **Spec-Driven Development (SDD)** — templates e constitution em `docker/base/openclaw-config/shared/`; artefatos esperados em `/data/openclaw/backlog/` (briefs, specs, tasks, user_story, implementation, status, etc.).
 - **Delegação entre agentes** — `openclaw.json` habilita `agentToAgent` entre os IDs listados; CEO costuma orquestrar; executor técnico (ex.: Dev_Backend) trabalha a partir de TASK/issue conforme `AGENTS.md`.
 - **Telegram** — binding padrão: agente **ceo** no canal Telegram (bot `TELEGRAM_BOT_TOKEN_CEO`, allowlist `TELEGRAM_CHAT_ID_CEO`). Mensagens de grupo fora da política containerem ser negadas pelas regras de `session.sendPolicy`.
-- **GitHub** — contexto ativo em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`, branch, org). Fallback de repo no bootstrap se `GIT_DEFAULT_REPOSITORY` não existir na org.
+- **GitHub** — contexto ativo em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`, branch, org). No bootstrap, o primeiro repositório listável da org vira contexto inicial; troca com `claw-repo-switch`.
 - **Crons nativos (gateway)** — variáveis `*_CRON_ENABLED`, `*_CRON_EXPR`, fuso `America/Sao_Paulo` no manifest disparam ciclos que invocam agentes (ex.: filas por label no GitHub). Valores efetivos estão no `openclaw-container.yaml` (ex.: dev_backend `0 * * * *`, dev_frontend `15 * * * *`, memory_curator `0 2 * * *`, etc.).
 - **Roteador de erros** — com `AGENT_ERROR_ROUTER_ENABLED=true`, um loop observa sessões dos agentes e envia alerta ao CEO via `openclaw agent --agent ceo --message ...`.
 - **Git hooks globais** — bloqueiam commit/push direto em `main`/`master` (caminho configurado para hooks em `/data/openclaw/git-hooks`).
@@ -105,7 +105,7 @@ web-read https://docs.github.com/en/rest
 
 ### Integrar fila GitHub → Dev_Backend (exemplo)
 
-1. Garantir contexto: `claw-repo-switch org/repo` ou `GIT_DEFAULT_REPOSITORY` correto.
+1. Garantir contexto: `claw-repo-switch org/repo` (ou o primeiro repo da org já definido no bootstrap).
 2. Criar issue no repositório ativo com label **`back_end`** (e sem conflito com outras trilhas, conforme `AGENTS.md` do dev_backend).
 3. No horário do cron do agente (ver env no `openclaw-container.yaml`), o ciclo containere acionar o agente para pegar a issue; delegação imediata também containere vir do Arquiteto na mesma sessão.
 

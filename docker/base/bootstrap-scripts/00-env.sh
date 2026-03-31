@@ -37,14 +37,11 @@ for var_name in OPENCLAW_GATEWAY_TOKEN TELEGRAM_BOT_TOKEN_CEO TELEGRAM_CHAT_ID G
     echo "[bootstrap] ${var_name}=empty"
   fi
 done
-# Garantir fallback de org/repositorio default
+# Organizacao GitHub; repositorio ativo e definido em 03-gh-auth (primeiro repo listavel da org) ou claw-repo-switch.
 export GIT_ORG="${GIT_ORG:-lukeware-ai}"
-export GIT_DEFAULT_REPOSITORY="${GIT_DEFAULT_REPOSITORY:-${GIT_REPOSITORY:-${GIT_ORG}/user-api}}"
-case "${GIT_DEFAULT_REPOSITORY}" in
-  */*) ;;
-  *) GIT_DEFAULT_REPOSITORY="${GIT_ORG}/${GIT_DEFAULT_REPOSITORY}" ;;
-esac
-export ACTIVE_GIT_REPOSITORY="${GIT_DEFAULT_REPOSITORY}"
+export ACTIVE_GIT_REPOSITORY="${ACTIVE_GIT_REPOSITORY:-}"
+export GIT_REPOSITORY="${GIT_REPOSITORY:-}"
+export GH_REPO="${GH_REPO:-}"
 export ACTIVE_REPOSITORY_BRANCH="${ACTIVE_REPOSITORY_BRANCH:-main}"
 export OPENCLAW_SESSION_ID="${OPENCLAW_SESSION_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$(cat /proc/sys/kernel/random/uuid | cut -d- -f1)}"
 # Fallback para quando DIRECTORS_NAME nao estiver definido no Secret

@@ -336,7 +336,7 @@ Todos os serviços estão disponíveis em `localhost`:
 ## GitHub (gh CLI)
 
 - A organização padrão para ações GitHub dos agentes vem de `GIT_ORG` (definido em `.env` e injetado no container).
-- Opcionalmente, `GIT_DEFAULT_REPOSITORY` define o primeiro repositório ativo na inicialização.
+- Na inicialização, o primeiro repositório listável da organização vira contexto ativo (ou use `claw-repo-switch`).
 - O token vem de `GIT_TOKEN` (também definido em `.env` e injetado no container).
 - O repositório ativo por sessão fica em `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
 - Para comandos `gh` fora de um checkout local, usar `--repo "$ACTIVE_GIT_REPOSITORY"` (ou `"$GIT_REPOSITORY"` para compatibilidade).

@@ -98,7 +98,7 @@ make clawdevs-up
 ## GitHub
 
 - The default organization for agents' GitHub shares comes from `GIT_ORG`.
-- Optionally, `GIT_DEFAULT_REPOSITORY` defines the first active repository in bootstrap.
+- On bootstrap, the first listable org repository becomes the active context (or use `claw-repo-switch`).
 - The token comes from `GIT_TOKEN`.
 - The active session repository is at `/data/openclaw/contexts/active_repository.env` (`ACTIVE_GIT_REPOSITORY`).
 - For `gh` commands outside of local checkout, use `--repo "$ACTIVE_GIT_REPOSITORY"` (or `"$GIT_REPOSITORY"` for compatibility).

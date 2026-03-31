@@ -250,7 +250,6 @@ TELEGRAM_CHAT_ID_CEO=<chat-id>
 # GitHub (Integração com repositórios)
 GIT_TOKEN=<personal-access-token>
 GIT_ORG=<organização>
-GIT_DEFAULT_REPOSITORY=<org/repo>
 
 # Identificação
 DIRECTORS_NAME=<nome-do-ceo>
@@ -429,7 +428,6 @@ OpenClaw implementa um sistema de memória em **Markdown puro** no workspace:
 ✓ TELEGRAM_CHAT_ID_CEO
 ✓ GIT_TOKEN
 ✓ GIT_ORG
-✓ GIT_DEFAULT_REPOSITORY
 ✓ DIRECTORS_NAME
 ```
 
@@ -614,7 +612,7 @@ make docker-down           # Para Docker
 
 - **Autor:** Diego Silva Morais (`lukewaresoftwarehouse@gmail.com`)
 - **Repositório:** GitHub (GIT_ORG)
-- **Issues:** `GIT_DEFAULT_REPOSITORY`
+- **Issues:** repositórios sob `GIT_ORG` (contexto ativo em `active_repository.env`)
 - **Escalações:** Via Telegram (TELEGRAM_BOT_TOKEN_CEO)
 
 ---
