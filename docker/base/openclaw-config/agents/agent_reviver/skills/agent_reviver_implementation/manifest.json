@@ -1,0 +1,117 @@
+{
+  "name": "agent_reviver_implementation",
+  "version": "2.0.0",
+  "description": "Agent health, monitoring, and recovery",
+  "author": "clawdevs-ai",
+  "license": "MIT",
+  "skill_type": "implementation",
+  "domain": "agent_reviver",
+  "hooks": {
+    "before_execution": {
+      "file": "src/hooks/before_execution.ts",
+      "handler": "beforeExecutionHook",
+      "description": "Analyze requirements and generate recommendations",
+      "async": true
+    },
+    "after_execution": {
+      "file": "src/hooks/after_execution.ts",
+      "handler": "afterExecutionHook",
+      "description": "Validate implementation against recommendations",
+      "async": true
+    }
+  },
+  "configuration": {
+    "requirement_sources": {
+      "type": "object",
+      "properties": {
+        "conversation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Parse requirements from conversation history"
+        },
+        "project_config": {
+          "type": "boolean",
+          "default": true,
+          "description": "Parse requirements from project configuration"
+        },
+        "system_prompt": {
+          "type": "boolean",
+          "default": true,
+          "description": "Parse requirements from system prompt"
+        }
+      }
+    },
+    "test_coverage_threshold": {
+      "type": "number",
+      "default": 0.8,
+      "description": "Minimum test coverage percentage (0.0-1.0)"
+    },
+    "recommendation_confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "default": "high",
+      "description": "Minimum confidence level for recommendations"
+    },
+    "include_alternatives": {
+      "type": "boolean",
+      "default": true,
+      "description": "Include alternative patterns in recommendations"
+    }
+  },
+  "capabilities": {
+    "requirement_analysis": {
+      "description": "Parse and validate requirements",
+      "confidence": "high",
+      "maturity": "production"
+    },
+    "pattern_matching": {
+      "description": "Match requirements to optimal patterns",
+      "confidence": "high",
+      "maturity": "production"
+    },
+    "recommendation_generation": {
+      "description": "Generate recommendations with trade-off analysis",
+      "confidence": "high",
+      "maturity": "production"
+    },
+    "pattern_validation": {
+      "description": "Validate patterns follow best practices",
+      "confidence": "high",
+      "maturity": "production"
+    }
+  },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src tests",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "monitoring health-check recovery diagnostics observability resilience"
+  ],
+  "patterns": {
+    "primary_pattern": {
+      "name": "Primary Pattern",
+      "languages": ["typescript", "javascript"],
+      "maturity": "production"
+    },
+    "alternative_pattern": {
+      "name": "Alternative Pattern",
+      "languages": ["typescript", "javascript"],
+      "maturity": "production"
+    }
+  }
+}

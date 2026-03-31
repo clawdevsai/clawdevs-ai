@@ -115,6 +115,12 @@ if ! docker image inspect ghcr.io/nvidia/openshell/cluster:0.0.20 >/dev/null 2>&
   fi
 fi
 
+if ! docker image inspect ghcr.io/nvidia/openshell/gateway:0.0.20 >/dev/null 2>&1; then
+  if docker pull ghcr.io/nvidia/openshell/gateway:0.0.19 >/dev/null 2>&1; then
+    docker tag ghcr.io/nvidia/openshell/gateway:0.0.19 ghcr.io/nvidia/openshell/gateway:0.0.20 >/dev/null 2>&1 || true
+  fi
+fi
+
 "${DOCKER_BIN[@]}" run -d --name clawdevs-nemoclaw --network "$STACK_NETWORK" --network-alias nemoclaw --network-alias openclaw \
   --gpus all \
   -p 18789:18789 \

@@ -21,10 +21,6 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
 def _openclaw_agent_message(agent_slug: str, message: str, session_id: str) -> str:
     sandbox = os.getenv("NEMOCLAW_SANDBOX_NAME", "clawdevs-ai")
     cmd = [
-        "openshell",
-        "doctor",
-        "exec",
-        "--",
         "nemoclaw",
         sandbox,
         "connect",
