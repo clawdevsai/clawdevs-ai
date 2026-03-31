@@ -372,14 +372,14 @@ ${
 
 ${recommendation.alternatives
   .map(
-    (alt) => `
+    (alt: any) => `
 ### ${alt.language}
 
 **Advantages**:
-${alt.pros.map((pro) => `- ${pro}`).join('\n')}
+${alt.pros.map((pro: any) => `- ${pro}`).join('\n')}
 
 **Disadvantages**:
-${alt.cons.map((con) => `- ${con}`).join('\n')}
+${alt.cons.map((con: any) => `- ${con}`).join('\n')}
 `,
   )
   .join('\n')}
