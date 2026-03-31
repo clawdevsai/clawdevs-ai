@@ -1,5 +1,5 @@
-import { Requirements } from '../../../shared/schemas/requirements';
-import { Recommendation, RecommendationSchema } from '../../../shared/schemas/recommendations';
+import { Requirements } from '../schemas/requirements';
+import { Recommendation, RecommendationSchema } from '../schemas/recommendations';
 import { ARCHITECTURE_PATTERNS, findMatchingPattern, ArchitecturePattern } from './architecture_matrix';
 
 /**

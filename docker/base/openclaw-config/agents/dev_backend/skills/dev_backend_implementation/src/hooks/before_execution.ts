@@ -1,7 +1,7 @@
-import { Requirements, RequirementsSchema } from '../../../shared/schemas/requirements';
-import { Recommendation } from '../../../shared/schemas/recommendations';
-import { requirementParser } from '../../../shared/utils/requirement-parser';
-import { logger } from '../../../shared/utils/logger';
+import { Requirements, RequirementsSchema } from '../schemas/requirements';
+import { Recommendation } from '../schemas/recommendations';
+import { requirementParser } from '../utils/requirement-parser';
+import { logger } from '../utils/logger';
 import { getRecommendation } from '../decisions/recommendations';
 import { getPattern } from '../decisions/patterns';
 
