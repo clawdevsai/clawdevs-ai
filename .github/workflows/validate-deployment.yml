@@ -21,8 +21,8 @@ jobs:
           TELEGRAM_BOT_TOKEN_CEO=${{ secrets.TELEGRAM_BOT_TOKEN_CEO }}
           TELEGRAM_CHAT_ID_CEO=${{ secrets.TELEGRAM_CHAT_ID_CEO }}
           GIT_TOKEN=${{ secrets.GIT_TOKEN }}
-          GIT_ORG=${{ secrets.GIT_ORG || vars.GIT_ORG }}
-          DIRECTORS_NAME=${{ secrets.DIRECTORS_NAME || vars.DIRECTORS_NAME }}
+          GIT_ORG=${{ vars.GIT_ORG || github.repository_owner }}
+          DIRECTORS_NAME=${{ fromJSON(toJSON(secrets)).DIRECTORS_NAME || fromJSON(toJSON(vars)).DIRECTORS_NAME }}
           OLLAMA_API_KEY=${{ secrets.OLLAMA_API_KEY }}
           PROVEDOR_LLM=ollama
           OPENCLAW_LOG_LEVEL=info

@@ -41,6 +41,11 @@ if [ -n "${GH_TOKEN:-}" ] || [ -n "${GIT_TOKEN:-}" ]; then
     write_repository_context "${initial_repo}" "${ACTIVE_REPOSITORY_BRANCH}"
   else
     echo "[bootstrap] nenhum repositorio inicial para '${GIT_ORG}' (lista vazia ou sem acesso); use claw-repo-switch org/repo"
+    echo "[bootstrap] repositorios listados por gh para '${GIT_ORG}' (ate 200; vazio = token/org ou permissao):"
+    if ! gh repo list "${GIT_ORG}" --limit 200 --json nameWithOwner --jq '.[].nameWithOwner' 2>/tmp/gh-repo-list-bootstrap.log; then
+      echo "[bootstrap] falha ao listar; ver /tmp/gh-repo-list-bootstrap.log"
+      sed -n '1,20p' /tmp/gh-repo-list-bootstrap.log 2>/dev/null || true
+    fi
   fi
 else
   echo "[bootstrap] sem token GitHub: pulando contexto de repositorio; use claw-repo-switch apos autenticar"
