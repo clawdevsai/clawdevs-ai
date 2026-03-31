@@ -242,7 +242,7 @@ cat > "${OPENCLAW_STATE_DIR}/openclaw.json" <<'EOF'
       "typingMode": "instant",
       "typingIntervalSeconds": 4,
       "sandbox": {
-        "mode": "all",
+        "mode": "off",
         "sessionToolsVisibility": "all"
       },
       "subagents": {

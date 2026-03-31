@@ -59,6 +59,38 @@ if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
     echo "[bootstrap] warning: failed to enforce openrouter.baseUrl after doctor"
   fi
 fi
+# Doctor --fix tambem pode alterar sandbox; reforca mode a partir da env
+# para evitar erro "Sandbox mode requires Docker" quando Docker nao existe no PATH.
+_sandbox_mode="${OPENCLAW_SANDBOX_MODE:-off}"
+case "${_sandbox_mode}" in
+  off|non-main|all) ;;
+  *)
+    echo "[bootstrap] OPENCLAW_SANDBOX_MODE='${_sandbox_mode}' invalido; usando 'off'"
+    _sandbox_mode="off"
+    ;;
+esac
+_sandbox_session_tools_visibility="${OPENCLAW_SANDBOX_SESSION_TOOLS_VISIBILITY:-all}"
+case "${_sandbox_session_tools_visibility}" in
+  all|spawned) ;;
+  *)
+    _sandbox_session_tools_visibility="all"
+    ;;
+esac
+if [ -f "${OPENCLAW_STATE_DIR}/openclaw.json" ]; then
+  _tmp_openclaw_json="$(mktemp)"
+  if jq --arg sandboxMode "${_sandbox_mode}" --arg sandboxVisibility "${_sandbox_session_tools_visibility}" '
+      .agents.defaults.sandbox.mode = $sandboxMode
+      | .agents.defaults.sandbox.sessionToolsVisibility = $sandboxVisibility
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_openclaw_json}"; then
+    mv "${_tmp_openclaw_json}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    echo "[bootstrap] sandbox mode reforcado apos doctor (mode=${_sandbox_mode}, visibility=${_sandbox_session_tools_visibility})"
+  else
+    rm -f "${_tmp_openclaw_json}"
+    echo "[bootstrap] warning: failed to enforce sandbox mode after doctor"
+  fi
+fi
 set +e
 openclaw gateway run --bind lan --port 18789
 gateway_exit=$?
