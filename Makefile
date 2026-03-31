@@ -51,8 +51,10 @@ PUSH_IMAGE ?= local
 
 ifeq ($(strip $(PUSH_IMAGE)),remote)
 EFFECTIVE_IMAGE_TAG := $(REMOTE_IMAGE_TAG)
+PANEL_WORKER_EFFECTIVE_IMAGE_REPO = $(PANEL_BACKEND_IMAGE_REPO)
 else
 EFFECTIVE_IMAGE_TAG := $(IMAGE_TAG)
+PANEL_WORKER_EFFECTIVE_IMAGE_REPO = $(PANEL_WORKER_IMAGE_REPO)
 endif
 
 TOKEN_INIT_IMAGE_REPO    ?= clawdevsai/token-init-runtime
@@ -66,14 +68,14 @@ PANEL_WORKER_IMAGE_REPO  ?= clawdevsai/clawdevs-panel-worker
 PANEL_FRONTEND_IMAGE_REPO ?= clawdevsai/clawdevs-panel-frontend
 OPENCLAW_IMAGE_REPO      ?= clawdevsai/openclaw-runtime
 
-TOKEN_INIT_IMAGE     := $(TOKEN_INIT_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+TOKEN_INIT_IMAGE     := $(TOKEN_INIT_IMAGE_REPO):$(IMAGE_TAG)
 POSTGRES_IMAGE       := $(POSTGRES_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 SEARXNG_IMAGE        := $(SEARXNG_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 OLLAMA_IMAGE         := $(OLLAMA_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 REDIS_IMAGE          := $(REDIS_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 PANEL_BACKEND_IMAGE  := $(PANEL_BACKEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 SEARXNG_PROXY_IMAGE  := $(SEARXNG_PROXY_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
-PANEL_WORKER_IMAGE   := $(PANEL_WORKER_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
+PANEL_WORKER_IMAGE   := $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 PANEL_FRONTEND_IMAGE := $(PANEL_FRONTEND_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 OPENCLAW_IMAGE       := $(OPENCLAW_IMAGE_REPO):$(EFFECTIVE_IMAGE_TAG)
 
@@ -451,10 +453,10 @@ destroy-complete:
 	@echo "[destroy-complete] Docker completamente limpo."
 
 token-init-image-build:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .; fi
+	docker build --no-cache -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
 
 token-init-image-build-with-cache:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .; fi
+	docker build -t $(TOKEN_INIT_IMAGE) -f docker/clawdevs-token-init/Dockerfile .
 
 token-init-image-push:
 	docker push $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -514,10 +516,10 @@ searxng-proxy-image-push:
 	docker push $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
 panel-worker-image-build:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build --no-cache -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
 
 panel-worker-image-build-with-cache:
-	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
+	@if [ "$(PUSH_IMAGE)" = "remote" ]; then docker pull $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(REMOTE_IMAGE_TAG); else docker build -t $(PANEL_WORKER_IMAGE) -f docker/clawdevs-panel-worker/Dockerfile control-panel/backend; fi
 
 panel-worker-image-push:
 	docker push $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
@@ -560,14 +562,14 @@ release: images-release
 
 pull:
 	@set -eu; \
-	docker pull $(TOKEN_INIT_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
+	echo "[pull] token-init permanece local (sem pull remoto)"; \
 	docker pull $(POSTGRES_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(SEARXNG_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(OLLAMA_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(REDIS_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(PANEL_BACKEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(SEARXNG_PROXY_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
-	docker pull $(PANEL_WORKER_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
+	docker pull $(PANEL_WORKER_EFFECTIVE_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(PANEL_FRONTEND_IMAGE_REPO):$(REMOTE_IMAGE_TAG); \
 	docker pull $(OPENCLAW_IMAGE_REPO):$(REMOTE_IMAGE_TAG)
 
