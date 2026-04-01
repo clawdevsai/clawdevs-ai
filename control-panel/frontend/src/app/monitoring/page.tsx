@@ -233,7 +233,7 @@ export default function MonitoringPage() {
         {/* Metrics Overview */}
         {isLoading ? (
           <MetricsSkeleton />
-        ) : metrics ? (
+        ) : metrics && metrics.status === "success" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               label="Compression Rate"
@@ -262,7 +262,13 @@ export default function MonitoringPage() {
               icon={BarChart3}
             />
           </div>
-        ) : null}
+        ) : (
+          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Waiting for compression metrics. Run agents to generate data.
+            </p>
+          </div>
+        )}
 
         {/* Per-Agent Metrics Table */}
         <div className="space-y-4">
