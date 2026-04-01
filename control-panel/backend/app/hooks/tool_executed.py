@@ -93,6 +93,7 @@ async def handle(context: Dict[str, Any]) -> Dict[str, Any]:
         )
 
         if not should_compress:
+            _metrics.record(False, result_size_bytes, result_size_bytes)
             # Return original result unmodified
             return {
                 "compressed": False,
@@ -124,6 +125,8 @@ async def handle(context: Dict[str, Any]) -> Dict[str, Any]:
             },
         )
 
+        _metrics.record(True, result_size_bytes, compressed_size_bytes)
+
         return {
             "compressed": True,
             "original_size_bytes": result_size_bytes,
@@ -142,6 +145,8 @@ async def handle(context: Dict[str, Any]) -> Dict[str, Any]:
             },
         )
         # On error, return original result unmodified (fail gracefully)
+        err_bytes = len(str(context.get("result", "")).encode("utf-8"))
+        _metrics.record(False, err_bytes, err_bytes)
         return {
             "compressed": False,
             "error": str(e),

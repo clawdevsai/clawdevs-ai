@@ -30,7 +30,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -eux; \
     apt-get update; \
     apt-get upgrade -y; \
-    apt-get install -y --no-install-recommends ca-certificates bash git curl jq python3 gh tzdata; \
+    apt-get install -y --no-install-recommends ca-certificates bash git curl jq python3 python3-setuptools make g++ gh tzdata; \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime; \
     echo $TZ > /etc/timezone; \
     npm install -g npm@10.9.0; \
@@ -43,8 +43,16 @@ RUN set -eux; \
     shopt -u nullglob; \
     test "${#PI_FILES[@]}" -gt 0; \
     node -e "import(process.argv[1]).catch(() => process.exit(1))" "file://${PI_FILES[0]}"; \
-    npm cache clean --force; \
     openclaw --version | head -n 1; \
+    echo "=== Building context-mode plugin ===" \
+    && CONTEXT_MODE_DIR="/opt/context-mode" \
+    && git clone --depth 1 https://github.com/mksglu/context-mode.git "${CONTEXT_MODE_DIR}" \
+    && cd "${CONTEXT_MODE_DIR}" \
+    && npm install --silent \
+    && npm run build \
+    && npm rebuild better-sqlite3 \
+    && echo "=== context-mode plugin built ===" \
+    && cd /; \
     apt-get autoremove -y --purge; \
     apt-get clean; \
     rm -rf /root/.npm /tmp/* /var/tmp/*; \

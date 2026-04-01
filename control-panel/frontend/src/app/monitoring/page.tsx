@@ -32,7 +32,10 @@ import { AppLayout } from "@/components/layout/app-layout"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatsCard } from "@/components/dashboard/stats-card"
-import { SemanticOptimizationMetrics, type SemanticOptimizationMetricsData } from "@/components/monitoring/semantic-optimization-metrics"
+import {
+  SemanticOptimizationMetrics,
+  type SemanticOptimizationMetricsData,
+} from "@/components/monitoring/semantic-optimization-metrics"
 import { SemanticOptimizationDetails } from "@/components/monitoring/semantic-optimization-details"
 import { OllamaHealthCard } from "@/components/monitoring/ollama-health"
 import { customInstance } from "@/lib/axios-instance"
@@ -43,14 +46,17 @@ import { cn } from "@/lib/utils"
 
 interface ContextModeMetrics {
   status: string
+  message?: string
   compression_rate: number
   tokens_saved_estimate: number
-  total_executions: number
+  total_executions?: number
+  total_compressions?: number
   total_agents: number
   indexed_agents: number
   average_compression_ratio: number
   monthly_savings_estimate: number
   last_updated: string
+  agents?: AgentMetrics[]
 }
 
 interface AgentMetrics {
@@ -59,25 +65,14 @@ interface AgentMetrics {
   compression_ratio: number
   tokens_saved: number
   indexed_at: string
-  memory_size_bytes: number
+  memory_size_bytes?: number
   status: "indexed" | "pending" | "error"
-}
-
-interface ContextModeResponse {
-  metrics: ContextModeMetrics
-  agents?: AgentMetrics[]
 }
 
 // ---- Fetchers -------------------------------------------------------------
 
-const fetchContextModeMetrics = () =>
+const fetchMonitoringMetrics = () =>
   customInstance<ContextModeMetrics>({
-    url: "/context-mode/metrics",
-    method: "GET",
-  })
-
-const fetchAgentMetrics = () =>
-  customInstance<AgentMetrics[]>({
     url: "/context-mode/metrics",
     method: "GET",
   })
@@ -140,6 +135,14 @@ function statusBadgeVariant(status: string) {
   }
 }
 
+function showCompressionOverview(metrics: ContextModeMetrics | undefined) {
+  if (!metrics) return false
+  if (metrics.status === "success") return true
+  if ((metrics.total_agents ?? 0) > 0) return true
+  if ((metrics.agents?.length ?? 0) > 0) return true
+  return false
+}
+
 // ---- Page -----------------------------------------------------------------
 
 export default function MonitoringPage() {
@@ -148,33 +151,27 @@ export default function MonitoringPage() {
 
   const { data: metrics, isLoading, isError, error } = useQuery({
     queryKey: ["context-mode", "metrics"],
-    queryFn: fetchContextModeMetrics,
+    queryFn: fetchMonitoringMetrics,
     retry: false,
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
   })
 
-  const { data: agentMetrics, isLoading: agentsLoading } = useQuery({
-    queryKey: ["context-mode", "agents"],
-    queryFn: fetchAgentMetrics,
-    retry: false,
-    refetchInterval: 120000, // Refetch every 2 minutes
-  })
+  const { data: semanticOptimizationMetrics, isLoading: semanticOptimizationLoading } =
+    useQuery({
+      queryKey: ["semantic-optimization", "metrics"],
+      queryFn: fetchSemanticOptimizationMetrics,
+      retry: false,
+      refetchInterval: 60000,
+    })
 
-  const { data: semanticOptimizationMetrics, isLoading: semanticOptimizationLoading } = useQuery({
-    queryKey: ["semantic-optimization", "metrics"],
-    queryFn: fetchSemanticOptimizationMetrics,
-    retry: false,
-    refetchInterval: 60000, // Refetch every minute
-  })
+  const agentMetrics = metrics?.agents ?? []
 
-  // Live-update via WebSocket "context-mode-metrics" channel
   useEffect(() => {
     if (!wsManager) return
-    const unsub = wsManager.subscribe("context-mode-metrics", (event: any) => {
-      // Broadcaster sends metrics directly, update query data in place
-      if (event.type === "context-mode-metrics" && event.status === "success") {
-        // Update the cached metrics with new data from WebSocket
-        queryClient.setQueryData(["context-mode", "metrics"], event)
+    const unsub = wsManager.subscribe("context-mode-metrics", (event: unknown) => {
+      const e = event as { type?: string }
+      if (e?.type === "context-mode-metrics") {
+        queryClient.invalidateQueries({ queryKey: ["context-mode", "metrics"] })
       }
     })
     return unsub
@@ -183,21 +180,21 @@ export default function MonitoringPage() {
   const handleRefresh = async () => {
     setIsRefreshing(true)
     try {
+      await queryClient.refetchQueries({ queryKey: ["context-mode", "metrics"] })
       await queryClient.refetchQueries({
-        queryKey: ["context-mode", "metrics"],
+        queryKey: ["semantic-optimization", "metrics"],
       })
-      await queryClient.refetchQueries({
-        queryKey: ["context-mode", "agents"],
-      })
+      await queryClient.refetchQueries({ queryKey: ["ollama", "health"] })
     } finally {
       setIsRefreshing(false)
     }
   }
 
+  const overviewVisible = showCompressionOverview(metrics)
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-semibold text-[hsl(var(--foreground))]">
@@ -206,27 +203,26 @@ export default function MonitoringPage() {
             <p className="text-sm text-[hsl(var(--muted-foreground))] mt-0.5">
               {isLoading
                 ? "Loading metrics..."
-                : `Context-mode compression metrics ${metrics?.last_updated ? `(updated ${formatDistanceToNow(new Date(metrics.last_updated), { addSuffix: true })})` : ""}`}
+                : `Context-mode compression metrics ${
+                    metrics?.last_updated
+                      ? `(updated ${formatDistanceToNow(new Date(metrics.last_updated), { addSuffix: true })})`
+                      : ""
+                  }`}
             </p>
           </div>
 
-          {/* Refresh Button */}
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-sm font-medium text-[hsl(var(--foreground))] hover:bg-[hsl(var(--card)/0.8)] disabled:opacity-50 transition-colors"
           >
             <RefreshCw
-              className={cn(
-                "h-4 w-4",
-                isRefreshing && "animate-spin"
-              )}
+              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
             />
             Refresh
           </button>
         </div>
 
-        {/* Error State */}
         {isError && (
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-sm text-[hsl(var(--muted-foreground))]">
             {(error as AxiosError | null)?.response?.status === 401 ? (
@@ -246,10 +242,9 @@ export default function MonitoringPage() {
           </div>
         )}
 
-        {/* Metrics Overview */}
         {isLoading ? (
           <MetricsSkeleton />
-        ) : metrics && metrics.status === "success" ? (
+        ) : overviewVisible && metrics ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               label="Compression Rate"
@@ -273,7 +268,11 @@ export default function MonitoringPage() {
               label="Indexed Agents"
               value={`${metrics.indexed_agents}/${metrics.total_agents}`}
               trend={{
-                value: metrics.indexed_agents === metrics.total_agents ? 100 : 50,
+                value:
+                  metrics.total_agents > 0 &&
+                  metrics.indexed_agents === metrics.total_agents
+                    ? 100
+                    : 50,
               }}
               icon={BarChart3}
             />
@@ -286,7 +285,6 @@ export default function MonitoringPage() {
           </div>
         )}
 
-        {/* Per-Agent Metrics Table */}
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
@@ -297,9 +295,9 @@ export default function MonitoringPage() {
             </p>
           </div>
 
-          {agentsLoading ? (
+          {isLoading ? (
             <AgentMetricsSkeleton />
-          ) : agentMetrics && agentMetrics.length > 0 ? (
+          ) : agentMetrics.length > 0 ? (
             <div className="rounded-lg border border-[hsl(var(--border))] overflow-hidden">
               <table className="w-full">
                 <thead className="bg-[hsl(var(--card))] border-b border-[hsl(var(--border))]">
@@ -359,18 +357,17 @@ export default function MonitoringPage() {
           )}
         </div>
 
-        {/* Semantic Optimization Section */}
         <div className="space-y-4 border-t border-[hsl(var(--border))] pt-6">
           <div>
             <h2 className="text-lg font-semibold text-[hsl(var(--foreground))]">
               Semantic Optimization: Ollama-Enhanced
             </h2>
             <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-              Semantic optimization metrics for query enhancement, reranking, summarization, and anomaly detection
+              Semantic optimization metrics for query enhancement, reranking,
+              summarization, and anomaly detection
             </p>
           </div>
 
-          {/* Ollama Health */}
           <div>
             <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
               Infrastructure Status
@@ -378,20 +375,24 @@ export default function MonitoringPage() {
             <OllamaHealthCard />
           </div>
 
-          {/* Semantic Optimization Metrics Cards */}
           <div>
             <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
               Optimization Metrics
             </h3>
-            <SemanticOptimizationMetrics data={semanticOptimizationMetrics} isLoading={semanticOptimizationLoading} />
+            <SemanticOptimizationMetrics
+              data={semanticOptimizationMetrics}
+              isLoading={semanticOptimizationLoading}
+            />
           </div>
 
-          {/* Semantic Optimization Details Table */}
           <div>
             <h3 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
               Detailed Task Metrics
             </h3>
-            <SemanticOptimizationDetails data={semanticOptimizationMetrics} isLoading={semanticOptimizationLoading} />
+            <SemanticOptimizationDetails
+              data={semanticOptimizationMetrics}
+              isLoading={semanticOptimizationLoading}
+            />
           </div>
         </div>
       </div>

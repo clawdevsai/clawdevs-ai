@@ -23,6 +23,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.services.ollama_client import OllamaClient
+from app.services.embedding_search import EmbeddingSearch
 from app.services.query_enhancer import QueryEnhancer
 from app.services.semantic_ranker import SemanticRanker
 from app.services.adaptive_compressor import AdaptiveCompressor
@@ -124,15 +125,21 @@ class TestQueryEnhancer:
 class TestSemanticRanker:
     @pytest.fixture
     def ranker(self):
-        mock_ollama = AsyncMock(spec=OllamaClient)
-        return SemanticRanker(ollama_client=mock_ollama)
+        mock_search = MagicMock()
+        mock_search.embed = AsyncMock(return_value=[1.0, 0.0, 0.0])
+        mock_search.embed_batch = AsyncMock(
+            return_value=[
+                [1.0, 0.0, 0.0],
+                [0.95, 0.05, 0.0],
+                [0.0, 0.95, 0.05],
+            ]
+        )
+        mock_search.cosine_similarity = EmbeddingSearch.cosine_similarity
+        return SemanticRanker(embedding_search=mock_search)
 
     @pytest.mark.asyncio
     async def test_rerank_success(self, ranker):
         """Test successful semantic reranking"""
-        mock_response = json.dumps({"ratings": [9, 7, 5]})
-        ranker.ollama_client.generate = AsyncMock(return_value=mock_response)
-
         chunks = ["chunk1", "chunk2", "chunk3"]
         bm25_scores = [0.8, 0.7, 0.6]
         result = await ranker.rerank("query", chunks, bm25_scores, top_k=2)

@@ -72,28 +72,18 @@ class ContextModeMetricsBroadcaster:
 
     async def _broadcast_loop(self):
         """Main broadcast loop."""
-        from app.hooks.tool_executed import get_compression_metrics
+        from app.api.context_mode import build_monitoring_payload
         from app.api.ws import manager
+        from app.core.database import AsyncSessionLocal
 
         while self.running:
             try:
                 await asyncio.sleep(self.interval_seconds)
 
-                metrics = get_compression_metrics()
+                async with AsyncSessionLocal() as session:
+                    payload = await build_monitoring_payload(session)
+                payload["type"] = "context-mode-metrics"
 
-                payload = {
-                    "type": "context-mode-metrics",
-                    "timestamp": None,  # Will be set by client
-                }
-
-                if metrics:
-                    payload["status"] = "success"
-                    payload.update(metrics)
-                else:
-                    payload["status"] = "no_data"
-                    payload["message"] = "No compression metrics yet"
-
-                # Broadcast to all connected clients
                 await manager.broadcast("context-mode-metrics", payload)
 
             except asyncio.CancelledError:

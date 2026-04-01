@@ -32,20 +32,24 @@ class TestContextModeSemanticOptimizationAPI:
     async def test_enhance_query_endpoint(self, client: AsyncClient, auth_headers: dict):
         """Test /enhance-query endpoint"""
         with patch(
-            "app.api.context_mode_semantic_optimization.query_enhancer.enhance_query"
-        ) as mock_enhance:
-            mock_enhance.return_value = {
-                "original": "docker issue",
-                "expanded": ["docker networking", "container"],
-                "reasoning": "Expanded with related terms",
-            }
+            "app.api.context_mode_semantic_optimization.flags.is_enabled",
+            return_value=True,
+        ):
+            with patch(
+                "app.api.context_mode_semantic_optimization.query_enhancer.enhance_query"
+            ) as mock_enhance:
+                mock_enhance.return_value = {
+                    "original": "docker issue",
+                    "expanded": ["docker networking", "container"],
+                    "reasoning": "Expanded with related terms",
+                }
 
-            response = await client.post(
-                "/api/context-mode/semantic-optimization/enhance-query?query=docker%20issue&agent_id=dev_backend",
-                headers=auth_headers,
-            )
+                response = await client.post(
+                    "/context-mode/semantic-optimization/enhance-query?query=docker%20issue&agent_id=dev_backend",
+                    headers=auth_headers,
+                )
 
-            assert response.status_code == 200
+                assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_enhance_query_missing_params(
@@ -53,7 +57,7 @@ class TestContextModeSemanticOptimizationAPI:
     ):
         """Test enhance-query with missing parameters"""
         response = await client.post(
-            "/api/context-mode/semantic-optimization/enhance-query",
+            "/context-mode/semantic-optimization/enhance-query",
             headers=auth_headers,
         )
 
@@ -72,7 +76,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/rerank-results",
+            "/context-mode/semantic-optimization/rerank-results",
             json=payload,
             headers=auth_headers,
         )
@@ -90,7 +94,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/classify-output",
+            "/context-mode/semantic-optimization/classify-output",
             json=payload,
             headers=auth_headers,
         )
@@ -103,7 +107,7 @@ class TestContextModeSemanticOptimizationAPI:
     ):
         """Test classify-output with empty output"""
         response = await client.post(
-            "/api/context-mode/semantic-optimization/classify-output",
+            "/context-mode/semantic-optimization/classify-output",
             json={"output": "", "tool_name": "python"},
             headers=auth_headers,
         )
@@ -122,7 +126,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/summarize",
+            "/context-mode/semantic-optimization/summarize",
             json=payload,
             headers=auth_headers,
         )
@@ -137,7 +141,7 @@ class TestContextModeSemanticOptimizationAPI:
         payload = {"content": "function implementation details"}
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/categorize",
+            "/context-mode/semantic-optimization/categorize",
             json=payload,
             headers=auth_headers,
         )
@@ -155,7 +159,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/detect-anomaly",
+            "/context-mode/semantic-optimization/detect-anomaly",
             json=payload,
             headers=auth_headers,
         )
@@ -168,7 +172,7 @@ class TestContextModeSemanticOptimizationAPI:
     ):
         """Test detect-anomaly with empty output"""
         response = await client.post(
-            "/api/context-mode/semantic-optimization/detect-anomaly",
+            "/context-mode/semantic-optimization/detect-anomaly",
             json={"output": "", "tool_name": "npm"},
             headers=auth_headers,
         )
@@ -189,7 +193,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/suggest-context",
+            "/context-mode/semantic-optimization/suggest-context",
             json=payload,
             headers=auth_headers,
         )
@@ -208,7 +212,7 @@ class TestContextModeSemanticOptimizationAPI:
         }
 
         response = await client.post(
-            "/api/context-mode/semantic-optimization/suggest-context",
+            "/context-mode/semantic-optimization/suggest-context",
             json=payload,
             headers=auth_headers,
         )
@@ -221,7 +225,7 @@ class TestContextModeSemanticOptimizationAPI:
     ):
         """Test /ollama-health endpoint"""
         response = await client.get(
-            "/api/context-mode/semantic-optimization/ollama-health",
+            "/context-mode/semantic-optimization/ollama-health",
             headers=auth_headers,
         )
 
@@ -236,7 +240,7 @@ class TestContextModeSemanticOptimizationAPI:
     ):
         """Test /metrics endpoint for Phase 6 stats"""
         response = await client.get(
-            "/api/context-mode/semantic-optimization/metrics",
+            "/context-mode/semantic-optimization/metrics",
             headers=auth_headers,
         )
 
@@ -249,15 +253,15 @@ class TestContextModeSemanticOptimizationAPI:
     async def test_endpoints_accessible(self, client: AsyncClient):
         """Test that Phase 6 endpoints are accessible"""
         endpoints = [
-            ("/api/context-mode/semantic-optimization/enhance-query?query=test&agent_id=test", "POST"),
-            ("/api/context-mode/semantic-optimization/rerank-results", "POST"),
-            ("/api/context-mode/semantic-optimization/classify-output", "POST"),
-            ("/api/context-mode/semantic-optimization/summarize", "POST"),
-            ("/api/context-mode/semantic-optimization/categorize", "POST"),
-            ("/api/context-mode/semantic-optimization/detect-anomaly", "POST"),
-            ("/api/context-mode/semantic-optimization/suggest-context", "POST"),
-            ("/api/context-mode/semantic-optimization/ollama-health", "GET"),
-            ("/api/context-mode/semantic-optimization/metrics", "GET"),
+            ("/context-mode/semantic-optimization/enhance-query?query=test&agent_id=test", "POST"),
+            ("/context-mode/semantic-optimization/rerank-results", "POST"),
+            ("/context-mode/semantic-optimization/classify-output", "POST"),
+            ("/context-mode/semantic-optimization/summarize", "POST"),
+            ("/context-mode/semantic-optimization/categorize", "POST"),
+            ("/context-mode/semantic-optimization/detect-anomaly", "POST"),
+            ("/context-mode/semantic-optimization/suggest-context", "POST"),
+            ("/context-mode/semantic-optimization/ollama-health", "GET"),
+            ("/context-mode/semantic-optimization/metrics", "GET"),
         ]
 
         for endpoint, method in endpoints:
@@ -266,5 +270,5 @@ class TestContextModeSemanticOptimizationAPI:
             else:
                 response = await client.post(endpoint, json={})
 
-            # Endpoints should respond (may be 200, 401, 422, etc)
-            assert response.status_code in [200, 400, 401, 422, 500]
+            # Endpoints should respond (503 when feature-flagged task is disabled)
+            assert response.status_code in [200, 400, 401, 422, 500, 503]

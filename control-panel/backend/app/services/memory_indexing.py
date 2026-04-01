@@ -282,6 +282,31 @@ class MemoryIndexingService:
                 'error': str(e)
             }
 
+    def list_indexed_agents_detail(self) -> List[Dict[str, Any]]:
+        """All rows from index_metadata for monitoring tables."""
+        try:
+            conn = sqlite3.connect(str(self.index_db))
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT agent_id, last_indexed, memory_size_bytes
+                FROM index_metadata
+                ORDER BY last_indexed DESC
+                """
+            )
+            rows = [
+                {
+                    "agent_id": r[0],
+                    "last_indexed": r[1],
+                    "memory_size_bytes": int(r[2] or 0),
+                }
+                for r in cursor.fetchall()
+            ]
+            conn.close()
+            return rows
+        except Exception:
+            return []
+
     def _check_cache(self, agent_id: str, memory_file: Path) -> Dict[str, Any]:
         """Check if indexed cache is still fresh."""
         try:

@@ -68,7 +68,7 @@ class TestSemanticOptimizationRollout:
         """Disabled task endpoint should return 503 Service Unavailable."""
         # Feature flag is disabled by default
         response = await client.post(
-            "/api/context-mode/semantic-optimization/enhance-query?query=test&agent_id=dev_backend",
+            "/context-mode/semantic-optimization/enhance-query?query=test&agent_id=dev_backend",
             headers=auth_headers,
         )
 
@@ -79,7 +79,7 @@ class TestSemanticOptimizationRollout:
     async def test_get_feature_flags_endpoint(self, client: AsyncClient, auth_headers: dict):
         """GET /feature-flags should list all tasks and canary agents."""
         response = await client.get(
-            "/api/context-mode/semantic-optimization/feature-flags",
+            "/context-mode/semantic-optimization/feature-flags",
             headers=auth_headers,
         )
 
@@ -94,7 +94,7 @@ class TestSemanticOptimizationRollout:
     async def test_check_task_enabled_endpoint(self, client: AsyncClient, auth_headers: dict):
         """GET /feature-flags/{task_name} should check if task is enabled."""
         response = await client.get(
-            "/api/context-mode/semantic-optimization/feature-flags/query_enhancement",
+            "/context-mode/semantic-optimization/feature-flags/query_enhancement",
             headers=auth_headers,
         )
 
@@ -108,7 +108,7 @@ class TestSemanticOptimizationRollout:
     async def test_check_task_with_agent_id(self, client: AsyncClient, auth_headers: dict):
         """Check task enabled for specific agent."""
         response = await client.get(
-            "/api/context-mode/semantic-optimization/feature-flags/query_enhancement?agent_id=dev_backend",
+            "/context-mode/semantic-optimization/feature-flags/query_enhancement?agent_id=dev_backend",
             headers=auth_headers,
         )
 

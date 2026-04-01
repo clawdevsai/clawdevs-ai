@@ -1,6 +1,10 @@
 """Semantic Optimization API endpoints for Ollama-enhanced optimization."""
+from typing import Any, Dict
+
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.config import get_settings
 from app.core.database import get_session
 from app.services.query_enhancer import QueryEnhancer
 from app.services.semantic_ranker import SemanticRanker
@@ -13,7 +17,8 @@ from app.services.ollama_client import OllamaClient
 from app.services.semantic_optimization_flags import flags
 from app.services.context_metrics import context_tracker
 
-router = APIRouter(prefix="/api/context-mode/semantic-optimization", tags=["semantic-optimization"])
+# NOTE: No leading /api — Next.js proxies /api/* → backend /* (path after /api/).
+router = APIRouter(prefix="/context-mode/semantic-optimization", tags=["semantic-optimization"])
 
 # Service instances (singleton-like)
 query_enhancer = QueryEnhancer()
@@ -24,6 +29,65 @@ categorizer = MemoryCategorizer()
 anomaly_detector = AnomalyDetector()
 context_suggester = ContextSuggester()
 ollama_client = OllamaClient()
+
+
+def _semantic_ui_metrics_from_tracker(summary: Dict[str, Any]) -> Dict[str, Any]:
+    """Map context_tracker summary to dashboard card shape expected by the frontend."""
+    per_task = summary.get("per_task") or {}
+
+    def ex(task_key: str) -> int:
+        block = per_task.get(task_key)
+        if isinstance(block, dict):
+            return int(block.get("executions", 0) or 0)
+        return 0
+
+    def ratio_pct(task_key: str) -> str:
+        block = per_task.get(task_key)
+        if not isinstance(block, dict):
+            return "0%"
+        b = float(block.get("baseline_tokens", 0) or 0)
+        opt = float(block.get("optimized_tokens", 0) or 0)
+        if b <= 0:
+            return "0%"
+        saved = max(0.0, (b - opt) / b * 100.0)
+        return f"{saved:.1f}%"
+
+    return {
+        "query_enhancements": {
+            "total_queries": ex("query_enhancement"),
+            "avg_expansion_terms": float(ex("query_enhancement")),
+            "semantic_coverage_improvement": ratio_pct("query_enhancement"),
+        },
+        "semantic_reranking": {
+            "total_reranks": ex("semantic_reranking"),
+            "avg_rerank_improvement": ratio_pct("semantic_reranking"),
+            "latency_p95": "—",
+        },
+        "intelligent_summarization": {
+            "chunks_summarized": ex("auto_compression_pipeline") + ex("summarization"),
+            "avg_reduction": (
+                ratio_pct("auto_compression_pipeline")
+                if ex("auto_compression_pipeline")
+                else ratio_pct("summarization")
+            ),
+            "information_preservation": "—",
+        },
+        "auto_categorization": {
+            "chunks_categorized": ex("categorization"),
+            "top_category": "—",
+            "categorization_confidence_avg": "—",
+        },
+        "anomaly_detection": {
+            "anomalies_detected": ex("anomaly_detection"),
+            "critical_anomalies": 0,
+            "compression_skips": 0,
+        },
+        "context_suggestions": {
+            "suggestions_offered": ex("context_suggestion"),
+            "acceptance_rate": ratio_pct("context_suggestion"),
+            "avg_relevance_score": "—",
+        },
+    }
 
 
 @router.post("/enhance-query")
@@ -112,11 +176,13 @@ async def suggest_context(tool_name: str, args: str, candidate_memories: list[di
 @router.get("/ollama-health")
 async def ollama_health():
     """Check Ollama server health."""
+    settings = get_settings()
     online = await ollama_client.health_check()
     return {
         "status": "active" if online else "unavailable",
-        "model": "phi4-mini-reasoning:latest",
+        "model": ollama_client.model,
         "online": online,
+        "base_url": settings.ollama_base_url,
     }
 
 
@@ -124,12 +190,14 @@ async def ollama_health():
 async def semantic_optimization_metrics(session: AsyncSession = Depends(get_session)):
     """Get semantic optimization context metrics (compression tracking)."""
     summary = context_tracker.get_summary()
-    ollama_health = await ollama_client.health_check()
+    ollama_ok = await ollama_client.health_check()
+    ui = _semantic_ui_metrics_from_tracker(summary)
 
     return {
         "context_compression": summary,
-        "ollama_status": "active" if ollama_health else "unavailable",
-        "model": "phi4-mini-reasoning:latest",
+        "ollama_status": "active" if ollama_ok else "unavailable",
+        "model": ollama_client.model,
+        **ui,
     }
 
 

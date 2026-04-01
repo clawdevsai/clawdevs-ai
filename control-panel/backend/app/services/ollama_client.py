@@ -1,9 +1,10 @@
 """Ollama client for Phase 6 semantic optimization."""
 import asyncio
 import aiohttp
-import json
 import logging
 from typing import Optional
+
+from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -11,15 +12,16 @@ logger = logging.getLogger(__name__)
 class OllamaClient:
     """Async HTTP client for Ollama API."""
 
-    def __init__(self, base_url: str = "http://ollama:11434", model: str = "phi4-mini-reasoning:latest"):
+    def __init__(self, base_url: Optional[str] = None, model: Optional[str] = None):
         """Initialize Ollama client.
 
         Args:
-            base_url: Ollama server URL (default: Docker internal network)
-            model: Model name (default: phi4-mini-reasoning:latest)
+            base_url: Ollama server URL (defaults to PANEL_OLLAMA_BASE_URL)
+            model: Model name (defaults to PANEL_OLLAMA_MODEL)
         """
-        self.base_url = base_url
-        self.model = model
+        settings = get_settings()
+        self.base_url = (base_url or settings.ollama_base_url).rstrip("/")
+        self.model = model or settings.ollama_model
         self.timeout = aiohttp.ClientTimeout(total=5.0)
 
     async def generate(

@@ -10,6 +10,7 @@ interface OllamaHealthResponse {
   status: "active" | "unavailable"
   model: string
   online: boolean
+  base_url?: string
   vram_used?: number
   vram_total?: number
   avg_latency_ms?: number
@@ -48,7 +49,7 @@ export function OllamaHealthCard() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-[hsl(var(--foreground))]">
-            Ollama (phi4-mini-reasoning)
+            Ollama{data?.model ? ` (${data.model})` : ""}
           </h3>
         </div>
 
@@ -68,6 +69,12 @@ export function OllamaHealthCard() {
 
         {data && (
           <div className="space-y-1 text-sm text-[hsl(var(--muted-foreground))]">
+            {data.base_url && (
+              <p>
+                Endpoint:{" "}
+                <span className="font-mono text-xs">{data.base_url}</span>
+              </p>
+            )}
             <p>Model: <span className="font-mono text-xs">{data.model}</span></p>
             {data.vram_used !== undefined && data.vram_total !== undefined && (
               <p>

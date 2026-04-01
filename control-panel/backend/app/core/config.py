@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     openclaw_gateway_url: str = "http://clawdevs-ai:18789"
     openclaw_gateway_token: str = ""
 
+    # Ollama (panel semantic optimization + health checks)
+    # In Docker the service hostname is usually `ollama`. For local `uvicorn` on the host, set
+    # PANEL_OLLAMA_BASE_URL=http://localhost:11434
+    ollama_base_url: str = Field(default="http://ollama:11434")
+    ollama_model: str = Field(default="phi4-mini-reasoning:latest")
+
     # GitHub
     github_token: str = ""
     github_org: str = ""
