@@ -4,7 +4,7 @@ import { BarChart3, Zap, AlertTriangle, Lightbulb } from "lucide-react"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-export interface Phase6MetricsData {
+export interface SemanticOptimizationMetricsData {
   query_enhancements?: {
     total_queries: number
     avg_expansion_terms: number
@@ -38,12 +38,12 @@ export interface Phase6MetricsData {
   }
 }
 
-interface Phase6MetricsCardProps {
-  data?: Phase6MetricsData
+interface SemanticOptimizationMetricsCardProps {
+  data?: SemanticOptimizationMetricsData
   isLoading: boolean
 }
 
-export function Phase6MetricsCards({ data, isLoading }: Phase6MetricsCardProps) {
+export function SemanticOptimizationMetrics({ data, isLoading }: SemanticOptimizationMetricsCardProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -67,7 +67,7 @@ export function Phase6MetricsCards({ data, isLoading }: Phase6MetricsCardProps) 
     return (
       <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
         <p className="text-sm text-[hsl(var(--muted-foreground))]">
-          No Phase 6 metrics available yet. Queries to Phase 6 endpoints will populate data.
+          No semantic optimization metrics available yet. Queries to optimization endpoints will populate data.
         </p>
       </div>
     )

@@ -17,7 +17,7 @@ interface OllamaHealthResponse {
 
 const fetchOllamaHealth = () =>
   customInstance<OllamaHealthResponse>({
-    url: "/context-mode/phase6/ollama-health",
+    url: "/context-mode/semantic-optimization/ollama-health",
     method: "GET",
   })
 

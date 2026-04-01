@@ -1,4 +1,4 @@
-"""Phase 6 API endpoints for Ollama-enhanced optimization."""
+"""Semantic Optimization API endpoints for Ollama-enhanced optimization."""
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.core.database import get_session
@@ -11,7 +11,7 @@ from app.services.anomaly_detector import AnomalyDetector
 from app.services.context_suggester import ContextSuggester
 from app.services.ollama_client import OllamaClient
 
-router = APIRouter(prefix="/api/context-mode/phase6", tags=["phase6"])
+router = APIRouter(prefix="/api/context-mode/semantic-optimization", tags=["semantic-optimization"])
 
 # Service instances (singleton-like)
 query_enhancer = QueryEnhancer()
@@ -113,8 +113,8 @@ async def ollama_health():
 
 
 @router.get("/metrics")
-async def phase6_metrics(session: AsyncSession = Depends(get_session)):
-    """Get Phase 6 optimization metrics."""
+async def semantic_optimization_metrics(session: AsyncSession = Depends(get_session)):
+    """Get semantic optimization metrics."""
     # Placeholder - will track actual usage
     return {
         "query_enhancements": {

@@ -2,19 +2,19 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface Phase6DetailRow {
+interface SemanticOptimizationDetailRow {
   task: string
   metric: string
   value: string | number
 }
 
-interface Phase6DetailsTableProps {
+interface SemanticOptimizationDetailsProps {
   data?: Record<string, any>
   isLoading: boolean
 }
 
-export function Phase6DetailsTable({ data, isLoading }: Phase6DetailsTableProps) {
-  const details: Phase6DetailRow[] = [
+export function SemanticOptimizationDetails({ data, isLoading }: SemanticOptimizationDetailsProps) {
+  const details: SemanticOptimizationDetailRow[] = [
     {
       task: "Query Enhancement",
       metric: "Avg Expansion Terms",

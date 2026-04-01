@@ -27,12 +27,12 @@ from app.core.database import get_session
 
 
 @pytest.mark.asyncio
-class TestContextModePhase6API:
+class TestContextModeSemanticOptimizationAPI:
     @pytest.mark.asyncio
     async def test_enhance_query_endpoint(self, client: AsyncClient, auth_headers: dict):
         """Test /enhance-query endpoint"""
         with patch(
-            "app.api.context_mode_phase6.query_enhancer.enhance_query"
+            "app.api.context_mode_semantic_optimization.query_enhancer.enhance_query"
         ) as mock_enhance:
             mock_enhance.return_value = {
                 "original": "docker issue",
@@ -41,7 +41,7 @@ class TestContextModePhase6API:
             }
 
             response = await client.post(
-                "/api/context-mode/phase6/enhance-query?query=docker%20issue&agent_id=dev_backend",
+                "/api/context-mode/semantic-optimization/enhance-query?query=docker%20issue&agent_id=dev_backend",
                 headers=auth_headers,
             )
 
@@ -53,7 +53,7 @@ class TestContextModePhase6API:
     ):
         """Test enhance-query with missing parameters"""
         response = await client.post(
-            "/api/context-mode/phase6/enhance-query",
+            "/api/context-mode/semantic-optimization/enhance-query",
             headers=auth_headers,
         )
 
@@ -72,7 +72,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/rerank-results",
+            "/api/context-mode/semantic-optimization/rerank-results",
             json=payload,
             headers=auth_headers,
         )
@@ -90,7 +90,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/classify-output",
+            "/api/context-mode/semantic-optimization/classify-output",
             json=payload,
             headers=auth_headers,
         )
@@ -103,7 +103,7 @@ class TestContextModePhase6API:
     ):
         """Test classify-output with empty output"""
         response = await client.post(
-            "/api/context-mode/phase6/classify-output",
+            "/api/context-mode/semantic-optimization/classify-output",
             json={"output": "", "tool_name": "python"},
             headers=auth_headers,
         )
@@ -122,7 +122,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/summarize",
+            "/api/context-mode/semantic-optimization/summarize",
             json=payload,
             headers=auth_headers,
         )
@@ -137,7 +137,7 @@ class TestContextModePhase6API:
         payload = {"content": "function implementation details"}
 
         response = await client.post(
-            "/api/context-mode/phase6/categorize",
+            "/api/context-mode/semantic-optimization/categorize",
             json=payload,
             headers=auth_headers,
         )
@@ -155,7 +155,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/detect-anomaly",
+            "/api/context-mode/semantic-optimization/detect-anomaly",
             json=payload,
             headers=auth_headers,
         )
@@ -168,7 +168,7 @@ class TestContextModePhase6API:
     ):
         """Test detect-anomaly with empty output"""
         response = await client.post(
-            "/api/context-mode/phase6/detect-anomaly",
+            "/api/context-mode/semantic-optimization/detect-anomaly",
             json={"output": "", "tool_name": "npm"},
             headers=auth_headers,
         )
@@ -189,7 +189,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/suggest-context",
+            "/api/context-mode/semantic-optimization/suggest-context",
             json=payload,
             headers=auth_headers,
         )
@@ -208,7 +208,7 @@ class TestContextModePhase6API:
         }
 
         response = await client.post(
-            "/api/context-mode/phase6/suggest-context",
+            "/api/context-mode/semantic-optimization/suggest-context",
             json=payload,
             headers=auth_headers,
         )
@@ -221,7 +221,7 @@ class TestContextModePhase6API:
     ):
         """Test /ollama-health endpoint"""
         response = await client.get(
-            "/api/context-mode/phase6/ollama-health",
+            "/api/context-mode/semantic-optimization/ollama-health",
             headers=auth_headers,
         )
 
@@ -231,12 +231,12 @@ class TestContextModePhase6API:
             assert "status" in data
 
     @pytest.mark.asyncio
-    async def test_phase6_metrics_endpoint(
+    async def test_semantic_optimization_metrics_endpoint(
         self, client: AsyncClient, auth_headers: dict
     ):
         """Test /metrics endpoint for Phase 6 stats"""
         response = await client.get(
-            "/api/context-mode/phase6/metrics",
+            "/api/context-mode/semantic-optimization/metrics",
             headers=auth_headers,
         )
 
@@ -249,15 +249,15 @@ class TestContextModePhase6API:
     async def test_endpoints_accessible(self, client: AsyncClient):
         """Test that Phase 6 endpoints are accessible"""
         endpoints = [
-            ("/api/context-mode/phase6/enhance-query?query=test&agent_id=test", "POST"),
-            ("/api/context-mode/phase6/rerank-results", "POST"),
-            ("/api/context-mode/phase6/classify-output", "POST"),
-            ("/api/context-mode/phase6/summarize", "POST"),
-            ("/api/context-mode/phase6/categorize", "POST"),
-            ("/api/context-mode/phase6/detect-anomaly", "POST"),
-            ("/api/context-mode/phase6/suggest-context", "POST"),
-            ("/api/context-mode/phase6/ollama-health", "GET"),
-            ("/api/context-mode/phase6/metrics", "GET"),
+            ("/api/context-mode/semantic-optimization/enhance-query?query=test&agent_id=test", "POST"),
+            ("/api/context-mode/semantic-optimization/rerank-results", "POST"),
+            ("/api/context-mode/semantic-optimization/classify-output", "POST"),
+            ("/api/context-mode/semantic-optimization/summarize", "POST"),
+            ("/api/context-mode/semantic-optimization/categorize", "POST"),
+            ("/api/context-mode/semantic-optimization/detect-anomaly", "POST"),
+            ("/api/context-mode/semantic-optimization/suggest-context", "POST"),
+            ("/api/context-mode/semantic-optimization/ollama-health", "GET"),
+            ("/api/context-mode/semantic-optimization/metrics", "GET"),
         ]
 
         for endpoint, method in endpoints:
