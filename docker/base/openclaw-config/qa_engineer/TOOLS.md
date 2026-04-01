@@ -37,9 +37,17 @@ rules:
   - use sessions_send for agent channels (not message)
 
 github_permissions:
-  type: read+write_limited
-  allowed: ["gh pr", "gh label", "gh workflow", "gh run view"]
-  denied: ["gh issue create/edit/close"]
+  type: read+write_full
+  org: "__GIT_ORG__"
+  allowed:
+    - "gh repo list __GIT_ORG__ --limit 1000"
+    - "gh pr (any operation)"
+    - "gh label (any operation)"
+    - "gh workflow (any operation)"
+    - "gh run (any operation)"
+    - "gh issue (any operation)"
+    - "gh repo (any operation)"
+  denied: []
 
 restrictions:
   - QA does not modify production code

@@ -50,12 +50,19 @@
 - `sessions_spawn` allowed for: `arquiteto`, `qa_engineer`.
 
 ## github_permissions
-- **Type:** `read+write`
+- **Type:** `read+write_full`
+- **Org:** `__GIT_ORG__` (all repos in organization)
 - **Own label:** `mobile` — automatically created at boot if it does not exist:
   `gh label create "mobile" --color "#e4e669" --description "Mobile tasks — routed to Dev_Mobile" --repo "$ACTIVE_GIT_REPOSITORY" 2>/dev/null || true`
-- **Allowed operations:** `gh pr`, `gh label`, `gh workflow`, `gh run view` (`--repo "$TASK_GIT_REPO"` only)
-- **Prohibited:** `gh issue create`, `gh issue edit`, `gh issue close` — use control panel API
-- **Active repo:** use `$TASK_GIT_REPO` (field `github_repo` of the task) instead of `$ACTIVE_GIT_REPOSITORY`
+- **Allowed operations:**
+  - `gh repo list __GIT_ORG__ --limit 1000`
+  - `gh pr` (any operation)
+  - `gh label` (any operation)
+  - `gh workflow` (any operation)
+  - `gh run` (any operation)
+  - `gh issue` (any operation)
+  - `gh repo` (any operation)
+- **Active repo:** use `$TASK_GIT_REPO` (field `github_repo` of the task) or `$ACTIVE_GIT_REPOSITORY`
 
 ## comandos_adicionais_mobile
 - `expo`: `npx expo start`, `npx expo lint`, `eas build`, `eas submit`
