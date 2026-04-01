@@ -71,7 +71,7 @@ export default function LoginPage() {
             Control Panel
           </p>
         </div>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4" data-testid="login-form">
           <div>
             <label className="block text-sm font-medium mb-1">Usuário</label>
             <input
@@ -80,6 +80,7 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 rounded-md bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
               required
+              data-testid="login-username"
             />
           </div>
           <div>
@@ -90,15 +91,17 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 rounded-md bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
               required
+              data-testid="login-password"
             />
           </div>
           {error && (
-            <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>
+            <p className="text-sm text-[hsl(var(--destructive))]" data-testid="login-error">{error}</p>
           )}
           <button
             type="submit"
             disabled={loading}
             className="w-full py-2 px-4 rounded-md bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-medium text-sm hover:opacity-90 disabled:opacity-50 transition-opacity"
+            data-testid="login-submit"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>

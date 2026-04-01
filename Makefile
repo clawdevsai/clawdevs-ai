@@ -132,9 +132,66 @@ SEARXNG_PROXY_CONF := docker/clawdevs-searxng-proxy/default.conf
 .PHONY: images-push images-release
 .PHONY: spec-template vibe-playbook sdd-contract constitution-template speckit-flow sdd-checklist
 .PHONY: gen-secret
+.PHONY: cypress cypress:ui
 
 gen-secret:
 	@python -c "import secrets; print(secrets.token_hex(32))"
+
+# ─── Cypress E2E ──────────────────────────────────────────────────────────
+
+CYPRESS_FRONTEND_URL ?= http://localhost:3000
+CYPRESS_WAIT_TIMEOUT ?= 120
+
+cypress:
+	@echo "[cypress] Verificando se a aplicacao esta rodando em $(CYPRESS_FRONTEND_URL)..."
+	@if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
+		echo "[cypress] Aplicacao ja esta em execucao."; \
+	else \
+		echo "[cypress] Aplicacao nao encontrada. Iniciando stack..."; \
+		$(MAKE) up-all-with-cache; \
+		echo "[cypress] Aguardando aplicacao ficar disponivel..."; \
+		timeout=$(CYPRESS_WAIT_TIMEOUT); \
+		while [ $$timeout -gt 0 ]; do \
+			if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
+				echo "[cypress] Aplicacao pronta."; \
+				break; \
+			fi; \
+			sleep 2; \
+			timeout=$$((timeout - 2)); \
+		done; \
+		if [ $$timeout -le 0 ]; then \
+			echo "ERRO: Timeout aguardando a aplicacao em $(CYPRESS_FRONTEND_URL)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "[cypress] Executando testes E2E (headless)..."
+	@cd control-panel/frontend && pnpm exec cypress run
+	@echo "[cypress] Testes concluidos."
+
+cypress:ui:
+	@echo "[cypress] Verificando se a aplicacao esta rodando em $(CYPRESS_FRONTEND_URL)..."
+	@if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
+		echo "[cypress] Aplicacao ja esta em execucao."; \
+	else \
+		echo "[cypress] Aplicacao nao encontrada. Iniciando stack..."; \
+		$(MAKE) up-all-with-cache; \
+		echo "[cypress] Aguardando aplicacao ficar disponivel..."; \
+		timeout=$(CYPRESS_WAIT_TIMEOUT); \
+		while [ $$timeout -gt 0 ]; do \
+			if curl -s -o /dev/null -w '' "$(CYPRESS_FRONTEND_URL)" 2>/dev/null; then \
+				echo "[cypress] Aplicacao pronta."; \
+				break; \
+			fi; \
+			sleep 2; \
+			timeout=$$((timeout - 2)); \
+		done; \
+		if [ $$timeout -le 0 ]; then \
+			echo "ERRO: Timeout aguardando a aplicacao em $(CYPRESS_FRONTEND_URL)"; \
+			exit 1; \
+		fi; \
+	fi
+	@echo "[cypress] Abrindo interface interativa..."
+	@cd control-panel/frontend && pnpm exec cypress open
 
 .PHONY: sdd-prompts sdd-example sdd-real-initiative
 
@@ -160,6 +217,8 @@ help:
 	@echo "make build-with-cache   Build local das 10 imagens (com cache)"
 	@echo "make migrate       Executa migrations Alembic"
 	@echo "make gen-secret     Gera secret key aleatoria (32 bytes hex)"
+	@echo "make cypress        Executa testes E2E Cypress (headless, inicia app se necessario)"
+	@echo "make cypress:ui     Executa testes E2E Cypress (interface grafica, inicia app se necessario)"
 
 preflight:
 	@if [ ! -f "$(ENV_FILE)" ]; then \
