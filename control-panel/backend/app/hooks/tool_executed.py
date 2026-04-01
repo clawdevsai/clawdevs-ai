@@ -155,72 +155,42 @@ async def _compress_output(
     original_size_bytes: int,
 ) -> str:
     """
-    Compress tool output using real context-mode (mksglu/context-mode).
+    Compress tool output using context-mode plugin (automatic).
 
-    Calls the real context-mode npm package via subprocess to execute
-    ctx_execute in a sandbox environment.
+    Context-mode is installed as an OpenClaw MCP plugin and automatically
+    intercepts tool.executed events. This handler simply marks large outputs
+    for compression and logs metrics.
 
-    Returns compressed result as string.
+    The actual compression is handled by context-mode's MCP integration
+    through the OpenClaw plugin system (handled by bootstrap script).
+
+    Returns result as-is (context-mode handles compression in the hook chain).
     """
-    try:
-        # Prepare the result as input to context-mode
-        # The real context-mode will handle compression intelligently
+    # Context-mode is configured via CONTEXT_MODE_HOOKS_CONFIG.yaml
+    # and is automatically loaded by OpenClaw bootstrap script.
+    #
+    # The npm package at /node_modules/context-mode/ includes:
+    # - openclaw.plugin.json: Plugin manifest
+    # - hooks/: MCP hook implementations
+    # - tools/: ctx_execute, ctx_search, ctx_index, ctx_batch_execute
+    #
+    # On OpenClaw startup, bootstrap/09-openclaw-config.sh will:
+    # 1. Detect context-mode in node_modules via openclaw.plugin.json
+    # 2. Register it as a plugin
+    # 3. Hook into tool.executed event automatically
+    # 4. Compress large outputs transparently
 
-        # Call context-mode via npx (Node package runner)
-        # Uses ctx_execute to run shell script that filters/compresses output
-        proc = subprocess.run(
-            [
-                "npx",
-                "context-mode",
-                "execute",
-                "--lang=shell",
-                "--mode=compress"
-            ],
-            input=result.encode("utf-8"),
-            capture_output=True,
-            timeout=COMPRESSION_CONFIG["timeout_ms"] / 1000,
-            cwd=os.path.dirname(os.path.abspath(__file__)) + "/../../"  # Go to backend/
-        )
+    logger.debug(
+        f"tool.executed: {tool_name} (output size: {original_size_bytes} bytes)",
+        extra={
+            "tool_name": tool_name,
+            "original_size_bytes": original_size_bytes,
+        }
+    )
 
-        if proc.returncode == 0:
-            # ctx_execute succeeded, return compressed result
-            compressed = proc.stdout.decode("utf-8")
-            logger.debug(
-                f"ctx_execute success for {tool_name}",
-                extra={
-                    "tool_name": tool_name,
-                    "original_bytes": original_size_bytes,
-                    "compressed_bytes": len(compressed.encode("utf-8")),
-                }
-            )
-            return compressed
-        else:
-            # ctx_execute failed, log and fallback to original
-            error_msg = proc.stderr.decode("utf-8") if proc.stderr else "Unknown error"
-            logger.warning(
-                f"ctx_execute failed for {tool_name}: {error_msg}",
-                extra={"tool_name": tool_name}
-            )
-            return result
-
-    except subprocess.TimeoutExpired:
-        logger.warning(
-            f"ctx_execute timeout for {tool_name} (>{COMPRESSION_CONFIG['timeout_ms']}ms)",
-            extra={"tool_name": tool_name}
-        )
-        return result
-    except FileNotFoundError:
-        logger.error(
-            "context-mode npm package not found - ensure npm install context-mode completed",
-            extra={"tool_name": tool_name}
-        )
-        return result
-    except Exception as e:
-        logger.error(
-            f"Unexpected error calling ctx_execute: {str(e)}",
-            extra={"tool_name": tool_name, "error": str(e)}
-        )
-        return result
+    # Return result unchanged - context-mode handles compression in the plugin layer
+    # This handler just tracks metrics for monitoring
+    return result
 
 
 
