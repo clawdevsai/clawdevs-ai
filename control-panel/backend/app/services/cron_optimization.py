@@ -10,6 +10,7 @@ Provides:
 
 import json
 import subprocess
+import threading
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
@@ -191,13 +192,17 @@ class CronOptimizationService:
         return monthly_tokens_saved * 0.000001
 
 
-# Singleton instance
+# Singleton instance with thread safety
 _service: Optional[CronOptimizationService] = None
+_service_lock = threading.Lock()
 
 
 def get_cron_optimization_service() -> CronOptimizationService:
-    """Get or create cron optimization service singleton."""
+    """Get or create cron optimization service singleton (thread-safe)."""
     global _service
     if _service is None:
-        _service = CronOptimizationService()
+        with _service_lock:
+            # Double-check locking pattern
+            if _service is None:
+                _service = CronOptimizationService()
     return _service

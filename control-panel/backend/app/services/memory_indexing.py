@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import sqlite3
+import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -22,14 +23,18 @@ from typing import Optional, List, Dict, Any
 class MemoryIndexingService:
     """Service for indexing and searching memory files with context-mode compression."""
 
-    def __init__(self, memory_root: str = "/data/openclaw/memory"):
+    def __init__(self, memory_root: Optional[str] = None):
         """Initialize memory indexing service.
 
         Args:
-            memory_root: Root directory containing agent memories
+            memory_root: Root directory containing agent memories.
+                        Defaults to OPENCLAW_MEMORY_ROOT env var or /data/openclaw/memory
         """
+        if memory_root is None:
+            memory_root = os.getenv("OPENCLAW_MEMORY_ROOT", "/data/openclaw/memory")
+
         self.memory_root = Path(memory_root)
-        self.index_db = Path("/tmp/memory_index.db")
+        self.index_db = Path(os.getenv("MEMORY_INDEX_DB", "/tmp/memory_index.db"))
         self.cache_ttl = 86400  # 24 hours
         self._init_database()
 
@@ -336,12 +341,16 @@ class MemoryIndexingService:
         return content[:context_length].strip() + "..."
 
 
-# Singleton instance
+# Singleton instance with thread safety
 _service: Optional[MemoryIndexingService] = None
+_service_lock = threading.Lock()
 
 def get_memory_indexing_service() -> MemoryIndexingService:
-    """Get or create memory indexing service singleton."""
+    """Get or create memory indexing service singleton (thread-safe)."""
     global _service
     if _service is None:
-        _service = MemoryIndexingService()
+        with _service_lock:
+            # Double-check locking pattern
+            if _service is None:
+                _service = MemoryIndexingService()
     return _service

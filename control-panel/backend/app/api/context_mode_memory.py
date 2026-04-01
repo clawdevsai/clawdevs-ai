@@ -49,6 +49,11 @@ async def get_agent_memory_metrics(agent_id: str):
     Returns:
         Dict com m\u00e9tricas do agent
     """
+    # Sanitize input
+    agent_id = agent_id.strip().lower()
+    if not agent_id or len(agent_id) < 1:
+        raise HTTPException(status_code=400, detail="Invalid agent ID")
+
     service = get_memory_indexing_service()
 
     # Reindex se cache expirou
@@ -70,6 +75,11 @@ async def reindex_agent_memory(agent_id: str):
     Returns:
         Dict com resultado do reindex
     """
+    # Sanitize input
+    agent_id = agent_id.strip().lower()
+    if not agent_id or len(agent_id) < 1:
+        raise HTTPException(status_code=400, detail="Invalid agent ID")
+
     service = get_memory_indexing_service()
 
     # Force reindex (ignora cache)
