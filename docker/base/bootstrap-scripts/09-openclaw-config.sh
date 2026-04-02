@@ -91,6 +91,8 @@ esac
 # Context Mode output/process caps (used by hooks config + guardrails)
 _context_mode_max_output_bytes="${OPENCLAW_CONTEXT_MODE_MAX_OUTPUT_BYTES:-200000}"
 _context_mode_max_process_time_seconds="${OPENCLAW_CONTEXT_MODE_MAX_PROCESS_TIME_SECONDS:-120}"
+export OPENCLAW_CONTEXT_MODE_MAX_OUTPUT_BYTES="${_context_mode_max_output_bytes}"
+export OPENCLAW_CONTEXT_MODE_MAX_PROCESS_TIME_SECONDS="${_context_mode_max_process_time_seconds}"
 
 _exec_policy_raw="${OPENCLAW_EXEC_POLICY:-allowlist}"
 _exec_policy="$(printf '%s' "${_exec_policy_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
@@ -1491,11 +1493,7 @@ EOF
 _provedor_raw="${PROVEDOR_LLM:-}"
 _provedor="$(printf '%s' "${_provedor_raw}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
 if [ -z "${_provedor}" ] || [ "${_provedor}" = "auto" ]; then
-  if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-    _provedor="openrouter"
-  else
-    _provedor="ollama"
-  fi
+  _provedor="ollama"
 fi
 case "${_provedor}" in
   openrouter|open-router|or)
@@ -1506,51 +1504,45 @@ case "${_provedor}" in
     ;;
   *)
     echo "[bootstrap] AVISO: PROVEDOR_LLM invalido (${_provedor_raw}), aplicando fallback automatico"
-    if [ -n "${OPENROUTER_API_KEY:-}" ]; then
-      _provedor="openrouter"
-    else
-      _provedor="ollama"
-    fi
+  _provedor="ollama"
     ;;
 esac
 echo "[bootstrap] LLM provider selecionado=${_provedor}"
 
-if [ "${_provedor}" = "openrouter" ]; then
-  if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-    echo "[bootstrap] AVISO: provider=openrouter mas OPENROUTER_API_KEY nao definida; mantendo modelos atuais"
-  else
-    _tmp_or="$(mktemp)"
-    _or_model="${OPENROUTER_MODEL:-stepfun/step-3.5-flash:free}"
-    _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
-    case "${_or_model}" in
-      openrouter/*) _or_model_full="${_or_model}" ;;
-      *) _or_model_full="openrouter/${_or_model}" ;;
-    esac
-    _or_model_id="${_or_model_full#openrouter/}"
-    if jq \
-      --arg apiKey "${OPENROUTER_API_KEY}" \
-      --arg baseUrl "${_or_base_url}" \
-      --arg model "${_or_model_full}" \
-      --arg modelId "${_or_model_id}" \
-      '
-        .models.providers.openrouter = {
-          "apiKey": $apiKey,
-          "baseUrl": $baseUrl,
-          "models": [
-            { "id": $modelId, "name": $modelId }
-          ]
-        }
-        | .agents.defaults.model = $model
-        | (.agents.list[].model) = $model
-      ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or}"; then
-      mv "${_tmp_or}" "${OPENCLAW_STATE_DIR}/openclaw.json"
-      mkdir -p ~/.openclaw
-      cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+if [ -n "${OPENROUTER_API_KEY:-}" ]; then
+  _tmp_or="$(mktemp)"
+  _or_model="${OPENROUTER_MODEL:-stepfun/step-3.5-flash:free}"
+  _or_base_url="${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}"
+  case "${_or_model}" in
+    openrouter/*) _or_model_full="${_or_model}" ;;
+    *) _or_model_full="openrouter/${_or_model}" ;;
+  esac
+  _or_model_id="${_or_model_full#openrouter/}"
+  if jq \
+    --arg apiKey "${OPENROUTER_API_KEY}" \
+    --arg baseUrl "${_or_base_url}" \
+    --arg model "${_or_model_full}" \
+    --arg modelId "${_or_model_id}" \
+    '
+      .models.providers.openrouter = {
+        "apiKey": $apiKey,
+        "baseUrl": $baseUrl,
+        "models": [
+          { "id": $modelId, "name": $modelId }
+        ]
+      }
+    ' "${OPENCLAW_STATE_DIR}/openclaw.json" > "${_tmp_or}"; then
+    mv "${_tmp_or}" "${OPENCLAW_STATE_DIR}/openclaw.json"
+    mkdir -p ~/.openclaw
+    cp "${OPENCLAW_STATE_DIR}/openclaw.json" ~/.openclaw/openclaw.json
+    if [ "${_provedor}" = "openrouter" ]; then
       echo "[bootstrap] provider=openrouter aplicado para todos os agentes (model=${_or_model_full})"
     else
-      rm -f "${_tmp_or}"
-      echo "[bootstrap] ERRO ao aplicar patch openrouter no openclaw.json"
+      echo "[bootstrap] openrouter registrado como fallback (model=${_or_model_full})"
     fi
+  else
+    rm -f "${_tmp_or}"
+    echo "[bootstrap] ERRO ao aplicar patch openrouter no openclaw.json"
   fi
 fi
 
