@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlmodel import col, select
 from sqlalchemy import func
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -29,7 +29,12 @@ from uuid import UUID
 
 from app.core.database import get_session
 from app.api.deps import CurrentUser
-from app.models import Metric, Approval, Task, Agent, Session
+from app.models import Metric, Session
+from app.services.context_metrics import (
+    compute_overview_metrics,
+    DEFAULT_WINDOW_MINUTES,
+    validate_window_minutes,
+)
 
 router = APIRouter()
 
@@ -50,6 +55,11 @@ class OverviewMetrics(BaseModel):
     pending_approvals: int
     open_tasks: int
     tokens_24h: float
+    tokens_consumed_total: float
+    tokens_consumed_avg_per_task: float
+    backlog_count: int
+    tasks_in_progress: int
+    tasks_completed: int
 
 
 class MetricResponse(BaseModel):
@@ -211,35 +221,12 @@ async def list_metrics(
 async def overview_metrics(
     _: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
+    window_minutes: int = Query(DEFAULT_WINDOW_MINUTES),
 ):
-    since = _to_naive_utc(datetime.now(timezone.utc) - timedelta(hours=24))
+    try:
+        validate_window_minutes(window_minutes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    agents_result = await session.exec(
-        select(Agent).where(col(Agent.status).in_(["online", "working"]))
-    )
-    active_agents = len(agents_result.all())
-
-    approvals_result = await session.exec(
-        select(Approval).where(Approval.status == "pending")
-    )
-    pending_approvals = len(approvals_result.all())
-
-    tasks_result = await session.exec(
-        select(Task).where(col(Task.status).in_(["inbox", "in_progress", "review"]))
-    )
-    open_tasks = len(tasks_result.all())
-
-    metrics_result = await session.exec(
-        select(Metric).where(
-            col(Metric.metric_type) == "tokens_used",
-            col(Metric.period_start) >= since,
-        )
-    )
-    tokens_24h = sum(m.value for m in metrics_result.all())
-
-    return OverviewMetrics(
-        active_agents=active_agents,
-        pending_approvals=pending_approvals,
-        open_tasks=open_tasks,
-        tokens_24h=tokens_24h,
-    )
+    payload = await compute_overview_metrics(session, window_minutes)
+    return OverviewMetrics(**payload)

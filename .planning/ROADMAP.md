@@ -42,8 +42,14 @@ Plans:
   3. Control panel shows cycle time per task and throughput per team
   4. Control panel exposes failure traces/logs with evidence
   5. CTO can change core runtime settings without recreating existing features
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 03-01-PLAN.md — Sessions window + MON-02 metrics + WS payload
+- [ ] 03-02-PLAN.md — Cycle time/throughput + failure observability APIs
+- [ ] 03-03-PLAN.md — Runtime settings persistence + audit + API
+- [ ] 03-04-PLAN.md — Monitoring dashboard + runtime settings UI
 
 ### Phase 4: Evaluation Regression Suite
 **Goal**: Coordination regressions are detectable through a minimal runnable suite
