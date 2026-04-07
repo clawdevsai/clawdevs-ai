@@ -10,7 +10,7 @@ This roadmap modernizes the existing control-panel frontend in incremental phase
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions when needed
 
-- [ ] **Phase 1: Runtime and Tailwind Baseline** - Upgrade runtime and lock styling foundation
+- [x] **Phase 1: Runtime and Tailwind Baseline** - Upgrade runtime and lock styling foundation
 - [ ] **Phase 2: Shell and Layout Migration** - Apply Mosaic layout patterns to global app chrome
 - [ ] **Phase 3: Dashboard and Chart Modernization** - Migrate dashboard visuals and chart presentation
 - [ ] **Phase 4: Compatibility and Rollout Hardening** - Preserve existing workflows and validate end-to-end behavior
@@ -82,7 +82,7 @@ Plans:
 
 | Phase | Plans | Status | Completed |
 |-------|-------|--------|-----------|
-| 1. Runtime and Tailwind Baseline | 0/3 | Not started | - |
+| 1. Runtime and Tailwind Baseline | 3/3 | Complete | 2026-04-07 |
 | 2. Shell and Layout Migration | 0/3 | Not started | - |
 | 3. Dashboard and Chart Modernization | 0/3 | Not started | - |
 | 4. Compatibility and Rollout Hardening | 0/3 | Not started | - |
