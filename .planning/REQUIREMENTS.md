@@ -76,17 +76,17 @@
 | CTRL-01 | Phase 2 | Pending |
 | CTRL-02 | Phase 2 | Pending |
 | CTRL-03 | Phase 2 | Pending |
-| CONT-01 | Phase 3 | Pending |
-| CONT-02 | Phase 3 | Pending |
-| CONT-03 | Phase 3 | Pending |
-| MONI-01 | Phase 4 | Pending |
-| MONI-02 | Phase 4 | Pending |
-| MONI-03 | Phase 4 | Pending |
-| MEMR-01 | Phase 5 | Pending |
-| MEMR-02 | Phase 5 | Pending |
-| FRON-01 | Phase 6 | Pending |
-| FRON-02 | Phase 6 | Pending |
-| FRON-03 | Phase 6 | Pending |
+| CONT-01 | Phase 2 | Pending |
+| CONT-02 | Phase 2 | Pending |
+| CONT-03 | Phase 2 | Pending |
+| MONI-01 | Phase 3 | Pending |
+| MONI-02 | Phase 3 | Pending |
+| MONI-03 | Phase 3 | Pending |
+| MEMR-01 | Phase 4 | Pending |
+| MEMR-02 | Phase 4 | Pending |
+| FRON-01 | Phase 5 | Pending |
+| FRON-02 | Phase 5 | Pending |
+| FRON-03 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
@@ -95,4 +95,4 @@
 
 ---
 *Requirements defined: 2026-04-07*
-*Last updated: 2026-04-07 after gsd-new-project requirements definition*
+*Last updated: 2026-04-07 after roadmap creation and phase remapping*
