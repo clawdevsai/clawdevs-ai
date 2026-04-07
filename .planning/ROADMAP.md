@@ -28,9 +28,9 @@ This roadmap modernizes the existing control-panel frontend in incremental phase
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Upgrade Next.js and aligned frontend dependencies safely
-- [ ] 01-02: Verify and normalize Tailwind/PostCSS setup against official guidance
-- [ ] 01-03: Run baseline quality checks (`type-check`, `build`) and fix breakages
+- [x] 01-01: Upgrade Next.js and aligned frontend dependencies safely
+- [x] 01-02: Verify and normalize Tailwind/PostCSS setup against official guidance
+- [x] 01-03: Run baseline quality checks (`type-check`, `build`) and fix breakages
 
 ### Phase 2: Shell and Layout Migration
 **Goal**: Migrate shared application shell to Mosaic-style structure

@@ -9,8 +9,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Platform & Runtime
 
-- [ ] **PLAT-01**: Frontend runs on `next@16.2.2` with successful build/start in current environment
-- [ ] **PLAT-02**: Tailwind CSS remains on `v4.2.x` and follows official Next.js setup (`postcss` + global css import model)
+- [x] **PLAT-01**: Frontend runs on `next@16.2.2` with successful build/start in current environment
+- [x] **PLAT-02**: Tailwind CSS remains on `v4.2.x` and follows official Next.js setup (`postcss` + global css import model)
 - [ ] **PLAT-03**: Existing App Router routes remain accessible after UI migration (`/`, `/chat`, `/sessions`, `/tasks`, `/monitoring`, `/settings`, `/agents`, `/approvals`)
 
 ### UI System & Layout
@@ -34,7 +34,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Quality & Validation
 
 - [ ] **QUAL-01**: Cypress smoke path validates login + dashboard navigation after migration
-- [ ] **QUAL-02**: Type-check and production build pass for frontend after integration changes
+- [x] **QUAL-02**: Type-check and production build pass for frontend after integration changes
 
 ## v2 Requirements
 
@@ -62,9 +62,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| QUAL-02 | Phase 1 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| QUAL-02 | Phase 1 | Complete |
 | PLAT-03 | Phase 2 | Pending |
 | UI-01 | Phase 2 | Pending |
 | UI-02 | Phase 2 | Pending |
