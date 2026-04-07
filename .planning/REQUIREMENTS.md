@@ -1,0 +1,87 @@
+# Requirements: ClawDevs AI Panel UI Modernization (Mosaic)
+
+**Defined:** 2026-04-07
+**Core Value:** Operators can monitor and manage AI workflows quickly from a consistent, fast, and reliable dashboard interface without losing existing functionality.
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Platform & Runtime
+
+- [ ] **PLAT-01**: Frontend runs on `next@16.2.2` with successful build/start in current environment
+- [ ] **PLAT-02**: Tailwind CSS remains on `v4.2.x` and follows official Next.js setup (`postcss` + global css import model)
+- [ ] **PLAT-03**: Existing App Router routes remain accessible after UI migration (`/`, `/chat`, `/sessions`, `/tasks`, `/monitoring`, `/settings`, `/agents`, `/approvals`)
+
+### UI System & Layout
+
+- [ ] **UI-01**: Application shell (sidebar, header, content frame) is migrated to Mosaic-aligned dashboard layout patterns
+- [ ] **UI-02**: Core interface primitives (cards, tables, badges, buttons, forms) are visually harmonized with template style
+- [ ] **UI-03**: Main dashboard and shell remain responsive on desktop and mobile breakpoints
+
+### Dashboard & Charts
+
+- [ ] **DASH-01**: Home dashboard is restructured with template-style KPI/stat/activity sections
+- [ ] **DASH-02**: Existing chart areas are migrated to template-consistent visual components
+- [ ] **DASH-03**: Chart components keep real project data bindings (no permanent demo/mock-only widgets)
+
+### Compatibility & Functional Preservation
+
+- [ ] **COMP-01**: Existing feature pages remain navigable through updated layout and menu structure
+- [ ] **COMP-02**: Existing authentication/session behavior remains unchanged for users
+- [ ] **COMP-03**: Frontend migration does not require backend API contract changes
+
+### Quality & Validation
+
+- [ ] **QUAL-01**: Cypress smoke path validates login + dashboard navigation after migration
+- [ ] **QUAL-02**: Type-check and production build pass for frontend after integration changes
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Enhancements
+
+- **ENH-01**: Add advanced Mosaic variant pages not required for current panel domain
+- **ENH-02**: Introduce additional analytics dashboards beyond existing backend-exposed metrics
+- **ENH-03**: Add broader UX animation polish once functional parity is complete
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Backend API redesign | Initiative is frontend modernization only |
+| New product modules unrelated to current panel | Not part of requested migration scope |
+| Framework migration away from Next.js App Router | Unnecessary risk for requested outcome |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PLAT-01 | TBD | Pending |
+| PLAT-02 | TBD | Pending |
+| PLAT-03 | TBD | Pending |
+| UI-01 | TBD | Pending |
+| UI-02 | TBD | Pending |
+| UI-03 | TBD | Pending |
+| DASH-01 | TBD | Pending |
+| DASH-02 | TBD | Pending |
+| DASH-03 | TBD | Pending |
+| COMP-01 | TBD | Pending |
+| COMP-02 | TBD | Pending |
+| COMP-03 | TBD | Pending |
+| QUAL-01 | TBD | Pending |
+| QUAL-02 | TBD | Pending |
+
+**Coverage:**
+- v1 requirements: 14 total
+- Mapped to phases: 0
+- Unmapped: 14
+
+---
+*Requirements defined: 2026-04-07*
+*Last updated: 2026-04-07 after initial scoping*
