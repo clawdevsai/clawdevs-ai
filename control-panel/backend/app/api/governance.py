@@ -34,12 +34,17 @@ from pydantic import BaseModel
 
 from app.api.deps import AdminUser
 from app.core.database import get_session
+from app.api.deps import require_admin
 from app.services.governance_engine import GovernanceEngine
 from app.services.cost_tracker import CostTracker
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/governance", tags=["governance"])
+router = APIRouter(
+    prefix="/api/governance",
+    tags=["governance"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 class TaskValidationRequest(BaseModel):
