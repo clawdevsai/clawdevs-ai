@@ -33,7 +33,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Quality & Validation
 
-- [ ] **QUAL-01**: Cypress smoke path validates login + dashboard navigation after migration
+- [x] **QUAL-01**: Cypress smoke path validates login + dashboard navigation after migration
 - [x] **QUAL-02**: Type-check and production build pass for frontend after integration changes
 
 ## v2 Requirements
@@ -75,7 +75,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COMP-01 | Phase 4 | Complete |
 | COMP-02 | Phase 4 | Complete |
 | COMP-03 | Phase 4 | Pending |
-| QUAL-01 | Phase 4 | Pending |
+| QUAL-01 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 14 total
