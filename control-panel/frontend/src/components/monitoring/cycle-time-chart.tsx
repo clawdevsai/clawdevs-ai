@@ -57,6 +57,24 @@ export function CycleTimeChart({
           Latência média e percentil p95 por task
         </p>
       </div>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/20 px-3 py-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+            Average
+          </p>
+          <p className="mt-1 text-sm font-semibold text-[hsl(var(--foreground))]">
+            {averageValue > 0 ? `${averageValue}s` : "—"}
+          </p>
+        </div>
+        <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/20 px-3 py-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+            P95
+          </p>
+          <p className="mt-1 text-sm font-semibold text-[hsl(var(--foreground))]">
+            {p95Value > 0 ? `${p95Value}s` : "—"}
+          </p>
+        </div>
+      </div>
       {loading ? (
         <Skeleton className="h-[220px] w-full" />
       ) : error ? (
