@@ -1,0 +1,6 @@
+SPEC::cypress/e2e/login.cy.ts
+COMMAND::npx -y pnpm@10.33.0 cy:run --spec cypress/e2e/login.cy.ts
+STATUS::PASS
+EXIT_CODE::0
+SUMMARY::  13 passing (10s)|    ✔  All specs passed!                        00:10       13       13        -        -        -  |
+LOG::/c/Users/Administrator/Workspace/lukeware/clawdevs-ai/.planning/phases/04-compatibility-and-rollout-hardening/.e2e-rerun-logs/login.cy.log

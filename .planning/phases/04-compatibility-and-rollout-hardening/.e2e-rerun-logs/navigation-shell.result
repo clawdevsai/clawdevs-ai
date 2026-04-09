@@ -1,0 +1,6 @@
+SPEC::cypress/e2e/navigation-shell.cy.ts
+COMMAND::npx -y pnpm@10.33.0 cy:run --spec cypress/e2e/navigation-shell.cy.ts
+STATUS::PASS
+EXIT_CODE::0
+SUMMARY::  2 passing (5s)|    ✔  All specs passed!                        00:04        2        2        -        -        -  |
+LOG::/c/Users/Administrator/Workspace/lukeware/clawdevs-ai/.planning/phases/04-compatibility-and-rollout-hardening/.e2e-rerun-logs/navigation-shell.cy.log

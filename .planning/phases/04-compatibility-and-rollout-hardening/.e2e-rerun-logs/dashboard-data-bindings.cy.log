@@ -1,0 +1,67 @@
+
+> clawdevs-panel-frontend@0.1.0 cy:run C:\Users\Administrator\Workspace\lukeware\clawdevs-ai\control-panel\frontend
+> cypress run "--spec" "cypress/e2e/dashboard-data-bindings.cy.ts"
+
+
+Warning: The allowCypressEnv configuration option is enabled. This allows any browser code to read values from Cypress.env(). This is insecure and will be removed in a future major version.
+
+1. Replace Cypress.env() calls with cy.env() (for sensitive values) or Cypress.expose() (for public configuration)
+2. Set allowCypressEnv: false in your Cypress configuration to disable Cypress.env()
+
+Learn more: https://on.cypress.io/cypress-env-migration
+
+
+====================================================================================================
+
+  (Run Starting)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Cypress:        15.13.0                                                                        │
+  │ Browser:        Electron 138 (headless)                                                        │
+  │ Node Version:   v22.21.1 (C:\nvm4w\nodejs\node.exe)                                            │
+  │ Specs:          1 found (dashboard-data-bindings.cy.ts)                                        │
+  │ Searched:       C:\Users\Administrator\Workspace\lukeware\clawdevs-ai\control-panel\frontend\c │
+  │                 ypress\e2e\dashboard-data-bindings.cy.ts                                       │
+  │ Experiments:    experimentalRunAllSpecs=true                                                   │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                                                    
+  Running:  dashboard-data-bindings.cy.ts                                                   (1 of 1)
+
+
+  Dashboard and monitoring data bindings
+    √ renders dashboard KPI values from intercepted metrics/session payloads (1226ms)
+    √ renders monitoring chart values from cycle-time and throughput payloads (1101ms)
+
+
+  2 passing (2s)
+
+
+  (Results)
+
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Tests:        2                                                                                │
+  │ Passing:      2                                                                                │
+  │ Failing:      0                                                                                │
+  │ Pending:      0                                                                                │
+  │ Skipped:      0                                                                                │
+  │ Screenshots:  0                                                                                │
+  │ Video:        false                                                                            │
+  │ Duration:     2 seconds                                                                        │
+  │ Spec Ran:     dashboard-data-bindings.cy.ts                                                    │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+====================================================================================================
+
+  (Run Finished)
+
+
+       Spec                                              Tests  Passing  Failing  Pending  Skipped  
+  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ ✔  dashboard-data-bindings.cy.ts            00:02        2        2        -        -        - │
+  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ✔  All specs passed!                        00:02        2        2        -        -        -  
+
