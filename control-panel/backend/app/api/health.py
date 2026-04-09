@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.deps import AdminUser
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.models.task import Task
