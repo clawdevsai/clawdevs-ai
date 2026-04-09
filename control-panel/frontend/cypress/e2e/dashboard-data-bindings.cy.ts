@@ -123,8 +123,9 @@ describe("Dashboard and monitoring data bindings", () => {
     cy.wait("@getSessions")
     cy.wait("@getMetricsSeries")
 
-    cy.contains("Total Sessions (24h)")
-      .closest("div")
+    cy.contains("Sessões Totais (24h)")
+      .parents("div.rounded-2xl")
+      .first()
       .contains(/^3$/)
       .should("be.visible")
 
