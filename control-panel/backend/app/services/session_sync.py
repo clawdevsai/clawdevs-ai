@@ -37,9 +37,12 @@ ACTIVE_WINDOW = timedelta(minutes=20)
 
 
 async def sync_sessions(db_session) -> None:
-    """Fetch sessions from OpenClaw filesystem and upsert them into the database."""
+    """Fetch sessions from OpenClaw filesystem and upsert them into the database.
+    ⚡ Bolt: Optimized using 'Collect-Batch-Compare' to avoid N+1 queries and redundant updates.
+    """
     base_path = Path(settings.openclaw_data_path)
     agent_slugs = get_discovered_agent_slugs()
+    collected: list[tuple[str, str, dict, str]] = []
 
     # 1. Collect all session metadata from all agents first (Batching)
     all_oc_sessions = []
@@ -49,10 +52,13 @@ async def sync_sessions(db_session) -> None:
         sessions_file = base_path / "agents" / agent_slug / "sessions" / "sessions.json"
         if not sessions_file.exists():
             continue
-
         try:
             with open(sessions_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                if isinstance(data, dict):
+                    for key, oc in data.items():
+                        if isinstance(oc, dict) and oc.get("sessionId"):
+                            collected.append((agent_slug, key, oc, str(oc["sessionId"])))
         except (OSError, json.JSONDecodeError):
             continue
 
