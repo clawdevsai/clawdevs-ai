@@ -24,6 +24,7 @@
 
 import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAvatar } from "@/components/agents/agent-avatar"
@@ -84,6 +85,15 @@ function AgentCardSkeleton() {
   )
 }
 
+const STATUS_MAP: Record<string, string> = {
+  online: "online",
+  working: "trabalhando",
+  idle: "ocioso",
+  offline: "offline",
+  error: "erro",
+  stopped: "parado",
+}
+
 export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   if (loading) {
     return (
@@ -100,64 +110,68 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
       {agents.map((agent) => {
         const effectiveStatus = (agent.runtime_status ?? agent.status) as string
         return (
-          <Link
-            key={agent.id}
-            href={`/agents/${agent.slug}`}
-            className="group flex min-w-0 flex-col gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-4 transition-colors hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.85]"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <AgentAvatar
-                slug={agent.slug}
-                displayName={agent.display_name}
-                avatarUrl={agent.avatar_url}
-                size="md"
-              />
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-sm font-semibold text-[hsl(var(--foreground))] transition-colors group-hover:text-[hsl(var(--primary))]">
-                  {agent.display_name}
-                </span>
-                <span className="truncate text-xs text-[hsl(var(--muted-foreground))]">
-                  {agent.role}
-                </span>
-              </div>
-              <Badge variant={statusBadgeVariant(effectiveStatus) as "success" | "warning" | "error" | "secondary"}>
-                <span
-                  className={cn(
-                    "mr-1 inline-block h-1.5 w-1.5 rounded-full",
-                    effectiveStatus === "online" || effectiveStatus === "working"
-                      ? "bg-emerald-500"
-                      : effectiveStatus === "idle"
-                        ? "bg-amber-500"
-                        : effectiveStatus === "error"
-                          ? "bg-rose-500"
-                          : "bg-white/30"
-                  )}
-                />
-                {effectiveStatus}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="max-w-[120px] truncate font-mono">
-                    {agent.model ?? agent.current_model ?? "—"}
-                  </span>
-                </TooltipTrigger>
-                {(agent.model ?? agent.current_model) && (
-                  <TooltipContent>
-                    Modelo: {agent.model ?? agent.current_model}
-                  </TooltipContent>
-                )}
-              </Tooltip>
-              <span>
-                {(agent.last_heartbeat ?? agent.last_heartbeat_at)
-                  ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), { addSuffix: true })
-                  : "sem heartbeat"}
+        <Link
+          key={agent.id}
+          href={`/agents/${agent.slug}`}
+          className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3 hover:border-[hsl(var(--primary)/0.4)] hover:bg-[hsl(var(--card))/0.8] transition-colors group focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:outline-none"
+          aria-label={`Ver detalhes do agente ${agent.display_name}`}
+        >
+          <div className="flex items-center gap-3">
+            <AgentAvatar
+              slug={agent.slug}
+              displayName={agent.display_name}
+              avatarUrl={agent.avatar_url}
+              size="md"
+            />
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+              <span className="text-sm font-semibold text-[hsl(var(--foreground))] truncate group-hover:text-[hsl(var(--primary))] transition-colors">
+                {agent.display_name}
+              </span>
+              <span className="text-xs text-[hsl(var(--muted-foreground))] truncate">
+                {agent.role}
               </span>
             </div>
-          </Link>
-        )
-      })}
+            <Badge variant={statusBadgeVariant(effectiveStatus) as "success" | "warning" | "error" | "secondary"}>
+              <span
+                className={cn(
+                  "mr-1 h-1.5 w-1.5 rounded-full inline-block",
+                  effectiveStatus === "online" || effectiveStatus === "working"
+                    ? "bg-green-400"
+                    : effectiveStatus === "idle"
+                    ? "bg-yellow-400"
+                    : effectiveStatus === "error"
+                    ? "bg-red-400"
+                    : "bg-white/30",
+                  effectiveStatus === "working" && "animate-pulse"
+                )}
+              />
+              {STATUS_MAP[effectiveStatus] || effectiveStatus}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between text-xs text-[hsl(var(--muted-foreground))]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="font-mono truncate max-w-[120px]">
+                  {agent.model ?? agent.current_model ?? "—"}
+                </span>
+              </TooltipTrigger>
+              {(agent.model ?? agent.current_model) && (
+                <TooltipContent>
+                  Modelo: {agent.model ?? agent.current_model}
+                </TooltipContent>
+              )}
+            </Tooltip>
+            <span>
+              {(agent.last_heartbeat ?? agent.last_heartbeat_at)
+                ? formatDistanceToNow(new Date((agent.last_heartbeat ?? agent.last_heartbeat_at) as string), {
+                    addSuffix: true,
+                    locale: ptBR,
+                  })
+                : "sem heartbeat"}
+            </span>
+          </div>
+        </Link>
+      )})}
     </div>
   )
 }
