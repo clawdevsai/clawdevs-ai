@@ -50,6 +50,7 @@ import {
 import { AppLayout } from "@/components/layout/app-layout";
 import { customInstance } from "@/lib/axios-instance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AgentAvatar } from "@/components/agents/agent-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -1318,7 +1319,7 @@ function ChatPageContent() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleComposerKeyDown}
-                  placeholder="Message Memo (Enter to send)"
+                  placeholder="Mensagem para Memo (Enter para enviar)"
                   className="min-h-[62px] max-h-44 w-full resize-none rounded-xl border border-transparent bg-transparent px-2.5 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:border-[hsl(var(--primary)/0.3)] focus:outline-none"
                 />
 
