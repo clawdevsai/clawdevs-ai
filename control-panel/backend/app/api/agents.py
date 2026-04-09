@@ -137,7 +137,7 @@ async def get_agent(
 async def update_agent_status(
     slug: str,
     body: dict,
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(select(Agent).where(Agent.slug == slug))
