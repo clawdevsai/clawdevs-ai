@@ -10,9 +10,9 @@ Scope: Final compatibility closure for migrated login/dashboard/monitoring flows
 | --- | --- | --- | --- | --- |
 | 5A-01 | `pnpm typecheck` | TypeScript without errors | PASS | `tsc --noEmit` completed (0 errors) |
 | 5A-02 | `pnpm build` | Production build succeeds | PASS | `next build` completed; static/dynamic routes generated |
-| 5A-03 | `pnpm cy:run --spec cypress/e2e/login.cy.ts` | Login/session smoke green | PASS | 13 passing, 0 failing |
-| 5A-04 | `pnpm cy:run --spec cypress/e2e/navigation-shell.cy.ts` | Shell navigation smoke green | PASS | 2 passing, 0 failing |
-| 5A-05 | `pnpm cy:run --spec cypress/e2e/dashboard-data-bindings.cy.ts` | Dashboard/monitoring bindings smoke green | PASS | 2 passing, 0 failing |
+| 5A-03 | `pnpm cy:run --spec cypress/e2e/login.cy.ts` | Login/session smoke green | PASS | 13 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
+| 5A-04 | `pnpm cy:run --spec cypress/e2e/navigation-shell.cy.ts` | Shell navigation smoke green | PASS | 2 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
+| 5A-05 | `pnpm cy:run --spec cypress/e2e/dashboard-data-bindings.cy.ts` | Dashboard/monitoring bindings smoke green | PASS | 2 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
 
 ## Manual Short Checklist (Login/Dashboard/Monitoring)
 

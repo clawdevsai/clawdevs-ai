@@ -13,9 +13,9 @@ This document records the objective gate outcomes and readiness decision.
 | --- | --- | --- | --- |
 | 5A-01 | Type check | PASS | `pnpm typecheck` completed successfully (`tsc --noEmit`) |
 | 5A-02 | Production build | PASS | `pnpm build` completed successfully (`next build`) |
-| 5A-03 | Cypress login smoke | PASS | `login.cy.ts`: 13 passing, 0 failing |
-| 5A-04 | Cypress shell navigation smoke | PASS | `navigation-shell.cy.ts`: 2 passing, 0 failing |
-| 5A-05 | Cypress dashboard/monitoring bindings smoke | PASS | `dashboard-data-bindings.cy.ts`: 2 passing, 0 failing |
+| 5A-03 | Cypress login smoke | PASS | `login.cy.ts`: 13 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
+| 5A-04 | Cypress shell navigation smoke | PASS | `navigation-shell.cy.ts`: 2 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
+| 5A-05 | Cypress dashboard/monitoring bindings smoke | PASS | `dashboard-data-bindings.cy.ts`: 2 passing, 0 failing (gap-closure rerun 2026-04-09T18:39:53Z-2026-04-09T18:40:50Z; see `04-GAP-CLOSURE-E2E-EVIDENCE.md`) |
 | 5A-06 | Manual short checklist (login/dashboard/monitoring) | PENDING HUMAN CHECK | Checklist documented in `04-REGRESSION-CHECKLIST.md` with explicit criteria |
 
 ## Contract Preservation Statement (Backend)
