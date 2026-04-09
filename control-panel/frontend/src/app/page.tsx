@@ -266,7 +266,7 @@ export default function DashboardPage() {
               <AgentsGrid agents={agents} loading={agentsLoading} />
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </AppLayout>
   )

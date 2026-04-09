@@ -74,22 +74,21 @@ export function Sidebar({
   }, [queryClient]);
 
   return (
-    <aside
-      className={cn(
-        "shrink-0 h-screen flex flex-col border-r border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-all duration-200",
-        collapsed ? "w-14" : "w-56"
-      )}
-    >
-      {/* Logo */}
-      <div className="p-4 border-b border-[hsl(var(--border))] flex items-center justify-between min-h-[57px]">
-        {!collapsed && (
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[hsl(var(--primary))] font-bold text-lg">ClawDevs</span>
-              <span className="text-[hsl(var(--muted-foreground))] text-xs">AI</span>
-            </div>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">Painel de Controle</p>
-          </div>
+    <>
+      <button
+        type="button"
+        aria-label="Fechar navegação"
+        onClick={() => onMobileOpenChange(false)}
+        className={cn(
+          "fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] md:hidden",
+          mobileOpen ? "block" : "hidden"
+        )}
+      />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex h-screen w-56 shrink-0 flex-col border-r border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-all duration-200 md:static md:z-auto md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          compactDesktop ? "md:w-14" : "md:w-56"
         )}
       >
         <div className="flex h-14 items-center gap-2 border-b border-[hsl(var(--border))] px-3">
@@ -142,7 +141,9 @@ export function Sidebar({
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive =
-              item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+              item.href === "/"
+                ? pathname === "/"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             const badge =
               item.badge === "approvals" && pendingCount > 0 ? pendingCount : null;
 
