@@ -1,3 +1,3 @@
-## 2026-04-08 - Tooltip implementation on buttons
-**Learning:** When using Radix UI Tooltips with buttons, the `TooltipTrigger` should wrap the `button` using `asChild`. Placing the trigger inside the button (e.g., around only the icon) is an anti-pattern that reduces the trigger area to just the icon and, crucially, breaks keyboard accessibility because focusing the button via Tab won't activate the tooltip.
-**Action:** Always wrap the interactive element (button, link) with `TooltipTrigger asChild` to ensure consistent hover and focus behavior.
+## 2026-04-09 - Accessible Tooltips for Icon-Only Buttons
+**Learning:** Icon-only buttons in the chat interface lacked accessible labels for sighted users who might not recognize the icons immediately. When implementing Radix UI Tooltips, the `TooltipTrigger` must wrap the `button` with the `asChild` prop to maintain valid HTML and ensure keyboard focus correctly triggers the tooltip. Additionally, removing the native `title` attribute is essential to prevent the browser from rendering a redundant second tooltip.
+**Action:** Always wrap icon-only buttons with a `Tooltip` component using the `asChild` pattern and remove native `title` attributes in future UX enhancements.
