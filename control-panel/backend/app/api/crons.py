@@ -80,7 +80,7 @@ def _execution_status(execution: CronExecution) -> str:
 
 @router.get("", response_model=list[CronStatusResponse])
 async def list_cron_statuses(
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     result = await session.exec(
@@ -130,7 +130,7 @@ async def list_cron_statuses(
 
 @router.get("/executions", response_model=CronExecutionsListResponse)
 async def list_cron_executions(
-    _: CurrentUser,
+    _: AdminUser,
     session: Annotated[AsyncSession, Depends(get_session)],
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),

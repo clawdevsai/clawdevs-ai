@@ -1,4 +1,4 @@
-## 2026-04-03 - Administrative Endpoints Missing Authorization
-**Vulnerability:** Several administrative endpoints (infrastructure management, repository modification, manual cron triggers) were accessible to any authenticated user, not just admins.
-**Learning:** FastAPI routes were using the `CurrentUser` dependency for endpoints that perform sensitive or global operations, leading to Broken Function Level Authorization (BFLA).
-**Prevention:** Always use the `AdminUser` dependency for endpoints that expose infrastructure details (cluster info), trigger system-wide syncs (agent sync), or modify global resources (repositories, crons).
+## 2026-05-22 - Broken Function Level Authorization (BFLA) in Admin/Infrastructure Endpoints
+**Vulnerability:** Several administrative and infrastructure endpoints (agent sync, cluster info, cron triggers, and repository management) were accessible to any authenticated user, regardless of their role.
+**Learning:** Defaulting to a generic `CurrentUser` dependency for all authenticated endpoints can lead to privilege escalation if not carefully reviewed. Infrastructure-related endpoints and global configuration changes must be explicitly protected with role-based checks.
+**Prevention:** Always use a specific `AdminUser` dependency (or similar RBAC check) for endpoints that expose system-wide information or allow modification of global resources. Include integration tests that specifically assert `403 Forbidden` for non-admin users on these sensitive paths.
