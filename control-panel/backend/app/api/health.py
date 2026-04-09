@@ -34,6 +34,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api.deps import AdminUser
 from app.core.database import get_session
+from app.api.deps import CurrentUser
 from app.models.task import Task
 from app.services.failure_detector import FailureDetector
 
