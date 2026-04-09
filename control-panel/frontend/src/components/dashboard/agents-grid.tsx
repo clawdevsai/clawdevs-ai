@@ -68,7 +68,7 @@ function statusBadgeVariant(status: string) {
 
 function AgentCardSkeleton() {
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))/0.7] p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-full" />
         <div className="flex flex-col gap-1.5 flex-1">
@@ -97,7 +97,7 @@ const STATUS_MAP: Record<string, string> = {
 export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <AgentCardSkeleton key={i} />
         ))}
@@ -106,7 +106,7 @@ export function AgentsGrid({ agents, loading = false }: AgentsGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {agents.map((agent) => {
         const effectiveStatus = (agent.runtime_status ?? agent.status) as string
         return (
