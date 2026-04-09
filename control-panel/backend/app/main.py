@@ -48,6 +48,10 @@ from app.api import memory_rag as memory_rag_api
 from app.api import governance as governance_api
 from app.api import chat as chat_api
 from app.api import agent_permissions as agent_permissions_api
+from app.api import context_mode as context_mode_api
+from app.api import context_mode_memory as context_mode_memory_api
+from app.api import context_mode_semantic_optimization as context_mode_semantic_optimization_api
+from app.services.context_mode_metrics_broadcaster import ContextModeMetricsBroadcaster
 
 settings = get_settings()
 logging.basicConfig(level=logging.INFO)
@@ -100,7 +104,16 @@ async def lifespan(app: FastAPI):
     else:
         logger.info("Health monitor disabled via config")
 
+    # Start context-mode metrics broadcaster
+    metrics_broadcaster = ContextModeMetricsBroadcaster(interval_seconds=30)
+    app.state.metrics_broadcaster = metrics_broadcaster
+    await metrics_broadcaster.start()
+
     yield
+
+    # Stop context-mode metrics broadcaster
+    if hasattr(app.state, 'metrics_broadcaster'):
+        await app.state.metrics_broadcaster.stop()
 
     # Stop health monitor
     if hasattr(app.state, 'health_monitor'):
@@ -147,6 +160,9 @@ app.include_router(health_api.router, tags=["health"])
 app.include_router(governance_api.router, tags=["governance"])
 app.include_router(chat_api.router, tags=["chat"])
 app.include_router(agent_permissions_api.router, tags=["agent-permissions"])
+app.include_router(context_mode_api.router, tags=["context-mode"])
+app.include_router(context_mode_memory_api.router, tags=["context-mode"])
+app.include_router(context_mode_semantic_optimization_api.router, tags=["semantic-optimization"])
 
 # WebSocket
 app.include_router(ws_api.router, tags=["websocket"])

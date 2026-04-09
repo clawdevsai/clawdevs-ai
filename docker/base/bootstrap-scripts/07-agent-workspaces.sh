@@ -68,6 +68,31 @@ copy_shared_files() {
   cp "${shared_dir}/SDD_OPERATING_MODEL.md" "${ws_dir}/SDD_OPERATING_MODEL.md"
   cp "${shared_dir}/SPECKIT_ADAPTATION.md" "${ws_dir}/SPECKIT_ADAPTATION.md"
 
+  # Context Mode files
+  cp "${shared_dir}/CONTEXT_MODE_README.md" "${ws_dir}/CONTEXT_MODE_README.md"
+  cp "${shared_dir}/CONTEXT_MODE_AGENT_HELPERS.md" "${ws_dir}/CONTEXT_MODE_AGENT_HELPERS.md"
+  cp "${shared_dir}/CONTEXT_MODE_HOOKS_CONFIG.yaml" "${ws_dir}/CONTEXT_MODE_HOOKS_CONFIG.yaml"
+  cp "${shared_dir}/CONTEXT_ENGINE_CONFIG.md" "${ws_dir}/CONTEXT_ENGINE_CONFIG.md"
+  cp "${shared_dir}/MEMORY_COMPACTION_CONFIG.md" "${ws_dir}/MEMORY_COMPACTION_CONFIG.md"
+  cp "${shared_dir}/SESSION_MANAGEMENT_CONFIG.md" "${ws_dir}/SESSION_MANAGEMENT_CONFIG.md"
+  cp "${shared_dir}/STANDING_ORDERS.md" "${ws_dir}/STANDING_ORDERS.md"
+  cp "${shared_dir}/CRON_JOBS_REGISTRY.md" "${ws_dir}/CRON_JOBS_REGISTRY.md"
+  cp "${shared_dir}/HOOKS_SPECIFICATION.md" "${ws_dir}/HOOKS_SPECIFICATION.md"
+  cp "${shared_dir}/DYNAMIC_COST_ORCHESTRATION.md" "${ws_dir}/DYNAMIC_COST_ORCHESTRATION.md"
+  cp "${shared_dir}/PROMPT_CHANGELOG.md" "${ws_dir}/PROMPT_CHANGELOG.md"
+
+  # Schemas
+  if [ -d "${shared_dir}/schemas" ]; then
+    mkdir -p "${ws_dir}/schemas"
+    cp -Rf "${shared_dir}/schemas/." "${ws_dir}/schemas/"
+  fi
+
+  # Utils
+  if [ -d "${shared_dir}/utils" ]; then
+    mkdir -p "${ws_dir}/utils"
+    cp -Rf "${shared_dir}/utils/." "${ws_dir}/utils/"
+  fi
+
   # Project README (renamed from PROJECT_README.md)
   cp "${shared_dir}/PROJECT_README.md" "${ws_dir}/README.md"
 
@@ -118,6 +143,42 @@ sed -i "s|\${DIRECTORS_NAME}|${DIRECTORS_NAME_ESCAPED}|g" "${OPENCLAW_STATE_DIR}
 for ws_agent in "${AGENTS[@]}"; do
   ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
   mkdir -p "${ws_dir}/memory"
+done
+
+# Create artifact tracking + shared projects link for all agents
+for ws_agent in "${AGENTS[@]}"; do
+  ws_dir="${OPENCLAW_STATE_DIR}/workspace-${ws_agent}"
+  mkdir -p "${ws_dir}/artifacts"
+
+  # Shared projects access
+  ln -sfn "${OPENCLAW_STATE_DIR}/projects" "${ws_dir}/projects"
+
+  # Artifact schema (v1)
+  if [ ! -f "${ws_dir}/artifacts/artifacts.schema.json" ]; then
+    cat > "${ws_dir}/artifacts/artifacts.schema.json" <<'EOF'
+{
+  "schema_version": "v1",
+  "fields": {
+    "command": "string",
+    "args": "array",
+    "cwd": "string",
+    "started_at": "string",
+    "finished_at": "string",
+    "exit_code": "number",
+    "stdout_hash": "string",
+    "stderr_hash": "string",
+    "files_changed": "array",
+    "diffs_hash": "string",
+    "tests_run": "array"
+  }
+}
+EOF
+  fi
+
+  # Artifact log seed (v1)
+  if [ ! -f "${ws_dir}/artifacts/artifacts.log.jsonl" ]; then
+    printf '{"schema_version":"v1"}\n' > "${ws_dir}/artifacts/artifacts.log.jsonl"
+  fi
 done
 
 # --- Sistema de Memória Cross-Agent (aiox-core pattern) ---

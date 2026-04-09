@@ -32,9 +32,8 @@ from app.services.agent_sync import (
     _get_openclaw_config,
     _get_agent_config,
     _pick_latest_runtime_entry,
-    AGENT_SLUGS,
+    DEFAULT_AGENT_SLUGS,
     ROLE_MAP,
-    DISPLAY_NAME_MAP,
     CRON_MAP,
 )
 from app.models import Agent
@@ -44,14 +43,14 @@ class TestAgentSyncConstants:
     """Test agent sync constants."""
 
     def test_agent_slugs_exists(self):
-        """Test that AGENT_SLUGS is defined and not empty."""
-        assert len(AGENT_SLUGS) > 0
-        assert "ceo" in AGENT_SLUGS
-        assert "qa_engineer" in AGENT_SLUGS
+        """Test that DEFAULT_AGENT_SLUGS is defined and not empty."""
+        assert len(DEFAULT_AGENT_SLUGS) > 0
+        assert "ceo" in DEFAULT_AGENT_SLUGS
+        assert "qa_engineer" in DEFAULT_AGENT_SLUGS
 
     def test_agent_slugs_count(self):
-        """Test that AGENT_SLUGS has all expected agents."""
-        assert len(AGENT_SLUGS) >= 12
+        """Test that DEFAULT_AGENT_SLUGS has all expected agents."""
+        assert len(DEFAULT_AGENT_SLUGS) >= 12
         expected_agents = [
             "ceo",
             "po",
@@ -67,7 +66,7 @@ class TestAgentSyncConstants:
             "memory_curator",
         ]
         for agent in expected_agents:
-            assert agent in AGENT_SLUGS
+            assert agent in DEFAULT_AGENT_SLUGS
 
     def test_role_map_contains_expected_roles(self):
         """Test that ROLE_MAP has all expected agent roles."""
@@ -76,19 +75,12 @@ class TestAgentSyncConstants:
         assert "qa_engineer" in ROLE_MAP
         assert ROLE_MAP["qa_engineer"] == "QA Engineer"
 
-    def test_display_name_map(self):
-        """Test that DISPLAY_NAME_MAP has all agents."""
-        assert "ceo" in DISPLAY_NAME_MAP
-        assert DISPLAY_NAME_MAP["ceo"] == "Leonardo"
-        assert "qa_engineer" in DISPLAY_NAME_MAP
-        assert DISPLAY_NAME_MAP["qa_engineer"] == "Mateus"
-
     def test_cron_map_exists(self):
         """Test that CRON_MAP is defined for cron-enabled agents."""
         assert isinstance(CRON_MAP, dict)
         # CRON_MAP is only defined for agents that actually run on a schedule.
         for slug in CRON_MAP.keys():
-            assert slug in AGENT_SLUGS
+            assert slug in DEFAULT_AGENT_SLUGS
         # Spot-check a few known cron-enabled agents
         assert "dev_backend" in CRON_MAP
         assert "qa_engineer" in CRON_MAP
@@ -100,19 +92,19 @@ class TestParseIdentity:
     def test_parse_identity_default_values(self):
         """Test parse_identity with default values (no IDENTITY.md)."""
         identity = parse_identity("ceo")
-        assert identity["display_name"] == "Leonardo"
+        assert identity["display_name"] == "Ceo"
         assert identity["role"] == "CEO / Orchestrator"
         assert "model" in identity
 
     def test_parse_identity_qa_engineer(self):
         """Test parse_identity for QA engineer."""
         identity = parse_identity("qa_engineer")
-        assert identity["display_name"] == "Mateus"
+        assert identity["display_name"] == "Qa Engineer"
         assert identity["role"] == "QA Engineer"
 
     def test_parse_identity_all_agents(self):
         """Test parse_identity for all agents."""
-        for agent in AGENT_SLUGS:
+        for agent in DEFAULT_AGENT_SLUGS:
             identity = parse_identity(agent)
             assert "display_name" in identity
             assert "role" in identity

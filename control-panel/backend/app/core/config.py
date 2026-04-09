@@ -45,6 +45,12 @@ class Settings(BaseSettings):
     openclaw_gateway_url: str = "http://clawdevs-ai:18789"
     openclaw_gateway_token: str = ""
 
+    # Ollama (panel semantic optimization + health checks)
+    # In Docker the service hostname is usually `ollama`. For local `uvicorn` on the host, set
+    # PANEL_OLLAMA_BASE_URL=http://localhost:11434
+    ollama_base_url: str = Field(default="http://ollama:11434")
+    ollama_model: str = Field(default="phi4-mini-reasoning:latest")
+
     # GitHub
     github_token: str = ""
     github_org: str = ""
@@ -111,6 +117,33 @@ class Settings(BaseSettings):
     AGENT_HEARTBEAT_TIMEOUT_MINUTES: int = Field(default=30)
     QUEUE_CRITICAL_DEPTH: int = Field(default=100)
     QUEUE_CRITICAL_PROCESSING_RATE_MIN: int = Field(default=5)
+
+    # Semantic Optimization Feature Flags (Week 4 - Rollout Strategy)
+    SEMANTIC_OPT_QUERY_ENHANCEMENT: bool = Field(default=False)
+    SEMANTIC_OPT_SEMANTIC_RERANKING: bool = Field(default=False)
+    SEMANTIC_OPT_ADAPTIVE_COMPRESSION: bool = Field(default=False)
+    SEMANTIC_OPT_SUMMARIZATION: bool = Field(default=False)
+    SEMANTIC_OPT_CATEGORIZATION: bool = Field(default=False)
+    SEMANTIC_OPT_ANOMALY_DETECTION: bool = Field(default=False)
+    SEMANTIC_OPT_CONTEXT_SUGGESTION: bool = Field(default=False)
+
+    # Canary deployment agents (comma-separated)
+    SEMANTIC_OPT_CANARY_AGENTS: str = Field(default="")
+
+    # Orchestration parallelism gate
+    ORCH_PARALLELISM_ENABLED: bool = Field(default=False)
+    ORCH_PARALLELISM_FORCE: bool = Field(default=False)
+    ORCH_PARALLELISM_COST_THRESHOLD: float = Field(default=2.0)
+    ORCH_PARALLELISM_LATENCY_THRESHOLD_SECONDS: int = Field(default=600)
+    ORCH_PARALLELISM_LOOKBACK_TASKS: int = Field(default=25)
+    ORCH_PARALLELISM_ADAPTIVE_ENABLED: bool = Field(default=True)
+    ORCH_PARALLELISM_ADAPTIVE_MIN_SAMPLES: int = Field(default=10)
+    ORCH_PARALLELISM_COST_MULTIPLIER: float = Field(default=1.2)
+    ORCH_PARALLELISM_LATENCY_MULTIPLIER: float = Field(default=1.2)
+
+    # Memory compaction thresholds
+    MEMORY_COMPACTION_SIZE_THRESHOLD: int = Field(default=200_000)
+    MEMORY_COMPACTION_MAX_AGE_SECONDS: int = Field(default=86_400)
 
     model_config = {"env_prefix": "PANEL_", "env_file": ".env", "extra": "allow"}
 

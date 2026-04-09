@@ -38,8 +38,19 @@ rules:
 
 github_permissions:
   type: read-only
-  allowed: ["gh issue list", "gh pr list", "gh workflow list", "gh run view", "gh label list"]
-  denied: ["gh issue create/edit/close", "gh pr create/merge", "any write op"]
+  org: "__GIT_ORG__"
+  allowed:
+    - "gh repo list __GIT_ORG__ --limit 1000"
+    - "gh issue list"
+    - "gh pr list"
+    - "gh workflow list"
+    - "gh run view"
+    - "gh label list"
+  denied:
+    - "gh issue create/edit/close"
+    - "gh pr create/merge"
+    - "gh repo create/delete/update"
+    - "any write op"
 
 notes:
   - PO does not create technical TASK/issues directly

@@ -19,6 +19,7 @@ required_scripts=(
   08-git-hooks.sh
   09-openclaw-config.sh
   10-background-services.sh
+  10a-context-mode-plugin.sh
   11-start-gateway.sh
 )
 
