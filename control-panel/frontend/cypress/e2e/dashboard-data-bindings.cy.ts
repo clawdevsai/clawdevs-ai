@@ -4,6 +4,7 @@
  */
 
 const API = "/api"
+const SESSION_TOKEN_KEY = "panel_token"
 
 const metricsSeriesBody = {
   items: [
@@ -55,6 +56,14 @@ const agentsBody = {
     },
   ],
   total: 2,
+}
+
+function assertPanelSession() {
+  cy.window()
+    .its("localStorage")
+    .invoke("getItem", SESSION_TOKEN_KEY)
+    .should("be.a", "string")
+    .and("not.be.empty")
 }
 
 function stubMetricBindingsApis() {
@@ -109,6 +118,8 @@ describe("Dashboard and monitoring data bindings", () => {
 
   it("renders dashboard KPI values from intercepted metrics/session payloads", () => {
     cy.visit("/")
+    cy.location("pathname").should("eq", "/")
+    assertPanelSession()
     cy.wait("@getSessions")
     cy.wait("@getMetricsSeries")
 
@@ -122,7 +133,14 @@ describe("Dashboard and monitoring data bindings", () => {
   })
 
   it("renders monitoring chart values from cycle-time and throughput payloads", () => {
-    cy.visit("/monitoring")
+    cy.visit("/")
+    cy.location("pathname").should("eq", "/")
+    assertPanelSession()
+
+    cy.get('aside nav a[href="/monitoring"]').first().click()
+    cy.location("pathname").should("eq", "/monitoring")
+    cy.contains("Monitoring Control Panel").should("be.visible")
+
     cy.wait("@getOverviewMetrics")
     cy.wait("@getCycleTime")
     cy.wait("@getThroughput")

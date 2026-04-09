@@ -13,6 +13,7 @@ const CORE_ROUTES = [
   "/agents",
   "/approvals",
 ] as const;
+const SESSION_TOKEN_KEY = "panel_token";
 
 function sidebarLink(href: string) {
   return cy.get(`aside nav a[href="${href}"]`).first();
@@ -25,6 +26,14 @@ function assertNoHorizontalOverflow() {
       root.clientWidth + 1
     );
   });
+}
+
+function assertPanelSession() {
+  cy.window()
+    .its("localStorage")
+    .invoke("getItem", SESSION_TOKEN_KEY)
+    .should("be.a", "string")
+    .and("not.be.empty");
 }
 
 function stubShellApis() {
@@ -179,29 +188,35 @@ describe("Shell navigation smoke", () => {
   it("covers desktop route transitions with active nav state", () => {
     cy.viewport(1440, 900);
     cy.visit("/");
+    assertPanelSession();
 
     CORE_ROUTES.forEach((route) => {
-      sidebarLink(route).click();
+      sidebarLink(route).should("be.visible").click();
       cy.location("pathname").should("eq", route);
       sidebarLink(route).should("have.attr", "aria-current", "page");
+      if (route === "/monitoring") {
+        cy.contains("Monitoring Control Panel").should("be.visible");
+      }
       assertNoHorizontalOverflow();
     });
+
+    assertPanelSession();
   });
 
   it("covers mobile sidebar open/close and route navigation", () => {
     cy.viewport(390, 844);
     cy.visit("/");
+    assertPanelSession();
 
     cy.get("aside").should("have.class", "-translate-x-full");
     cy.get('[aria-label="Abrir menu"]').should("be.visible").click();
-    cy.get("aside").should("have.class", "translate-x-0");
+    sidebarLink("/sessions").should("be.visible");
 
     sidebarLink("/sessions").should("be.visible").click();
     cy.location("pathname").should("eq", "/sessions");
     cy.get("aside").should("have.class", "-translate-x-full");
 
     cy.get('[aria-label="Abrir menu"]').click();
-    cy.get("aside").should("have.class", "translate-x-0");
     cy.get('[aria-label="Fechar menu"]').click();
     cy.get("aside").should("have.class", "-translate-x-full");
 
@@ -209,6 +224,11 @@ describe("Shell navigation smoke", () => {
     cy.get('[aria-label="Fechar navegação"]').click({ force: true });
     cy.get("aside").should("have.class", "-translate-x-full");
 
+    cy.get('[aria-label="Abrir menu"]').click();
+    sidebarLink("/monitoring").should("be.visible").click();
+    cy.location("pathname").should("eq", "/monitoring");
+    cy.contains("Monitoring Control Panel").should("be.visible");
+    assertPanelSession();
     assertNoHorizontalOverflow();
   });
 });

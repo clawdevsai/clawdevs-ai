@@ -1,4 +1,4 @@
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e2e-test-fake-token",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQxMDA4MDAwMDB9.e2e-smoke-signature",
   "token_type": "bearer"
 }

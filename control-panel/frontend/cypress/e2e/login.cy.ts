@@ -7,10 +7,115 @@
  */
 
 const LOGIN_API = "/api/auth/login";
+const SESSION_TOKEN_KEY = "panel_token";
+
+type LoginFixture = {
+  access_token: string;
+  token_type: string;
+};
+
+function fillCredentials(username = "admin", password = "admin") {
+  cy.get('[data-testid="login-username"]').clear().type(username);
+  cy.get('[data-testid="login-password"]').clear().type(password);
+}
+
+function submitLogin() {
+  cy.get('[data-testid="login-submit"]').click();
+}
+
+function stubDashboardApis(options: {
+  expectedAuthToken?: string;
+  authFailureStatus?: 401 | 403;
+} = {}) {
+  const { expectedAuthToken, authFailureStatus } = options;
+
+  cy.intercept("GET", "/api/agents*", (req) => {
+    if (expectedAuthToken) {
+      expect(req.headers.authorization).to.eq(`Bearer ${expectedAuthToken}`);
+    }
+
+    if (authFailureStatus) {
+      req.reply({
+        statusCode: authFailureStatus,
+        body: { detail: "Unauthorized" },
+      });
+      return;
+    }
+
+    req.reply({
+      statusCode: 200,
+      body: { items: [], total: 0 },
+    });
+  }).as("getAgents");
+
+  cy.intercept("GET", "/api/approvals*", {
+    statusCode: 200,
+    body: { items: [], total: 0 },
+  });
+
+  cy.intercept("GET", "/api/sessions*", {
+    statusCode: 200,
+    body: { items: [], total: 0 },
+  });
+
+  cy.intercept("GET", "/api/tasks*", {
+    statusCode: 200,
+    body: { items: [], total: 0 },
+  });
+
+  cy.intercept("GET", "/api/activity-events*", {
+    statusCode: 200,
+    body: { items: [], total: 0 },
+  });
+
+  cy.intercept("GET", "/api/api/health/summary*", {
+    statusCode: 200,
+    body: { healthy: 0, stalled: 0, failed: 0, blocked: 0 },
+  });
+
+  cy.intercept("GET", "/api/metrics/overview*", {
+    statusCode: 200,
+    body: {
+      active_agents: 0,
+      pending_approvals: 0,
+      open_tasks: 0,
+      tokens_24h: 0,
+      tokens_consumed_total: 0,
+      tokens_consumed_avg_per_task: 0,
+      backlog_count: 0,
+      tasks_in_progress: 0,
+      tasks_completed: 0,
+    },
+  });
+
+  cy.intercept("GET", "/api/metrics/cycle-time*", {
+    statusCode: 200,
+    body: {
+      cycle_time_avg_seconds: 0,
+      cycle_time_p95_seconds: 0,
+      window_minutes: 30,
+    },
+  });
+
+  cy.intercept("GET", "/api/metrics/throughput*", {
+    statusCode: 200,
+    body: {
+      window_minutes: 30,
+      group_by: "label",
+      items: [],
+    },
+  });
+
+  cy.intercept("GET", /\/api\/metrics(\?.*)?$/, {
+    statusCode: 200,
+    body: { items: [], total: 0 },
+  });
+}
 
 describe("Login page", () => {
   beforeEach(() => {
     cy.visit("/login");
+    cy.clearPanelSession();
   });
 
   // ─── Page rendering ──────────────────────────────────────────────────
@@ -40,27 +145,30 @@ describe("Login page", () => {
   // ─── Successful login ────────────────────────────────────────────────
 
   describe("successful login", () => {
-    it("authenticates and redirects to home page", () => {
-      cy.intercept("POST", LOGIN_API, {
-        statusCode: 200,
-        fixture: "login.json",
-      }).as("loginRequest");
+    it("stores panel_token, redirects, and sends bearer token after login", () => {
+      cy.fixture<LoginFixture>("login.json").then(({ access_token }) => {
+        stubDashboardApis({ expectedAuthToken: access_token });
 
-      cy.get('[data-testid="login-username"]').type("admin");
-      cy.get('[data-testid="login-password"]').type("admin");
-      cy.get('[data-testid="login-submit"]').click();
+        cy.intercept("POST", LOGIN_API, {
+          statusCode: 200,
+          fixture: "login.json",
+        }).as("loginRequest");
 
-      cy.wait("@loginRequest").its("request.body").should("deep.equal", {
-        username: "admin",
-        password: "admin",
-      });
+        fillCredentials("admin", "admin");
+        submitLogin();
 
-      // After successful login, token is stored and user is redirected
-      cy.location("pathname").should("eq", "/");
-      cy.window().then((win) => {
-        expect(win.localStorage.getItem("panel_token")).to.eq(
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e2e-test-fake-token"
-        );
+        cy.wait("@loginRequest").its("request.body").should("deep.equal", {
+          username: "admin",
+          password: "admin",
+        });
+
+        cy.location("pathname", { timeout: 10000 }).should("eq", "/");
+        cy.window().then((win) => {
+          expect(win.localStorage.getItem(SESSION_TOKEN_KEY)).to.eq(access_token);
+        });
+
+        // Asserts request interceptor behavior (Authorization: Bearer <token>)
+        cy.wait("@getAgents");
       });
     });
   });
@@ -86,33 +194,44 @@ describe("Login page", () => {
 
       // User stays on login page
       cy.location("pathname").should("eq", "/login");
+      cy.window()
+        .its("localStorage")
+        .invoke("getItem", SESSION_TOKEN_KEY)
+        .should("be.null");
     });
 
     it("clears error on new submission attempt", () => {
-      // First: fail
-      cy.intercept("POST", LOGIN_API, {
-        statusCode: 401,
-        body: { detail: "Unauthorized" },
-      }).as("loginFail");
+      cy.fixture<LoginFixture>("login.json").then(({ access_token }) => {
+        stubDashboardApis({ expectedAuthToken: access_token });
 
-      cy.get('[data-testid="login-username"]').type("bad");
-      cy.get('[data-testid="login-password"]').type("bad");
-      cy.get('[data-testid="login-submit"]').click();
-      cy.wait("@loginFail");
-      cy.get('[data-testid="login-error"]').should("be.visible");
+        // First: fail
+        cy.intercept("POST", LOGIN_API, {
+          statusCode: 401,
+          body: { detail: "Unauthorized" },
+        }).as("loginFail");
 
-      // Second: succeed — error should clear
-      cy.intercept("POST", LOGIN_API, {
-        statusCode: 200,
-        fixture: "login.json",
-      }).as("loginOk");
+        fillCredentials("bad", "bad");
+        submitLogin();
+        cy.wait("@loginFail");
+        cy.get('[data-testid="login-error"]').should("be.visible");
 
-      cy.get('[data-testid="login-username"]').clear().type("admin");
-      cy.get('[data-testid="login-password"]').clear().type("admin");
-      cy.get('[data-testid="login-submit"]').click();
-      cy.wait("@loginOk");
+        // Second: succeed — error should clear
+        cy.intercept("POST", LOGIN_API, {
+          statusCode: 200,
+          fixture: "login.json",
+        }).as("loginOk");
 
-      cy.get('[data-testid="login-error"]').should("not.exist");
+        fillCredentials("admin", "admin");
+        submitLogin();
+        cy.wait("@loginOk");
+
+        cy.get('[data-testid="login-error"]').should("not.exist");
+        cy.location("pathname", { timeout: 10000 }).should("eq", "/");
+        cy.window()
+          .its("localStorage")
+          .invoke("getItem", SESSION_TOKEN_KEY)
+          .should("eq", access_token);
+      });
     });
   });
 
@@ -124,15 +243,19 @@ describe("Login page", () => {
         "networkError"
       );
 
-      cy.get('[data-testid="login-username"]').type("admin");
-      cy.get('[data-testid="login-password"]').type("admin");
-      cy.get('[data-testid="login-submit"]').click();
+      fillCredentials("admin", "admin");
+      submitLogin();
 
       cy.wait("@networkError");
 
       cy.get('[data-testid="login-error"]')
         .should("be.visible")
         .and("contain.text", "Erro de conexão com o servidor");
+      cy.location("pathname").should("eq", "/login");
+      cy.window()
+        .its("localStorage")
+        .invoke("getItem", SESSION_TOKEN_KEY)
+        .should("be.null");
     });
   });
 
@@ -148,9 +271,8 @@ describe("Login page", () => {
         });
       }).as("slowLogin");
 
-      cy.get('[data-testid="login-username"]').type("admin");
-      cy.get('[data-testid="login-password"]').type("admin");
-      cy.get('[data-testid="login-submit"]').click();
+      fillCredentials("admin", "admin");
+      submitLogin();
 
       // While loading: button disabled, text changes
       cy.get('[data-testid="login-submit"]')
@@ -183,6 +305,30 @@ describe("Login page", () => {
       cy.get('[data-testid="login-submit"]').click();
 
       cy.get("@loginSpy").should("not.have.been.called");
+    });
+  });
+
+  // ─── Session cleanup contract ────────────────────────────────────────
+
+  describe("session cleanup contract", () => {
+    ([401, 403] as const).forEach((statusCode) => {
+      it(`clears panel_token and redirects when protected API returns ${statusCode}`, () => {
+        cy.fixture<LoginFixture>("login.json").then(({ access_token }) => {
+          cy.setPanelToken(access_token);
+          stubDashboardApis({
+            expectedAuthToken: access_token,
+            authFailureStatus: statusCode,
+          });
+
+          cy.visit("/");
+          cy.wait("@getAgents");
+          cy.location("pathname", { timeout: 10000 }).should("eq", "/login");
+          cy.window()
+            .its("localStorage")
+            .invoke("getItem", SESSION_TOKEN_KEY)
+            .should("be.null");
+        });
+      });
     });
   });
 });
