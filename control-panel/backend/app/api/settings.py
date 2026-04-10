@@ -19,6 +19,7 @@
 # SOFTWARE.
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 from app.api.deps import CurrentUser, AdminUser
 from app.core.config import get_settings
 from app.core.database import get_session
